@@ -1,248 +1,242 @@
 {% extends "base.html" %}
 <!--
 /home/life/app/templates/temp_index.html
-Version: 1.0.0
-Purpose: Homepage with daily dashboard - reminders, appointments, quick access
+Version: 1.1.1
+Purpose: Compact homepage - fits on one iPad screen without scrolling
 Created: 2025-06-11
+Updated: 2025-06-12 - Fixed datetime string formatting error
 -->
 
 {% block title %}Home - Life{% endblock %}
 
-{% block template_info %}temp_index.html v1.0 - Homepage daily dashboard{% endblock %}
+{% block template_info %}temp_index.html v1.1 - Compact homepage{% endblock %}
 
 {% block content %}
 <div class="container">
-    <h1>Life - {{ today.strftime('%A, %B %d') }}</h1>
+    <h1>Today - {{ today.strftime('%a %b %d') }}</h1>
     
-    <!-- Today's Reminders -->
-    <div class="dashboard-section">
-        <h2>Today's Reminders</h2>
-        {% if reminders %}
-            <ul class="reminder-list">
-                {% for reminder in reminders %}
-                <li class="reminder-item {% if reminder.completed %}completed{% endif %}" 
-                    data-id="{{ reminder.id }}">
-                    <input type="checkbox" 
-                           {% if reminder.completed %}checked{% endif %}
-                           onchange="toggleReminder({{ reminder.id }})">
-                    <span>{{ reminder.title }}</span>
-                    {% if reminder.recurring %}
-                        <small class="recurring">({{ reminder.recurring }})</small>
-                    {% endif %}
-                </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p class="no-items">No reminders for today</p>
-        {% endif %}
+    <!-- Compact two-column layout for main sections -->
+    <div class="homepage-grid">
         
-        <!-- Refuse Bins Alert -->
-        {% if refuse_bins %}
-            <div class="refuse-alert">
-                <h3>Bins Out Tonight!</h3>
-                {% for bin in refuse_bins %}
-                    <span class="bin-badge bin-{{ bin.color }}">{{ bin.type }}</span>
-                {% endfor %}
-            </div>
-        {% endif %}
-    </div>
-    
-    <!-- Appointments -->
-    <div class="dashboard-section">
-        <h2>Upcoming Appointments</h2>
-        {% if appointments %}
-            <ul class="appointment-list">
-                {% for appt in appointments %}
-                <li class="appointment-item">
-                    <div class="appt-date">
-                        {% if appt.date == today.strftime('%Y-%m-%d') %}
-                            Today
-                        {% else %}
-                            {{ appt.date }}
-                        {% endif %}
-                        {% if appt.time %}
-                            at {{ appt.time }}
-                        {% endif %}
+        <!-- Left Column -->
+        <div class="left-column">
+            
+            <!-- Today's Reminders -->
+            <div class="dashboard-section">
+                <h2>Reminders</h2>
+                {% if reminders %}
+                    <ul class="reminder-list">
+                        {% for reminder in reminders[:3] %}  <!-- Limit to 3 items -->
+                        <li class="reminder-item {% if reminder.completed %}completed{% endif %}" 
+                            data-id="{{ reminder.id }}">
+                            <input type="checkbox" 
+                                   {% if reminder.completed %}checked{% endif %}
+                                   onchange="toggleReminder({{ reminder.id }})">
+                            <span>{{ reminder.title }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="no-items">No reminders today</p>
+                {% endif %}
+                
+                <!-- Refuse Bins Alert -->
+                {% if refuse_bins %}
+                    <div class="refuse-alert">
+                        <strong>Bins Out Tonight!</strong>
+                        {% for bin in refuse_bins %}
+                            <span class="bin-badge bin-{{ bin.color }}">{{ bin.type.split('(')[0].strip() }}</span>
+                        {% endfor %}
                     </div>
-                    <div class="appt-title">{{ appt.title }}</div>
-                </li>
-                {% endfor %}
-            </ul>
-            <a href="{{ url_for('main.calendar') }}" class="button button-secondary">View Calendar</a>
-        {% else %}
-            <p class="no-items">No upcoming appointments</p>
-        {% endif %}
-    </div>
-    
-    <!-- Quick Actions -->
-    <div class="dashboard-section">
-        <h2>Quick Actions</h2>
-        <div class="quick-actions">
-            <a href="{{ url_for('files.upload') }}" class="button">
-                Upload Document
-            </a>
-            <a href="{{ url_for('main.lists') }}" class="button">
-                Shopping List {% if shopping_count > 0 %}({{ shopping_count }}){% endif %}
-            </a>
-            <a href="{{ url_for('main.add_event') }}" class="button">
-                Add Appointment
-            </a>
-            <a href="{{ url_for('files.search') }}" class="button">
-                Search Files
-            </a>
-        </div>
-    </div>
-    
-    <!-- Recent Files -->
-    <div class="dashboard-section">
-        <h2>Recent Documents</h2>
-        {% if recent_files %}
-            <div class="file-list">
-                {% for file in recent_files %}
-                <div class="file-item">
-                    <a href="{{ url_for('files.download', file_id=file.id) }}">
-                        {{ file.title or file.filename }}
-                    </a>
-                    <small>{{ file.upload_date }}</small>
-                </div>
-                {% endfor %}
+                {% endif %}
             </div>
-            <a href="{{ url_for('files.browse') }}" class="button button-secondary">Browse All Files</a>
-        {% else %}
-            <p class="no-items">No documents uploaded yet</p>
-        {% endif %}
+            
+            <!-- Quick Actions -->
+            <div class="dashboard-section">
+                <h2>Quick Actions</h2>
+                <div class="quick-actions">
+                    <a href="{{ url_for('files.upload') }}" class="button">
+                        Upload
+                    </a>
+                    <a href="{{ url_for('main.lists') }}" class="button">
+                        Shopping {% if shopping_count > 0 %}({{ shopping_count }}){% endif %}
+                    </a>
+                    <a href="{{ url_for('main.add_event') }}" class="button">
+                        Add Event
+                    </a>
+                    <a href="{{ url_for('files.search') }}" class="button">
+                        Search
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Column -->
+        <div class="right-column">
+            
+            <!-- Appointments -->
+            <div class="dashboard-section">
+                <h2>Upcoming</h2>
+                {% if appointments %}
+                    <ul class="appointment-list">
+                        {% for appt in appointments[:4] %}  <!-- Limit to 4 items -->
+                        <li class="appointment-item">
+                            <div class="appt-date">
+                                {% if appt.date == today.strftime('%Y-%m-%d') %}
+                                    Today
+                                {% else %}
+                                    {{ appt.date }}
+                                {% endif %}
+                                {% if appt.time %}
+                                    {{ appt.time }}
+                                {% endif %}
+                            </div>
+                            <div class="appt-title">{{ appt.title }}</div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    <a href="{{ url_for('main.calendar') }}" class="button button-secondary">View Calendar</a>
+                {% else %}
+                    <p class="no-items">No appointments</p>
+                    <a href="{{ url_for('main.add_event') }}" class="button button-secondary">Add Event</a>
+                {% endif %}
+            </div>
+            
+            <!-- Recent Files -->
+            <div class="dashboard-section">
+                <h2>Recent Documents</h2>
+                {% if recent_files %}
+                    <div class="file-list">
+                        {% for file in recent_files[:3] %}  <!-- Limit to 3 items -->
+                        <div class="file-item">
+                            <a href="{{ url_for('files.download', file_id=file.id) }}">
+                                {{ (file.title or file.filename)[:25] }}{% if (file.title or file.filename)|length > 25 %}...{% endif %}
+                            </a>
+                            <small>{{ file.upload_date.strftime('%m/%d') if file.upload_date else 'N/A' }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <a href="{{ url_for('files.browse') }}" class="button button-secondary">Browse All</a>
+                {% else %}
+                    <p class="no-items">No documents yet</p>
+                    <a href="{{ url_for('files.upload') }}" class="button button-secondary">Upload First File</a>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
 
 <style>
-/* Dashboard-specific styles */
-.dashboard-section {
-    margin-bottom: 2rem;
-    padding: 1.5rem;
-    background-color: var(--bg-accent);
-    border-radius: 8px;
-}
-
-.reminder-list,
-.appointment-list {
-    list-style: none;
-    padding: 0;
-}
-
-.reminder-item {
-    padding: 0.75rem 0;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
+/* Homepage-specific compact styles */
+.homepage-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 1rem;
+    margin-top: 0.5rem;
 }
 
-.reminder-item:last-child {
-    border-bottom: none;
+.left-column,
+.right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+/* Compact dashboard sections */
+.dashboard-section {
+    margin-bottom: 0;  /* Remove bottom margin since we use gap */
+    flex: 1;
+    min-height: fit-content;
+}
+
+/* Compact reminder/appointment items */
+.reminder-item,
+.appointment-item {
+    padding: 0.3rem 0;  /* Even more compact */
+    font-size: 0.9rem;
 }
 
 .reminder-item input[type="checkbox"] {
-    width: 24px;
-    height: 24px;
-    cursor: pointer;
-    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
 }
 
-.reminder-item.completed {
-    opacity: 0.6;
-}
-
-.reminder-item.completed span {
-    text-decoration: line-through;
-}
-
-.recurring {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-}
-
+/* Compact refuse alert */
 .refuse-alert {
-    margin-top: 1rem;
-    padding: 1rem;
-    background-color: var(--warning);
-    color: white;
-    border-radius: 4px;
-}
-
-.refuse-alert h3 {
-    margin: 0 0 0.5rem 0;
-    color: white;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    font-size: 0.9rem;
 }
 
 .bin-badge {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    margin-right: 0.5rem;
-    border-radius: 4px;
-    font-size: 0.9rem;
-    font-weight: 500;
+    padding: 0.1rem 0.4rem;
+    margin-right: 0.2rem;
+    font-size: 0.7rem;
 }
 
-.bin-blue {
-    background-color: #4A90E2;
-    color: white;
-}
-
-.bin-yellow {
-    background-color: #F5A623;
-    color: white;
-}
-
-.bin-brown {
-    background-color: #8B6914;
-    color: white;
-}
-
-.appointment-item {
-    padding: 0.75rem 0;
-    border-bottom: 1px solid var(--border);
-}
-
-.appointment-item:last-child {
-    border-bottom: none;
-}
-
-.appt-date {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-}
-
-.appt-title {
-    font-weight: 500;
-}
-
+/* Compact quick actions - 2x2 grid */
 .quick-actions {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+
+.quick-actions .button {
+    padding: 0.6rem 0.5rem;
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+/* Compact file list */
+.file-list {
+    max-height: 120px;  /* Limit height */
+    overflow-y: auto;
 }
 
 .file-item {
-    padding: 0.5rem 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    padding: 0.2rem 0;
+    font-size: 0.9rem;
+}
+
+.file-item a {
+    font-weight: 500;
 }
 
 .file-item small {
-    color: var(--text-secondary);
-}
-
-.no-items {
-    color: var(--text-secondary);
-    font-style: italic;
+    font-size: 0.75rem;
 }
 
 /* Mobile adjustments */
 @media (max-width: 768px) {
-    .quick-actions {
+    .homepage-grid {
         grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    .quick-actions {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .quick-actions .button {
+        font-size: 0.7rem;
+        padding: 0.5rem 0.3rem;
+    }
+}
+
+/* iPad portrait optimization */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+    .homepage-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    /* Ensure everything fits in viewport */
+    .dashboard-section {
+        padding: 0.6rem;
+    }
+    
+    .quick-actions .button {
+        padding: 0.7rem 0.4rem;
+        font-size: 0.85rem;
     }
 }
 </style>

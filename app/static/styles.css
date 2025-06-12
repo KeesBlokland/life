@@ -1,27 +1,27 @@
 /*
-styles.css - Main stylesheet for Life app
-Version: 1.0.1
-Purpose: Pastel theme, responsive layout, accessibility features
-Created: 2024-12-XX
-Updated: 2025-06-11 - Added calendar and shopping list styles
+styles.css - Compact iPad-friendly stylesheet for Life app
+Version: 1.2.1
+Purpose: Reduced spacing, compact layout for elderly tablet users
+Created: 2025-06-11
+Updated: 2025-06-12 - Fixed file browser layout and restored colors
 */
 
 /* CSS Variables */
 :root {
-    --bg-primary: #FAF9F6;      /* Off-white background */
-    --bg-secondary: #E8E6E1;    /* Light gray */
-    --bg-accent: #F0EDE8;       /* Subtle accent */
-    --text-primary: #2C3E50;    /* Dark blue-gray */
-    --text-secondary: #5A6C7D;  /* Medium blue-gray */
-    --accent: #7D9A96;          /* Muted sage green */
-    --border: #D3D3D3;          /* Light gray */
-    --success: #6B8E6B;         /* Muted green */
-    --warning: #D4A574;         /* Muted orange */
-    --error: #B87A7A;           /* Muted red */
+    --bg-primary: #FAF9F6;      
+    --bg-secondary: #E8E6E1;    
+    --bg-accent: #F0EDE8;       
+    --text-primary: #2C3E50;    
+    --text-secondary: #5A6C7D;  
+    --accent: #7D9A96;          
+    --border: #D3D3D3;          
+    --success: #6B8E6B;         
+    --warning: #D4A574;         
+    --error: #B87A7A;           
     --shadow: rgba(0, 0, 0, 0.1);
 }
 
-/* Base Styles */
+/* Base Styles - Compact */
 * {
     margin: 0;
     padding: 0;
@@ -30,8 +30,8 @@ Updated: 2025-06-11 - Added calendar and shopping list styles
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-size: 18px;
-    line-height: 1.6;
+    font-size: 16px;           /* Reduced from 18px */
+    line-height: 1.4;          /* Reduced from 1.6 */
     color: var(--text-primary);
     background-color: var(--bg-primary);
     min-height: 100vh;
@@ -39,25 +39,25 @@ body {
     flex-direction: column;
 }
 
-/* Typography */
+/* Typography - Compact */
 h1 {
-    font-size: 2rem;
+    font-size: 1.4rem;         /* Reduced from 2rem */
     font-weight: 600;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;     /* Reduced from 1rem */
     color: var(--text-primary);
 }
 
 h2 {
-    font-size: 1.5rem;
+    font-size: 1.2rem;         /* Reduced from 1.5rem */
     font-weight: 500;
-    margin-bottom: 0.8rem;
+    margin-bottom: 0.4rem;     /* Reduced from 0.8rem */
     color: var(--text-primary);
 }
 
 h3 {
-    font-size: 1.2rem;
+    font-size: 1rem;           /* Reduced from 1.2rem */
     font-weight: 500;
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.3rem;     /* Reduced from 0.6rem */
     color: var(--text-secondary);
 }
 
@@ -70,24 +70,24 @@ a:hover {
     text-decoration: underline;
 }
 
-/* Layout */
+/* Layout - Compact */
 .container {
     max-width: 800px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 10px;           /* Reduced from 20px */
 }
 
-/* Navigation */
+/* Navigation - Compact */
 header {
     background-color: var(--bg-secondary);
     border-bottom: 1px solid var(--border);
-    padding: 1rem 0;
+    padding: 0.5rem 0;         /* Reduced from 1rem */
 }
 
 .nav-container {
     max-width: 800px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 10px;           /* Reduced from 20px */
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -95,7 +95,7 @@ header {
 
 .nav-container h1 {
     margin: 0;
-    font-size: 1.5rem;
+    font-size: 1.2rem;         /* Reduced from 1.5rem */
 }
 
 .nav-container h1 a {
@@ -104,13 +104,14 @@ header {
 
 .nav-links {
     display: flex;
-    gap: 1.5rem;
+    gap: 1rem;                 /* Reduced from 1.5rem */
 }
 
 .nav-links a {
     color: var(--text-secondary);
     font-weight: 500;
-    padding: 0.5rem 0;
+    padding: 0.3rem 0;         /* Reduced from 0.5rem */
+    font-size: 0.9rem;         /* Slightly smaller */
 }
 
 .nav-links a:hover {
@@ -118,33 +119,34 @@ header {
     text-decoration: none;
 }
 
-/* Main Content */
+/* Main Content - Compact */
 main {
     flex: 1;
-    padding: 2rem 0;
+    padding: 1rem 0;           /* Reduced from 2rem */
 }
 
 main .container {
     background-color: white;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px var(--shadow);
+    padding: 1rem;             /* Reduced from 2rem */
+    border-radius: 6px;        /* Reduced from 8px */
+    box-shadow: 0 1px 3px var(--shadow);  /* Reduced shadow */
 }
 
-/* Forms */
+/* Forms - Compact */
 form {
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;       /* Reduced from 2rem */
 }
 
 .form-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.8rem;     /* Reduced from 1.5rem */
 }
 
 label {
     display: block;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.3rem;     /* Reduced from 0.5rem */
     font-weight: 500;
     color: var(--text-secondary);
+    font-size: 0.9rem;         /* Slightly smaller */
 }
 
 input[type="text"],
@@ -155,35 +157,35 @@ input[type="time"],
 textarea,
 select {
     width: 100%;
-    padding: 0.75rem;
+    padding: 0.5rem;           /* Reduced from 0.75rem */
     font-size: 1rem;
     border: 1px solid var(--border);
-    border-radius: 4px;
+    border-radius: 3px;        /* Reduced from 4px */
     background-color: white;
     font-family: inherit;
 }
 
 input[type="file"] {
     font-size: 1rem;
-    padding: 0.5rem 0;
+    padding: 0.3rem 0;         /* Reduced from 0.5rem */
 }
 
 textarea {
-    min-height: 100px;
+    min-height: 60px;          /* Reduced from 100px */
     resize: vertical;
 }
 
-/* Buttons */
+/* Buttons - Compact */
 button,
 .button {
     display: inline-block;
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
+    padding: 0.5rem 1rem;      /* Reduced from 0.75rem 1.5rem */
+    font-size: 0.9rem;         /* Reduced from 1rem */
     font-weight: 500;
     color: white;
     background-color: var(--accent);
     border: none;
-    border-radius: 4px;
+    border-radius: 3px;        /* Reduced from 4px */
     cursor: pointer;
     text-decoration: none;
     transition: opacity 0.2s;
@@ -203,19 +205,25 @@ button:hover,
     background-color: var(--error);
 }
 
-/* Messages */
+.button-small {
+    padding: 0.3rem 0.7rem;    /* Even smaller */
+    font-size: 0.8rem;
+}
+
+/* Messages - Compact */
 .messages {
     max-width: 800px;
-    margin: 1rem auto;
-    padding: 0 20px;
+    margin: 0.5rem auto;       /* Reduced from 1rem */
+    padding: 0 10px;           /* Reduced from 20px */
 }
 
 .message {
-    padding: 1rem;
-    margin-bottom: 1rem;
-    border-radius: 4px;
+    padding: 0.6rem;           /* Reduced from 1rem */
+    margin-bottom: 0.5rem;     /* Reduced from 1rem */
+    border-radius: 3px;        /* Reduced from 4px */
     background-color: var(--bg-accent);
     border: 1px solid var(--border);
+    font-size: 0.9rem;         /* Smaller text */
 }
 
 .message.success {
@@ -236,16 +244,16 @@ button:hover,
     color: var(--error);
 }
 
-/* Daily Dashboard */
+/* Daily Dashboard - Compact */
 .dashboard-section {
-    margin-bottom: 2rem;
-    padding: 1.5rem;
+    margin-bottom: 1rem;       /* Reduced from 2rem */
+    padding: 0.8rem;           /* Reduced from 1.5rem */
     background-color: var(--bg-accent);
-    border-radius: 8px;
+    border-radius: 6px;        /* Reduced from 8px */
 }
 
 .dashboard-section h2 {
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;     /* Reduced from 1rem */
     color: var(--text-primary);
 }
 
@@ -256,11 +264,11 @@ button:hover,
 
 .reminder-item,
 .appointment-item {
-    padding: 0.75rem 0;
+    padding: 0.4rem 0;         /* Reduced from 0.75rem */
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.7rem;               /* Reduced from 1rem */
 }
 
 .reminder-item:last-child,
@@ -269,8 +277,8 @@ button:hover,
 }
 
 .reminder-item input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
+    width: 18px;               /* Reduced from 20px */
+    height: 18px;
     cursor: pointer;
 }
 
@@ -279,19 +287,126 @@ button:hover,
     text-decoration: line-through;
 }
 
-/* File Browser */
+.recurring {
+    color: var(--text-secondary);
+    font-size: 0.8rem;         /* Reduced from 0.9rem */
+}
+
+.refuse-alert {
+    margin-top: 0.7rem;        /* Reduced from 1rem */
+    padding: 0.7rem;           /* Reduced from 1rem */
+    background-color: var(--warning);
+    color: white;
+    border-radius: 3px;        /* Reduced from 4px */
+}
+
+.refuse-alert h3 {
+    margin: 0 0 0.3rem 0;      /* Reduced from 0.5rem */
+    color: white;
+}
+
+.bin-badge {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;    /* Reduced from 0.25rem 0.75rem */
+    margin-right: 0.3rem;      /* Reduced from 0.5rem */
+    border-radius: 3px;        /* Reduced from 4px */
+    font-size: 0.8rem;         /* Reduced from 0.9rem */
+    font-weight: 500;
+}
+
+.bin-blue { background-color: #4A90E2; color: white; }
+.bin-yellow { background-color: #F5A623; color: white; }
+.bin-brown { background-color: #8B6914; color: white; }
+
+.appointment-item {
+    padding: 0.4rem 0;         /* Reduced from 0.75rem */
+    border-bottom: 1px solid var(--border);
+}
+
+.appointment-item:last-child {
+    border-bottom: none;
+}
+
+.appt-date {
+    font-size: 0.8rem;         /* Reduced from 0.9rem */
+    color: var(--text-secondary);
+}
+
+.appt-title {
+    font-weight: 500;
+}
+
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));  /* Reduced from 200px */
+    gap: 0.7rem;               /* Reduced from 1rem */
+    margin-top: 0.7rem;        /* Reduced from 1rem */
+}
+
+.file-item {
+    padding: 0.3rem 0;         /* Reduced from 0.5rem */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.file-item small {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
+.no-items {
+    color: var(--text-secondary);
+    font-style: italic;
+    font-size: 0.9rem;
+}
+
+/* File browser - compact controls */
+.file-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 0.8rem;
+    background-color: var(--bg-accent);
+    border-radius: 6px;
+}
+
+.category-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.category-buttons .button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+}
+
+.button-active {
+    background-color: var(--accent) !important;
+    color: white !important;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* File Browser - restore original card layout but more compact */
 .file-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1rem;
-    margin-top: 1rem;
+    margin-bottom: 1rem;
 }
 
 .file-card {
     padding: 1rem;
-    background-color: var(--bg-accent);
+    background-color: white;
     border: 1px solid var(--border);
-    border-radius: 4px;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px var(--shadow);
     transition: box-shadow 0.2s;
 }
 
@@ -299,86 +414,122 @@ button:hover,
     box-shadow: 0 4px 8px var(--shadow);
 }
 
-.file-tags {
-    margin-top: 0.5rem;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
+.file-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
 }
 
-/* Footer */
+.file-header h4 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.file-category {
+    font-size: 0.8rem;
+    color: white;
+    background-color: var(--accent);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.file-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.file-description {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+}
+
+.file-tags {
+    margin-bottom: 0.5rem;
+}
+
+.tag {
+    display: inline-block;
+    background-color: var(--bg-secondary);
+    color: var(--text-secondary);
+    padding: 0.2rem 0.4rem;
+    margin: 0.2rem 0.2rem 0.2rem 0;
+    border-radius: 8px;
+    font-size: 0.8rem;
+}
+
+.file-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.page-info {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.no-files {
+    text-align: center;
+    padding: 2rem;
+    background-color: var(--bg-accent);
+    border-radius: 6px;
+}
+
+.no-files h3 {
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.no-files p {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+/* Footer - Compact */
 footer {
     background-color: var(--bg-secondary);
     border-top: 1px solid var(--border);
-    padding: 1rem 0;
+    padding: 0.5rem 0;         /* Reduced from 1rem */
     margin-top: auto;
 }
 
 .footer-container {
     max-width: 800px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 10px;           /* Reduced from 20px */
     text-align: center;
     color: var(--text-secondary);
+    font-size: 0.8rem;         /* Smaller footer text */
 }
 
 .debug-footer {
-    margin-top: 0.5rem;
-    font-size: 0.8rem;
+    margin-top: 0.3rem;        /* Reduced from 0.5rem */
+    font-size: 0.7rem;         /* Reduced from 0.8rem */
     color: var(--text-secondary);
     font-family: monospace;
 }
 
-/* Dyslexia Mode */
-body.dyslexia {
-    font-family: 'OpenDyslexic', sans-serif;
-    letter-spacing: 0.1em;
-    word-spacing: 0.2em;
-    line-height: 1.8;
-}
-
-/* High Contrast Mode */
-body.high-contrast {
-    --bg-primary: #FFFFFF;
-    --bg-secondary: #F0F0F0;
-    --text-primary: #000000;
-    --text-secondary: #333333;
-    --accent: #0066CC;
-    --border: #666666;
-}
-
-/* Mobile Responsive */
-@media (max-width: 768px) {
-    body {
-        font-size: 16px;
-    }
-    
-    .nav-container {
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    .nav-links {
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 1rem;
-    }
-    
-    main .container {
-        padding: 1rem;
-        border-radius: 0;
-    }
-    
-    .file-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* Calendar Styles */
+/* Calendar Styles - Compact + Interactive */
 .calendar-nav {
     display: flex;
     justify-content: center;
-    gap: 1rem;
-    margin-bottom: 2rem;
+    gap: 0.7rem;               /* Reduced from 1rem */
+    margin-bottom: 1rem;       /* Reduced from 2rem */
 }
 
 .calendar-grid {
@@ -386,9 +537,9 @@ body.high-contrast {
     grid-template-columns: repeat(7, 1fr);
     background-color: white;
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 6px;        /* Reduced from 8px */
     overflow: hidden;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;       /* Reduced from 2rem */
 }
 
 .calendar-header {
@@ -396,20 +547,27 @@ body.high-contrast {
 }
 
 .calendar-header div {
-    padding: 1rem;
+    padding: 0.5rem;           /* Reduced from 1rem */
     text-align: center;
     font-weight: 500;
     border-right: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
     background-color: var(--bg-secondary);
+    font-size: 0.9rem;         /* Smaller text */
 }
 
 .calendar-day {
-    min-height: 120px;
-    padding: 0.5rem;
+    min-height: 80px;          /* Reduced from 120px */
+    padding: 0.3rem;           /* Reduced from 0.5rem */
     border-right: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
     vertical-align: top;
+    position: relative;
+    cursor: pointer;
+}
+
+.calendar-day:hover {
+    background-color: rgba(125, 154, 150, 0.05);
 }
 
 .calendar-day:nth-child(7n) {
@@ -420,23 +578,396 @@ body.high-contrast {
     background-color: rgba(125, 154, 150, 0.1);
 }
 
+.calendar-day.drag-over {
+    background-color: rgba(125, 154, 150, 0.2);
+    border: 2px dashed var(--accent);
+}
+
 .day-number {
     font-weight: 500;
-    margin-bottom: 0.5rem;
-    font-size: 1rem;
+    margin-bottom: 0.3rem;     /* Reduced from 0.5rem */
+    font-size: 0.9rem;         /* Reduced from 1rem */
 }
 
 .event {
+    position: relative;
     background-color: var(--accent);
     color: white;
-    padding: 0.2rem 0.4rem;
-    border-radius: 3px;
-    font-size: 0.75rem;
-    margin-bottom: 0.2rem;
-    line-height: 1.2;
+    padding: 0.1rem 0.3rem;    /* Reduced from 0.2rem 0.4rem */
+    border-radius: 2px;        /* Reduced from 3px */
+    font-size: 0.7rem;         /* Reduced from 0.75rem */
+    margin-bottom: 0.1rem;     /* Reduced from 0.2rem */
+    line-height: 1.1;          /* Reduced from 1.2 */
     word-wrap: break-word;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.event:hover {
+    background-color: #6B8A86;
+    transform: scale(1.02);
+}
+
+.event.dragging {
+    opacity: 0.5;
+    transform: rotate(2deg);
+}
+
+.event-title {
+    display: block;
+}
+
+.event-time {
+    display: block;
+    font-size: 0.6rem;
+    opacity: 0.9;
 }
 
 .calendar-actions {
     text-align: center;
+}
+
+/* Event context menu */
+.event-menu {
+    position: absolute;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    box-shadow: 0 4px 8px var(--shadow);
+    z-index: 1000;
+    min-width: 120px;
+}
+
+.menu-item {
+    display: block;
+    width: 100%;
+    padding: 0.5rem;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+
+.menu-item:hover {
+    background-color: var(--bg-accent);
+}
+
+.menu-danger {
+    color: var(--error);
+}
+
+.menu-danger:hover {
+    background-color: rgba(184, 122, 122, 0.1);
+}
+
+/* Event forms */
+.event-form {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 1rem;             /* Compact padding */
+    background-color: var(--bg-accent);
+    border-radius: 6px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+/* Success/feedback messages */
+.move-feedback {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: var(--success);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    z-index: 1001;
+    animation: slideIn 0.3s ease;
+}
+
+/* Day View - Compact like homepage */
+.day-nav {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    align-items: center;
+    gap: 0.7rem;
+    margin-bottom: 1rem;
+    padding: 0.8rem;
+    background-color: var(--bg-accent);
+    border-radius: 6px;
+}
+
+.nav-arrow {
+    padding: 0.5rem 1rem;
+    background-color: var(--accent);
+    color: white;
+    text-decoration: none;
+    border-radius: 3px;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s;
+}
+
+.nav-arrow:hover {
+    opacity: 0.9;
+    text-decoration: none;
+}
+
+.day-title {
+    text-align: center;
+    margin: 0;
+    font-size: 1.2rem;
+    line-height: 1.3;
+}
+
+.refuse-alert-large {
+    margin-bottom: 1rem;
+    padding: 0.8rem;
+    background-color: var(--warning);
+    color: white;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.refuse-alert-large h2 {
+    margin-bottom: 0.5rem;
+    color: white;
+    font-size: 1.1rem;
+}
+
+.bin-badge-large {
+    display: inline-block;
+    padding: 0.3rem 0.7rem;
+    margin: 0.2rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.day-events {
+    margin-bottom: 1.5rem;
+}
+
+.event-block {
+    background-color: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    box-shadow: 0 1px 3px var(--shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.event-content {
+    flex: 1;
+}
+
+.event-title-large {
+    font-size: 1.1rem;
+    margin-bottom: 0.3rem;
+    color: var(--text-primary);
+}
+
+.event-time-large {
+    font-size: 0.9rem;
+    color: var(--accent);
+    margin-bottom: 0.3rem;
+    font-weight: 500;
+}
+
+.event-description {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.3rem;
+}
+
+.event-category {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.event-actions-large {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: 1rem;
+}
+
+.button-large {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.2s;
+    text-align: center;
+    display: inline-block;
+}
+
+.button-large:hover {
+    opacity: 0.9;
+    text-decoration: none;
+}
+
+.button-edit {
+    background-color: var(--accent);
+    color: white;
+}
+
+.button-delete {
+    background-color: var(--error);
+    color: white;
+}
+
+.button-add {
+    background-color: var(--success);
+    color: white;
+}
+
+.button-back {
+    background-color: var(--text-secondary);
+    color: white;
+}
+
+.no-events {
+    text-align: center;
+    padding: 2rem;
+    background-color: var(--bg-accent);
+    border-radius: 6px;
+}
+
+.no-events h2 {
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.day-actions {
+    display: flex;
+    gap: 0.7rem;
+    justify-content: center;
+}
+
+/* Mobile adjustments for day view */
+@media (max-width: 768px) {
+    .day-nav {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+        text-align: center;
+    }
+    
+    .event-block {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+    
+    .event-actions-large {
+        justify-content: center;
+        margin-left: 0;
+        margin-top: 0.7rem;
+    }
+    
+    .day-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+
+/* Login Form - Compact */
+.login-form {
+    max-width: 350px;          /* Reduced from 400px */
+    margin: 1rem auto;         /* Reduced from 2rem */
+    padding: 1rem;             /* Reduced from 2rem */
+    background-color: var(--bg-accent);
+    border-radius: 6px;        /* Reduced from 8px */
+}
+
+.form-help {
+    display: block;
+    margin-top: 0.3rem;        /* Reduced from 0.5rem */
+    font-size: 0.8rem;         /* Reduced from 0.9rem */
+}
+
+.form-actions {
+    display: flex;
+    gap: 0.7rem;               /* Reduced from 1rem */
+    margin-top: 1rem;          /* Reduced from 2rem */
+}
+
+.login-help-section {
+    max-width: 350px;          /* Reduced from 400px */
+    margin: 1rem auto;         /* Reduced from 2rem */
+    padding: 1rem;             /* Reduced from 1.5rem */
+    background-color: var(--bg-secondary);
+    border-radius: 6px;        /* Reduced from 8px */
+}
+
+.login-help-section ul {
+    list-style-position: inside;
+    margin-top: 0.3rem;        /* Reduced from 0.5rem */
+}
+
+/* Mobile/Tablet Responsive */
+@media (max-width: 768px) {
+    body {
+        font-size: 15px;         /* Reduced from 16px */
+    }
+    
+    .nav-container {
+        flex-direction: column;
+        gap: 0.5rem;             /* Reduced from 1rem */
+    }
+    
+    .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.7rem;             /* Reduced from 1rem */
+    }
+    
+    main .container {
+        padding: 0.7rem;         /* Reduced from 1rem */
+        border-radius: 0;
+    }
+    
+    .file-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .quick-actions {
+        grid-template-columns: repeat(2, 1fr);  /* 2 columns on mobile */
+    }
+}
+
+/* iPad specific optimizations */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .container {
+        padding: 0 15px;         /* Slightly more padding on iPad */
+    }
+    
+    .quick-actions {
+        grid-template-columns: repeat(4, 1fr);  /* 4 columns on iPad */
+    }
+    
+    .file-grid {
+        grid-template-columns: repeat(3, 1fr);  /* 3 columns on iPad */
+    }
 }

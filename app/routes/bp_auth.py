@@ -1,8 +1,9 @@
 """
 /home/life/app/routes/bp_auth.py
-Version: 1.0.0
+Version: 1.0.1
 Purpose: Authentication routes - login, logout, session management
 Created: 2025-06-11
+Updated: 2025-06-12 - Removed redundant login success messages
 """
 
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
@@ -49,7 +50,7 @@ def login():
             session['logged_in'] = True
             session['is_admin'] = True
             session.permanent = True
-            flash('Logged in with admin access.', 'success')
+            # Removed redundant flash message - user can see they're logged in
             
             if current_app.config['DEBUG']:
                 current_app.logger.debug("Admin login successful")
@@ -65,7 +66,7 @@ def login():
             session['logged_in'] = True
             session['is_admin'] = False
             session.permanent = True
-            flash('Logged in successfully.', 'success')
+            # Removed redundant flash message - user can see they're logged in
             
             if current_app.config['DEBUG']:
                 current_app.logger.debug("User login successful")

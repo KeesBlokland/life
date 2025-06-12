@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+<!--
+/home/life/app/templates/temp_edit_event.html
+Version: 1.0.1
+Purpose: Edit calendar event form
+Created: 2025-06-12
+Updated: 2025-06-12 - Added bin collection category with color selection
+-->
+
+{% block title %}Edit Event - Life<script>
+function toggleBinOptions() {
+    const category = document.getElementById('category').value;
+    const binOptions = document.getElementById('binOptions');
+    binOptions.style.display = category === 'bin' ? 'block' : 'none';
+}
+</script>
+{% endblock %}
+
+{% block template_info %}temp_edit_event.html v1.0 - Edit calendar event form{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Edit Event</h1>
+    
+    <form method="post" class="event-form">
+        <div class="form-group">
+            <label for="title">Event Title</label>
+            <input type="text" id="title" name="title" value="{{ event.title }}" required autofocus>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="date">Date</label>
+                <input type="date" id="date" name="date" value="{{ event.date }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="time">Time (optional)</label>
+                <input type="time" id="time" name="time" value="{{ event.time or '' }}">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" name="category" onchange="toggleBinOptions()">
+                <option value="appointment" {% if event.category == 'appointment' %}selected{% endif %}>Appointment</option>
+                <option value="medical" {% if event.category == 'medical' %}selected{% endif %}>Medical</option>
+                <option value="personal" {% if event.category == 'personal' %}selected{% endif %}>Personal</option>
+                <option value="hobby" {% if event.category == 'hobby' %}selected{% endif %}>Hobby</option>
+                <option value="family" {% if event.category == 'family' %}selected{% endif %}>Family</option>
+                <option value="travel" {% if event.category == 'travel' %}selected{% endif %}>Travel</option>
+                <option value="bin" {% if event.category == 'bin' %}selected{% endif %}>Bin Collection</option>
+                <option value="other" {% if event.category == 'other' %}selected{% endif %}>Other</option>
+            </select>
+        </div>
+        
+        <!-- Bin options - shown only when Bin category selected -->
+        <div id="binOptions" class="form-group" style="display: {% if event.category == 'bin' %}block{% else %}none{% endif %};">
+            <label for="bin_type">Bin Type & Color</label>
+            <select id="bin_type" name="bin_type">
+                <option value="blue" {% if event.description == 'blue' %}selected{% endif %}>Blue - Paper/Cardboard</option>
+                <option value="yellow" {% if event.description == 'yellow' %}selected{% endif %}>Yellow - Recycling</option>
+                <option value="brown" {% if event.description == 'brown' %}selected{% endif %}>Brown - Bio/Organic</option>
+                <option value="green" {% if event.description == 'green' %}selected{% endif %}>Green - Garden</option>
+                <option value="black" {% if event.description == 'black' %}selected{% endif %}>Black - General Waste</option>
+                <option value="glass" {% if event.description == 'glass' %}selected{% endif %}>Glass Collection</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="recurring">Recurring</label>
+            <select id="recurring" name="recurring">
+                <option value="" {% if not event.recurring %}selected{% endif %}>None</option>
+                <option value="daily" {% if event.recurring == 'daily' %}selected{% endif %}>Daily</option>
+                <option value="weekly" {% if event.recurring == 'weekly' %}selected{% endif %}>Weekly</option>
+                <option value="monthly" {% if event.recurring == 'monthly' %}selected{% endif %}>Monthly</option>
+                <option value="yearly" {% if event.recurring == 'yearly' %}selected{% endif %}>Yearly</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="description">Description (optional)</label>
+            <textarea id="description" name="description" rows="3" {% if event.category == 'bin' %}style="display: none;"{% endif %}>{{ event.description or '' }}</textarea>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="button">Update Event</button>
+            <a href="{{ url_for('main.calendar') }}" class="button button-secondary">Cancel</a>
+            <form method="post" action="{{ url_for('main.delete_event', event_id=event.id) }}" 
+                  style="display: inline;" 
+                  onsubmit="return confirm('Are you sure you want to delete this event?')">
+                <button type="submit" class="button button-danger">Delete</button>
+            </form>
+        </div>
+    </form>
+</div>
+
+
+{% endblock %}

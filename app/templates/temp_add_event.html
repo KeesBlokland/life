@@ -1,14 +1,15 @@
 {% extends "base.html" %}
 <!--
 /home/life/app/templates/temp_add_event.html
-Version: 1.0.0
-Purpose: Add calendar event form
+Version: 1.0.2
+Purpose: Add calendar event form - simplified bin events
 Created: 2025-06-11
+Updated: 2025-06-12 - KISS principle for bin events
 -->
 
 {% block title %}Add Event - Life{% endblock %}
 
-{% block template_info %}temp_add_event.html v1.0 - Add calendar event form{% endblock %}
+{% block template_info %}temp_add_event.html v1.0.2 - Simplified bin events{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -27,36 +28,54 @@ Created: 2025-06-11
             </div>
             
             <div class="form-group">
-                <label for="time">Time (optional)</label>
-                <input type="time" id="time" name="time">
+                <label for="category">Category</label>
+                <select id="category" name="category" onchange="toggleBinOptions()">
+                    <option value="appointment">Appointment</option>
+                    <option value="medical">Medical</option>
+                    <option value="personal">Personal</option>
+                    <option value="hobby">Hobby</option>
+                    <option value="family">Family</option>
+                    <option value="travel">Travel</option>
+                    <option value="bin">Bin Collection</option>
+                    <option value="other">Other</option>
+                </select>
             </div>
         </div>
         
-        <div class="form-group">
-            <label for="category">Category</label>
-            <select id="category" name="category">
-                <option value="appointment">Appointment</option>
-                <option value="medical">Medical</option>
-                <option value="personal">Personal</option>
-                <option value="work">Work</option>
-                <option value="family">Family</option>
-                <option value="travel">Travel</option>
-                <option value="other">Other</option>
+        <!-- Bin options - shown only when Bin category selected -->
+        <div id="binOptions" class="form-group" style="display: none;">
+            <label for="bin_type">Bin Type & Color</label>
+            <select id="bin_type" name="bin_type">
+                <option value="blue">Blue - Paper/Cardboard</option>
+                <option value="yellow">Yellow - Recycling</option>
+                <option value="brown">Brown - Bio/Organic</option>
+                <option value="green">Green - Garden</option>
+                <option value="black">Black - General Waste</option>
+                <option value="glass">Glass Collection</option>
             </select>
         </div>
         
-        <div class="form-group">
-            <label for="recurring">Recurring</label>
-            <select id="recurring" name="recurring">
-                <option value="">None</option>
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-                <option value="yearly">Yearly</option>
-            </select>
+        <!-- Time and recurring - hidden for bin events -->
+        <div id="timeRecurringSection" class="form-row">
+            <div class="form-group">
+                <label for="time">Time (optional)</label>
+                <input type="time" id="time" name="time">
+            </div>
+            
+            <div class="form-group">
+                <label for="recurring">Recurring</label>
+                <select id="recurring" name="recurring">
+                    <option value="">None</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                </select>
+            </div>
         </div>
         
-        <div class="form-group">
+        <!-- Description - hidden for bin events -->
+        <div id="descriptionSection" class="form-group">
             <label for="description">Description (optional)</label>
             <textarea id="description" name="description" rows="3" placeholder="Additional details about the event"></textarea>
         </div>
@@ -80,86 +99,12 @@ Created: 2025-06-11
             <button type="button" class="preset-button" onclick="setPreset('Vacation', 'travel')">
                 Vacation
             </button>
-            <button type="button" class="preset-button" onclick="setPreset('Meeting', 'work')">
+            <button type="button" class="preset-button" onclick="setPreset('Meeting', 'hobby')">
                 Meeting
             </button>
         </div>
     </div>
 </div>
-
-<style>
-.event-form {
-    max-width: 600px;
-    margin: 0 auto 3rem auto;
-    padding: 2rem;
-    background-color: var(--bg-accent);
-    border-radius: 8px;
-}
-
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-}
-
-.form-actions {
-    display: flex;
-    gap: 1rem;
-    margin-top: 2rem;
-    justify-content: center;
-}
-
-.presets-section {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 2rem;
-    background-color: var(--bg-secondary);
-    border-radius: 8px;
-}
-
-.presets-section h3 {
-    margin-bottom: 1rem;
-    text-align: center;
-    color: var(--text-primary);
-}
-
-.preset-buttons {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1rem;
-}
-
-.preset-button {
-    padding: 1rem;
-    background-color: white;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 0.9rem;
-}
-
-.preset-button:hover {
-    background-color: var(--accent);
-    color: white;
-    border-color: var(--accent);
-}
-
-/* Mobile adjustments */
-@media (max-width: 768px) {
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-    
-    .form-actions {
-        flex-direction: column;
-    }
-    
-    .preset-buttons {
-        grid-template-columns: 1fr;
-    }
-}
-</style>
 
 <script>
 // Set today's date as default
@@ -172,9 +117,34 @@ document.addEventListener('DOMContentLoaded', function() {
 function setPreset(title, category) {
     document.getElementById('title').value = title;
     document.getElementById('category').value = category;
+    toggleBinOptions();
     
     // Focus on the date field
     document.getElementById('date').focus();
+}
+
+function toggleBinOptions() {
+    const category = document.getElementById('category').value;
+    const binOptions = document.getElementById('binOptions');
+    const title = document.getElementById('title');
+    const timeRecurringSection = document.getElementById('timeRecurringSection');
+    const descriptionSection = document.getElementById('descriptionSection');
+    
+    if (category === 'bin') {
+        // Simplify for bin events
+        title.value = 'Bin';
+        title.readOnly = true;
+        binOptions.style.display = 'block';
+        timeRecurringSection.style.display = 'none';
+        descriptionSection.style.display = 'none';
+    } else {
+        // Normal event
+        if (title.value === 'Bin') title.value = '';
+        title.readOnly = false;
+        binOptions.style.display = 'none';
+        timeRecurringSection.style.display = 'block';
+        descriptionSection.style.display = 'block';
+    }
 }
 </script>
 {% endblock %}

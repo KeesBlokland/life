@@ -1,14 +1,14 @@
 """
 /home/life/app/routes/bp_main.py
-Version: 1.0.1
+Version: 1.0.4
 Purpose: Main routes - homepage, calendar, shopping lists, reminders
 Created: 2025-06-11
-Updated: 2025-06-11 - Fixed date parsing for calendar events
+Updated: 2025-06-12 - Fixed duplicate calendar route registration
 """
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, session
 from datetime import datetime, date, timedelta
-from routes.bp_auth import login_required
+from routes.bp_auth import login_required, admin_required
 from utils.util_db import get_db, query_db, execute_db
 
 main_bp = Blueprint('main', __name__)
@@ -102,6 +102,38 @@ def calendar(year=None, month=None):
                          year=year,
                          month=month,
                          calendar_data=calendar_data)
+
+@main_bp.route('/calendar/day/<date_str>')
+@login_required
+def day_view(date_str):
+    """Single day view with large event blocks"""
+    try:
+        view_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        flash('Invalid date', 'error')
+        return redirect(url_for('main.calendar'))
+    
+    # Get events for this day
+    events = query_db('''
+        SELECT id, title, time, category, description
+        FROM events
+        WHERE date = ?
+        ORDER BY time
+    ''', (view_date,))
+    
+    # Get refuse bins for this day
+    refuse_bins = check_refuse_collection(view_date)
+    
+    # Calculate prev/next dates
+    prev_date = view_date - timedelta(days=1)
+    next_date = view_date + timedelta(days=1)
+    
+    return render_template('temp_day_view.html',
+                         view_date=view_date,
+                         events=events,
+                         refuse_bins=refuse_bins,
+                         prev_date=prev_date,
+                         next_date=next_date)
 
 @main_bp.route('/lists')
 @login_required
@@ -207,6 +239,71 @@ def add_event():
         return redirect(url_for('main.calendar'))
     
     return render_template('temp_add_event.html')
+
+@main_bp.route('/event/edit/<int:event_id>', methods=['GET', 'POST'])
+@login_required
+def edit_event(event_id):
+    """Edit calendar event"""
+    event = query_db('SELECT * FROM events WHERE id = ?', (event_id,), one=True)
+    
+    if not event:
+        flash('Event not found', 'error')
+        return redirect(url_for('main.calendar'))
+    
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        event_date = request.form.get('date')
+        event_time = request.form.get('time')
+        category = request.form.get('category', 'appointment')
+        recurring = request.form.get('recurring')
+        description = request.form.get('description', '').strip()
+        
+        if not title or not event_date:
+            flash('Title and date are required', 'error')
+            return redirect(url_for('main.edit_event', event_id=event_id))
+        
+        execute_db('''
+            UPDATE events 
+            SET title = ?, date = ?, time = ?, category = ?, recurring = ?, description = ?
+            WHERE id = ?
+        ''', (title, event_date, event_time, category, recurring, description, event_id))
+        
+        flash('Event updated successfully', 'success')
+        return redirect(url_for('main.calendar'))
+    
+    return render_template('temp_edit_event.html', event=event)
+
+@main_bp.route('/event/delete/<int:event_id>', methods=['POST'])
+@login_required
+def delete_event(event_id):
+    """Delete calendar event"""
+    event = query_db('SELECT title FROM events WHERE id = ?', (event_id,), one=True)
+    
+    if not event:
+        return jsonify({'error': 'Event not found'}), 404
+    
+    execute_db('DELETE FROM events WHERE id = ?', (event_id,))
+    
+    flash(f'Deleted event: {event["title"]}', 'success')
+    return redirect(url_for('main.calendar'))
+
+@main_bp.route('/event/move/<int:event_id>', methods=['POST'])
+@login_required
+def move_event(event_id):
+    """Move event to new date"""
+    new_date = request.json.get('new_date')
+    
+    if not new_date:
+        return jsonify({'error': 'New date required'}), 400
+    
+    event = query_db('SELECT title FROM events WHERE id = ?', (event_id,), one=True)
+    
+    if not event:
+        return jsonify({'error': 'Event not found'}), 404
+    
+    execute_db('UPDATE events SET date = ? WHERE id = ?', (new_date, event_id))
+    
+    return jsonify({'success': True, 'message': f'Moved {event["title"]} to {new_date}'})
 
 # Helper functions
 def check_refuse_collection(check_date):

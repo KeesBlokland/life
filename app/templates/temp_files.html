@@ -1,22 +1,22 @@
 {% extends "base.html" %}
 <!--
 /home/life/app/templates/temp_files.html
-Version: 1.0.0
-Purpose: File browser with categories and pagination
+Version: 1.1.1
+Purpose: File browser with compact controls  
 Created: 2025-06-11
+Updated: 2025-06-12 - Compact controls, removed embedded CSS, View button
 -->
 
 {% block title %}Documents - Life{% endblock %}
 
-{% block template_info %}temp_files.html v1.0 - File browser interface{% endblock %}
+{% block template_info %}temp_files.html v1.1.1 - Compact file browser{% endblock %}
 
 {% block content %}
 <div class="container">
     <h1>Documents</h1>
     
-    <!-- Category filter -->
-    <div class="category-filter">
-        <h3>Categories</h3>
+    <!-- Compact category filter and actions -->
+    <div class="file-controls">
         <div class="category-buttons">
             <a href="{{ url_for('files.browse') }}" 
                class="button {% if not current_category %}button-active{% endif %}">
@@ -29,12 +29,11 @@ Created: 2025-06-11
             </a>
             {% endfor %}
         </div>
-    </div>
-    
-    <!-- Action buttons -->
-    <div class="action-buttons">
-        <a href="{{ url_for('files.upload') }}" class="button">Upload Document</a>
-        <a href="{{ url_for('files.search') }}" class="button button-secondary">Search Files</a>
+        
+        <div class="action-buttons">
+            <a href="{{ url_for('files.upload') }}" class="button">Upload</a>
+            <a href="{{ url_for('files.search') }}" class="button">Search</a>
+        </div>
     </div>
     
     <!-- Files grid -->
@@ -66,11 +65,11 @@ Created: 2025-06-11
                 
                 <div class="file-actions">
                     <a href="{{ url_for('files.download', file_id=file.id) }}" 
-                       class="button button-small">Download</a>
+                       class="button button-small">View</a>
                     {% if session.get('is_admin') %}
                     <form method="post" action="{{ url_for('files.delete_file', file_id=file.id) }}" 
                           style="display: inline;" 
-                          onsubmit="return confirm('Are you sure you want to delete this file?')">
+                          onsubmit="return confirm('Delete this file?')">
                         <button type="submit" class="button button-small button-danger">Delete</button>
                     </form>
                     {% endif %}
@@ -109,172 +108,4 @@ Created: 2025-06-11
         </div>
     {% endif %}
 </div>
-
-<style>
-.category-filter {
-    margin-bottom: 2rem;
-    padding: 1.5rem;
-    background-color: var(--bg-accent);
-    border-radius: 8px;
-}
-
-.category-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 1rem;
-}
-
-.category-buttons .button {
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-}
-
-.button-active {
-    background-color: var(--accent) !important;
-    color: white !important;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
-.file-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.file-card {
-    padding: 1.5rem;
-    background-color: white;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    box-shadow: 0 2px 4px var(--shadow);
-    transition: box-shadow 0.2s;
-}
-
-.file-card:hover {
-    box-shadow: 0 4px 8px var(--shadow);
-}
-
-.file-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 0.5rem;
-}
-
-.file-header h4 {
-    margin: 0;
-    font-size: 1.1rem;
-    color: var(--text-primary);
-}
-
-.file-category {
-    font-size: 0.8rem;
-    color: white;
-    background-color: var(--accent);
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    white-space: nowrap;
-}
-
-.file-meta {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 1rem;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-}
-
-.file-description {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    margin-bottom: 1rem;
-    line-height: 1.4;
-}
-
-.file-tags {
-    margin-bottom: 1rem;
-}
-
-.tag {
-    display: inline-block;
-    background-color: var(--bg-secondary);
-    color: var(--text-secondary);
-    padding: 0.25rem 0.5rem;
-    margin: 0.25rem 0.25rem 0.25rem 0;
-    border-radius: 12px;
-    font-size: 0.8rem;
-}
-
-.file-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.button-small {
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-}
-
-.pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 1rem;
-    margin-top: 2rem;
-}
-
-.page-info {
-    color: var(--text-secondary);
-    font-weight: 500;
-}
-
-.no-files {
-    text-align: center;
-    padding: 3rem;
-    background-color: var(--bg-accent);
-    border-radius: 8px;
-}
-
-.no-files h3 {
-    color: var(--text-secondary);
-    margin-bottom: 1rem;
-}
-
-.no-files p {
-    color: var(--text-secondary);
-    margin-bottom: 2rem;
-}
-
-/* Mobile adjustments */
-@media (max-width: 768px) {
-    .file-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .category-buttons {
-        flex-direction: column;
-    }
-    
-    .action-buttons {
-        flex-direction: column;
-    }
-    
-    .file-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
-    }
-    
-    .file-actions {
-        flex-direction: column;
-    }
-}
-</style>
 {% endblock %}
