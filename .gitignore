@@ -20,6 +20,14 @@ import/
 
 # Ignore user-specific or sensitive config
 app/config.py
+dev_life.sh
+setup_life.sh
+start_life.sh
+SETUP_README.md
+.sudo*
+.profile
+.bash*
+
 
 # Placeholder for config.py (add manually)
 # echo "# Placeholder config file" > app/config.py
