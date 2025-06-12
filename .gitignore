@@ -10,6 +10,8 @@ data/database/*.db
 
 # Ignore backups
 data/backups/
+data/documents/
+data/images/events
 
 # Ignore uploaded and imported files
 app/uploads/
