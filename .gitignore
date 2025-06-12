@@ -1,0 +1,27 @@
+# Ignore Python cache files
+__pycache__/
+*.py[cod]
+
+# Ignore virtual environment
+venv/
+
+# Ignore SQLite database
+data/database/*.db
+
+# Ignore backups
+data/backups/
+
+# Ignore uploaded and imported files
+app/uploads/
+import/
+
+# Ignore shell scripts (you can comment this out if some scripts should stay)
+*.sh
+
+# Ignore user-specific or sensitive config
+app/config.py
+
+# Placeholder for config.py (add manually)
+# echo "# Placeholder config file" > app/config.py
+# git add app/config.py
+# git update-index --assume-unchanged app/config.py
