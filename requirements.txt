@@ -1,27 +1,44 @@
-# /home/life/requirements.txt
-# Life App Python Dependencies
+# /home/life/app/requirements.txt
 # Version: 1.0.0
+# Purpose: Python dependencies for Life family archive system
 # Created: 2025-06-11
 
-# Core Flask
+# Core Flask framework
 Flask==2.3.3
 Werkzeug==2.3.7
 
-# Image Processing
-Pillow==10.0.0
+# Database
+# SQLite is built into Python, no additional packages needed
+
+# File handling and processing
+Pillow==10.0.1
+python-magic==0.4.27
 pillow-heif==0.13.0
 
-# File Type Detection
-python-magic==0.4.27
+# Security
+bcrypt==4.0.1
 
-# OCR and Document Processing
-pytesseract==0.3.10
-PyPDF2==3.0.1
-python-docx==0.8.11
+# Development and debugging
+python-dotenv==1.0.0
 
-# Search
-Whoosh==2.7.4
+# Optional: Image processing enhancements
+# Uncomment if you want additional image format support
+# pillow-simd==10.0.1.post1  # Faster image processing (alternative to Pillow)
 
-# Optional but recommended
-python-dateutil==2.8.2
-pytz==2023.3
+# Optional: OCR capabilities
+# Uncomment if you want text extraction from images
+# pytesseract==0.3.10
+# opencv-python==4.8.1.78
+
+# Optional: Video processing
+# Uncomment if you need video thumbnails and metadata
+# ffmpeg-python==0.2.0
+
+# System dependencies (install via package manager):
+# Ubuntu/Debian:
+#   sudo apt-get install libmagic1 libheif-dev
+#   sudo apt-get install tesseract-ocr tesseract-ocr-deu  # For OCR
+#   sudo apt-get install ffmpeg  # For video processing
+
+# Install Python packages:
+#   pip install -r requirements.txt

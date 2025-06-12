@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Shopping List - Life{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Shopping List</h1>
+    
+    <div class="add-item-section">
+        <h2>Add Item</h2>
+        <form method="post" action="{{ url_for('main.add_shopping_item') }}" class="add-item-form">
+            <div class="form-row">
+                <input type="text" name="item" placeholder="Item name" required>
+                <input type="text" name="quantity" placeholder="Quantity (optional)">
+                <button type="submit" class="button">Add</button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="shopping-list">
+        {% if shopping_items %}
+            {% for item in shopping_items %}
+            <div class="shopping-item {% if item.completed %}completed{% endif %}" data-id="{{ item.id }}">
+                <input type="checkbox" {% if item.completed %}checked{% endif %} onchange="toggleItem({{ item.id }})">
+                <span class="item-name">{{ item.item }}</span>
+                {% if item.quantity %}
+                <span class="item-quantity">{{ item.quantity }}</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="no-items">No items in shopping list</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function toggleItem(itemId) {
+    fetch(`/shopping/toggle/${itemId}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'}
+    })
+    .then(response => response.json())
+    .then(data => {
+        const item = document.querySelector(`[data-id="${itemId}"]`);
+        if (data.completed) {
+            item.classList.add('completed');
+        } else {
+            item.classList.remove('completed');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        const checkbox = document.querySelector(`[data-id="${itemId}"] input`);
+        checkbox.checked = !checkbox.checked;
+    });
+}
+</script>
+{% endblock %}

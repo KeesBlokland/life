@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+<!--
+/home/life/app/templates/500.html
+Version: 1.0.1
+Purpose: 500 Server Error template
+Created: 2025-06-11
+Updated: 2025-06-11
+-->
+
+{% block title %}Server Error - Life{% endblock %}
+
+{% block template_info %}500.html v1.0.1 - Server error{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="error-page">
+        <h1>500 - Server Error</h1>
+        <p>Something went wrong on our end. Please try again later.</p>
+        <div class="error-actions">
+            <a href="{{ url_for('main.index') }}" class="button">Go Home</a>
+            <button onclick="window.location.reload()" class="button button-secondary">Try Again</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

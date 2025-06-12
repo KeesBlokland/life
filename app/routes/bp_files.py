@@ -1,8 +1,9 @@
 """
 /home/life/app/routes/bp_files.py
-Version: 1.0.0
+Version: 1.0.2
 Purpose: File handling routes - upload, download, browse, search
 Created: 2025-06-11
+Updated: 2025-06-11 - Fixed category routing for slashes
 """
 
 import os
@@ -20,7 +21,7 @@ from utils.util_image import process_image_file
 files_bp = Blueprint('files', __name__)
 
 @files_bp.route('/browse')
-@files_bp.route('/browse/<category>')
+@files_bp.route('/browse/<path:category>')
 @login_required
 def browse(category=None):
     """Browse files by category"""
@@ -62,8 +63,25 @@ def browse(category=None):
         count_query = 'SELECT COUNT(*) as count FROM files WHERE deleted = 0'
         count_args = ()
     
-    files = query_db(query, args)
+    files_raw = query_db(query, args)
     total_count = query_db(count_query, count_args, one=True)['count']
+    
+    # Convert SQLite Row objects to dicts and add tags
+    files = []
+    for file_row in files_raw:
+        # Convert Row to dict
+        file_dict = dict(file_row)
+        
+        # Get tags for this file
+        tags = query_db('''
+            SELECT t.name
+            FROM tags t
+            JOIN file_tags ft ON t.id = ft.tag_id
+            WHERE ft.file_id = ?
+        ''', (file_dict['id'],))
+        file_dict['tags'] = [tag['name'] for tag in tags]
+        
+        files.append(file_dict)
     
     # Get category list
     categories = query_db('''
@@ -74,16 +92,6 @@ def browse(category=None):
         GROUP BY auto_category
         ORDER BY auto_category
     ''')
-    
-    # Add file tags
-    for file in files:
-        tags = query_db('''
-            SELECT t.name
-            FROM tags t
-            JOIN file_tags ft ON t.id = ft.tag_id
-            WHERE ft.file_id = ?
-        ''', (file['id'],))
-        file['tags'] = [tag['name'] for tag in tags]
     
     # Calculate pagination
     total_pages = (total_count + per_page - 1) // per_page
@@ -273,7 +281,20 @@ def search():
     search_term = f'%{query}%'
     args = (search_term,) * 6 + (per_page, (page - 1) * per_page)
     
-    results = query_db(search_query, args)
+    results_raw = query_db(search_query, args)
+    
+    # Convert to dicts and add tags
+    results = []
+    for result_row in results_raw:
+        result_dict = dict(result_row)
+        tags = query_db('''
+            SELECT t.name
+            FROM tags t
+            JOIN file_tags ft ON t.id = ft.tag_id
+            WHERE ft.file_id = ?
+        ''', (result_dict['id'],))
+        result_dict['tags'] = [tag['name'] for tag in tags]
+        results.append(result_dict)
     
     # Get total count
     count_query = '''
@@ -293,16 +314,6 @@ def search():
     '''
     
     total_count = query_db(count_query, (search_term,) * 6, one=True)['count']
-    
-    # Add tags to results
-    for result in results:
-        tags = query_db('''
-            SELECT t.name
-            FROM tags t
-            JOIN file_tags ft ON t.id = ft.tag_id
-            WHERE ft.file_id = ?
-        ''', (result['id'],))
-        result['tags'] = [tag['name'] for tag in tags]
     
     # Find related files using semantic relationships
     related_files = find_related_files(query, [r['id'] for r in results])

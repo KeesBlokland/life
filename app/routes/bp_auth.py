@@ -38,35 +38,44 @@ def admin_required(f):
 def login():
     """Login page and authentication"""
     if request.method == 'POST':
-        password = request.form.get('password', '')
-        admin_password = request.form.get('admin_password', '')
+        password = request.form.get('password', '').strip()
+        admin_password = request.form.get('admin_password', '').strip()
         
         if current_app.config['DEBUG']:
-            current_app.logger.debug(f"Login attempt - has password: {bool(password)}")
+            current_app.logger.debug(f"Login attempt - view password: {bool(password)}, admin password: {bool(admin_password)}")
         
-        # Check view password
-        if password == current_app.config['VIEW_PASSWORD']:
+        # Check admin password first (gives full access)
+        if admin_password and admin_password == current_app.config['ADMIN_PASSWORD']:
             session['logged_in'] = True
+            session['is_admin'] = True
             session.permanent = True
+            flash('Logged in with admin access.', 'success')
             
-            # Check admin password if provided
-            if admin_password and admin_password == current_app.config['ADMIN_PASSWORD']:
-                session['is_admin'] = True
-                flash('Logged in with admin access.', 'success')
-                
-                if current_app.config['DEBUG']:
-                    current_app.logger.debug("Admin login successful")
-            else:
-                flash('Logged in successfully.', 'success')
-                
-                if current_app.config['DEBUG']:
-                    current_app.logger.debug("User login successful")
+            if current_app.config['DEBUG']:
+                current_app.logger.debug("Admin login successful")
             
             # Redirect to next page or home
             next_page = request.args.get('next')
             if next_page and next_page.startswith('/'):
                 return redirect(next_page)
             return redirect(url_for('main.index'))
+        
+        # Check view password (gives basic access)
+        elif password and password == current_app.config['VIEW_PASSWORD']:
+            session['logged_in'] = True
+            session['is_admin'] = False
+            session.permanent = True
+            flash('Logged in successfully.', 'success')
+            
+            if current_app.config['DEBUG']:
+                current_app.logger.debug("User login successful")
+            
+            # Redirect to next page or home
+            next_page = request.args.get('next')
+            if next_page and next_page.startswith('/'):
+                return redirect(next_page)
+            return redirect(url_for('main.index'))
+        
         else:
             flash('Invalid password. Please try again.', 'error')
             

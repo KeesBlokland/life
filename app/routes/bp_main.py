@@ -1,8 +1,9 @@
 """
 /home/life/app/routes/bp_main.py
-Version: 1.0.0
+Version: 1.0.1
 Purpose: Main routes - homepage, calendar, shopping lists, reminders
 Created: 2025-06-11
+Updated: 2025-06-11 - Fixed date parsing for calendar events
 """
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, session
@@ -238,7 +239,12 @@ def build_calendar_data(year, month, events):
     # Convert events to dict by date
     events_by_date = {}
     for event in events:
-        event_date = datetime.strptime(event['date'], '%Y-%m-%d').date()
+        # Handle both string and date object types
+        if isinstance(event['date'], str):
+            event_date = datetime.strptime(event['date'], '%Y-%m-%d').date()
+        else:
+            event_date = event['date']  # Already a date object
+            
         if event_date not in events_by_date:
             events_by_date[event_date] = []
         events_by_date[event_date].append(event)

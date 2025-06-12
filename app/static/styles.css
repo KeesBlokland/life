@@ -1,8 +1,9 @@
 /*
 styles.css - Main stylesheet for Life app
-Version: 1.0.0
+Version: 1.0.1
 Purpose: Pastel theme, responsive layout, accessibility features
 Created: 2024-12-XX
+Updated: 2025-06-11 - Added calendar and shopping list styles
 */
 
 /* CSS Variables */
@@ -372,13 +373,70 @@ body.high-contrast {
     }
 }
 
-/* Touch-friendly buttons for mobile */
-@media (pointer: coarse) {
-    button,
-    .button,
-    input[type="checkbox"],
-    input[type="radio"] {
-        min-height: 44px;
-        min-width: 44px;
-    }
+/* Calendar Styles */
+.calendar-nav {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background-color: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.calendar-header {
+    display: contents;
+}
+
+.calendar-header div {
+    padding: 1rem;
+    text-align: center;
+    font-weight: 500;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background-color: var(--bg-secondary);
+}
+
+.calendar-day {
+    min-height: 120px;
+    padding: 0.5rem;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+}
+
+.calendar-day:nth-child(7n) {
+    border-right: none;
+}
+
+.calendar-day.today {
+    background-color: rgba(125, 154, 150, 0.1);
+}
+
+.day-number {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.event {
+    background-color: var(--accent);
+    color: white;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    margin-bottom: 0.2rem;
+    line-height: 1.2;
+    word-wrap: break-word;
+}
+
+.calendar-actions {
+    text-align: center;
 }

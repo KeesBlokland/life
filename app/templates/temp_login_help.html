@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+<!--
+/home/life/app/templates/temp_login_help.html
+Version: 1.0.0
+Purpose: Login help with video guide
+Created: 2025-06-11
+-->
+
+{% block title %}Login Help - Life{% endblock %}
+
+{% block template_info %}temp_login_help.html v1.0 - Login help and video guide{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Login Help</h1>
+    
+    <div class="help-section">
+        <h2>Password Information</h2>
+        <div class="password-hints">
+            <div class="hint-card">
+                <h3>View Password</h3>
+                <p>Ask family member for the viewing password to browse documents.</p>
+                <p><strong>Hint:</strong> It's a simple word we all know.</p>
+            </div>
+            
+            <div class="hint-card">
+                <h3>Admin Password</h3>
+                <p>Only needed for uploading, editing, and admin functions.</p>
+                <p><strong>Hint:</strong> Same as view password for now.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="help-section">
+        <h2>Video Guide</h2>
+        <div class="video-placeholder">
+            <p>Video guide would be embedded here.</p>
+            <p>Shows step-by-step login process and basic navigation.</p>
+        </div>
+    </div>
+    
+    <div class="help-section">
+        <h2>Troubleshooting</h2>
+        <div class="troubleshooting">
+            <h4>Common Issues:</h4>
+            <ul>
+                <li><strong>Password not working:</strong> Check caps lock, try typing slowly</li>
+                <li><strong>Page won't load:</strong> Check internet connection, try refreshing</li>
+                <li><strong>Can't find documents:</strong> Try using the search feature</li>
+                <li><strong>Upload not working:</strong> Make sure you're using admin password</li>
+            </ul>
+            
+            <h4>Still need help?</h4>
+            <p>Contact the system administrator or family member who set this up.</p>
+        </div>
+    </div>
+    
+    <div class="help-actions">
+        <a href="{{ url_for('auth.login') }}" class="button">Back to Login</a>
+        <a href="{{ url_for('main.index') }}" class="button button-secondary">Go to Home</a>
+    </div>
+</div>
+
+<style>
+.help-section {
+    margin-bottom: 3rem;
+    padding: 2rem;
+    background-color: var(--bg-accent);
+    border-radius: 8px;
+}
+
+.password-hints {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.hint-card {
+    padding: 1.5rem;
+    background-color: white;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+}
+
+.hint-card h3 {
+    color: var(--accent);
+    margin-bottom: 1rem;
+}
+
+.hint-card p {
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.video-placeholder {
+    padding: 3rem;
+    background-color: var(--bg-secondary);
+    border: 2px dashed var(--border);
+    border-radius: 4px;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.troubleshooting ul {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+}
+
+.troubleshooting li {
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+.help-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+    .password-hints {
+        grid-template-columns: 1fr;
+    }
+    
+    .help-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+</style>
+{% endblock %}

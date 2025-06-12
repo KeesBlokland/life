@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+<!--
+/home/life/app/templates/temp_admin_dashboard.html
+Version: 1.0.0
+Purpose: Admin dashboard with system overview and management tools
+Created: 2025-06-11
+-->
+
+{% block title %}Admin Dashboard - Life{% endblock %}
+
+{% block template_info %}temp_admin_dashboard.html v1.0 - Admin system overview{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Admin Dashboard</h1>
+    
+    <!-- System Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Total Files</h3>
+            <div class="stat-number">{{ stats.total_files }}</div>
+        </div>
+        
+        <div class="stat-card">
+            <h3>Total Storage</h3>
+            <div class="stat-number">{{ (stats.total_size / 1024 / 1024)|round(1) }} MB</div>
+        </div>
+        
+        <div class="stat-card">
+            <h3>Recent Uploads</h3>
+            <div class="stat-number">{{ stats.recent_uploads }}</div>
+            <small>Last 7 days</small>
+        </div>
+        
+        <div class="stat-card">
+            <h3>Total Tags</h3>
+            <div class="stat-number">{{ stats.total_tags }}</div>
+        </div>
+        
+        <div class="stat-card">
+            <h3>Deleted Files</h3>
+            <div class="stat-number">{{ stats.deleted_files }}</div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="admin-section">
+        <h2>Quick Actions</h2>
+        <div class="action-buttons">
+            <form method="post" action="{{ url_for('admin.create_backup') }}" style="display: inline;">
+                <button type="submit" class="button">Create Backup</button>
+            </form>
+            
+            <form method="post" action="{{ url_for('admin.cleanup_files') }}" style="display: inline;">
+                <button type="submit" class="button button-secondary">Cleanup Files</button>
+            </form>
+            
+            <a href="{{ url_for('admin.deleted_files') }}" class="button button-secondary">
+                View Deleted Files
+            </a>
+            
+            <a href="{{ url_for('admin.settings') }}" class="button button-secondary">
+                System Settings
+            </a>
+        </div>
+    </div>
+    
+    <!-- Storage by Category -->
+    {% if storage_by_category %}
+    <div class="admin-section">
+        <h2>Storage by Category</h2>
+        <div class="storage-table">
+            {% for category in storage_by_category %}
+            <div class="storage-row">
+                <div class="category-name">{{ category.auto_category or 'Uncategorized' }}</div>
+                <div class="file-count">{{ category.file_count }} files</div>
+                <div class="storage-size">{{ (category.total_size / 1024 / 1024)|round(1) }} MB</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Recent Activity -->
+    {% if recent_files %}
+    <div class="admin-section">
+        <h2>Recent Uploads</h2>
+        <div class="recent-files">
+            {% for file in recent_files %}
+            <div class="file-row">
+                <div class="file-info">
+                    <strong>{{ file.filename }}</strong>
+                    <span class="file-category">{{ file.auto_category or 'Uncategorized' }}</span>
+                </div>
+                <div class="file-meta">
+                    <span>{{ file.upload_date }}</span>
+                    <span>{{ (file.size / 1024)|round(1) }} KB</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.stat-card {
+    padding: 2rem;
+    background-color: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 4px var(--shadow);
+}
+
+.stat-card h3 {
+    margin: 0 0 1rem 0;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+}
+
+.stat-card small {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.admin-section {
+    margin-bottom: 3rem;
+    padding: 2rem;
+    background-color: var(--bg-accent);
+    border-radius: 8px;
+}
+
+.admin-section h2 {
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.storage-table {
+    background-color: white;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+.storage-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+}
+
+.storage-row:last-child {
+    border-bottom: none;
+}
+
+.category-name {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.file-count, .storage-size {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.recent-files {
+    background-color: white;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+.file-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.file-row:last-child {
+    border-bottom: none;
+}
+
+.file-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.file-category {
+    font-size: 0.8rem;
+    color: white;
+    background-color: var(--accent);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    width: fit-content;
+}
+
+.file-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    text-align: right;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .storage-row {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    .file-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .file-meta {
+        text-align: left;
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+<!--
+/home/life/app/templates/temp_add_event.html
+Version: 1.0.0
+Purpose: Add calendar event form
+Created: 2025-06-11
+-->
+
+{% block title %}Add Event - Life{% endblock %}
+
+{% block template_info %}temp_add_event.html v1.0 - Add calendar event form{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Add Calendar Event</h1>
+    
+    <form method="post" class="event-form">
+        <div class="form-group">
+            <label for="title">Event Title</label>
+            <input type="text" id="title" name="title" required autofocus>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="date">Date</label>
+                <input type="date" id="date" name="date" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="time">Time (optional)</label>
+                <input type="time" id="time" name="time">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" name="category">
+                <option value="appointment">Appointment</option>
+                <option value="medical">Medical</option>
+                <option value="personal">Personal</option>
+                <option value="work">Work</option>
+                <option value="family">Family</option>
+                <option value="travel">Travel</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="recurring">Recurring</label>
+            <select id="recurring" name="recurring">
+                <option value="">None</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="description">Description (optional)</label>
+            <textarea id="description" name="description" rows="3" placeholder="Additional details about the event"></textarea>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="button">Add Event</button>
+            <a href="{{ url_for('main.calendar') }}" class="button button-secondary">Cancel</a>
+        </div>
+    </form>
+    
+    <!-- Quick preset buttons -->
+    <div class="presets-section">
+        <h3>Quick Presets</h3>
+        <div class="preset-buttons">
+            <button type="button" class="preset-button" onclick="setPreset('Doctor Appointment', 'medical')">
+                Doctor Appointment
+            </button>
+            <button type="button" class="preset-button" onclick="setPreset('Birthday', 'family')">
+                Birthday
+            </button>
+            <button type="button" class="preset-button" onclick="setPreset('Vacation', 'travel')">
+                Vacation
+            </button>
+            <button type="button" class="preset-button" onclick="setPreset('Meeting', 'work')">
+                Meeting
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+.event-form {
+    max-width: 600px;
+    margin: 0 auto 3rem auto;
+    padding: 2rem;
+    background-color: var(--bg-accent);
+    border-radius: 8px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    justify-content: center;
+}
+
+.presets-section {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem;
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+}
+
+.presets-section h3 {
+    margin-bottom: 1rem;
+    text-align: center;
+    color: var(--text-primary);
+}
+
+.preset-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.preset-button {
+    padding: 1rem;
+    background-color: white;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+
+.preset-button:hover {
+    background-color: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .preset-buttons {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+// Set today's date as default
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('date');
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.value = today;
+});
+
+function setPreset(title, category) {
+    document.getElementById('title').value = title;
+    document.getElementById('category').value = category;
+    
+    // Focus on the date field
+    document.getElementById('date').focus();
+}
+</script>
+{% endblock %}
