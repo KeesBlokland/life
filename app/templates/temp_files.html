@@ -1,20 +1,55 @@
 {% extends "base.html" %}
 <!--
 /home/life/app/templates/temp_files.html
-Version: 1.1.1
+Version: 1.3.3
 Purpose: File browser with compact controls  
 Created: 2025-06-11
-Updated: 2025-06-12 - Compact controls, removed embedded CSS, View button
+Updated: 2025-06-12 - Clean single-line layout with proper separation
 -->
 
 {% block title %}Documents - Life{% endblock %}
 
-{% block template_info %}temp_files.html v1.1.1 - Compact file browser{% endblock %}
+{% block scripts %}
+<script>
+function toggleDetails(fileId) {
+    const details = document.getElementById('details-' + fileId);
+    if (details.style.display === 'none') {
+        details.style.display = 'block';
+    } else {
+        details.style.display = 'none';
+    }
+}
+
+function editTitle(fileId) {
+    document.getElementById('title-display-' + fileId).style.display = 'none';
+    document.getElementById('title-form-' + fileId).style.display = 'inline';
+    document.getElementById('title-input-' + fileId).focus();
+}
+
+function cancelEdit(fileId) {
+    document.getElementById('title-display-' + fileId).style.display = 'inline';
+    document.getElementById('title-form-' + fileId).style.display = 'none';
+}
+
+function editTags(fileId) {
+    document.getElementById('tags-display-' + fileId).style.display = 'none';
+    document.getElementById('tags-form-' + fileId).style.display = 'inline';
+    document.getElementById('tags-input-' + fileId).focus();
+}
+
+function cancelTagsEdit(fileId) {
+    document.getElementById('tags-display-' + fileId).style.display = 'inline';
+    document.getElementById('tags-form-' + fileId).style.display = 'none';
+}
+</script>
+{% endblock %}
+
+{% block page_name %}: Documents{% endblock %}
+
+{% block template_info %}temp_files.html v1.3.3 - Added admin CRUD for tags{% endblock %}
 
 {% block content %}
 <div class="container">
-    <h1>Documents</h1>
-    
     <!-- Compact category filter and actions -->
     <div class="file-controls">
         <div class="category-buttons">
@@ -36,42 +71,77 @@ Updated: 2025-06-12 - Compact controls, removed embedded CSS, View button
         </div>
     </div>
     
-    <!-- Files grid -->
+    <!-- Files list -->
     {% if files %}
-        <div class="file-grid">
+        <div class="file-list">
             {% for file in files %}
-            <div class="file-card">
-                <div class="file-header">
-                    <h4>{{ file.title or file.filename }}</h4>
-                    <span class="file-category">{{ file.auto_category or 'Uncategorized' }}</span>
-                </div>
-                
-                <div class="file-meta">
-                    <small>{{ file.upload_date }}</small>
-                    <small>{{ (file.size / 1024)|round(1) }} KB</small>
-                </div>
-                
-                {% if file.description %}
-                <p class="file-description">{{ file.description }}</p>
-                {% endif %}
-                
-                {% if file.tags %}
-                <div class="file-tags">
-                    {% for tag in file.tags %}
-                    <span class="tag">{{ tag }}</span>
-                    {% endfor %}
-                </div>
-                {% endif %}
-                
-                <div class="file-actions">
+            <div class="file-row">
+                <div class="file-line">
                     <a href="{{ url_for('files.download', file_id=file.id) }}" 
                        class="button button-small">View</a>
+                    <span class="file-title">{{ file.title or file.filename }}</span>
+                    <div class="file-actions">
+                        <button type="button" class="button button-small button-secondary" 
+                                onclick="toggleDetails({{ file.id }})">Info</button>
+                        {% if session.get('is_admin') %}
+                        <form method="post" action="{{ url_for('files.delete_file', file_id=file.id) }}" 
+                              style="display: inline;" 
+                              onsubmit="return confirm('Delete this file?')">
+                            <button type="submit" class="button button-small button-danger">Delete</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Hidden details -->
+                <div class="file-details" id="details-{{ file.id }}" style="display: none;">
                     {% if session.get('is_admin') %}
-                    <form method="post" action="{{ url_for('files.delete_file', file_id=file.id) }}" 
-                          style="display: inline;" 
-                          onsubmit="return confirm('Delete this file?')">
-                        <button type="submit" class="button button-small button-danger">Delete</button>
-                    </form>
+                    <div class="detail-item">
+                        <strong>Display Name:</strong>
+                        <span id="title-display-{{ file.id }}">{{ file.title or file.filename }}</span>
+                        <button type="button" class="button-edit-small" onclick="editTitle({{ file.id }})">Edit</button>
+                        <form id="title-form-{{ file.id }}" style="display: none;" method="post" action="/files/edit/{{ file.id }}">
+                            <input type="text" id="title-input-{{ file.id }}" name="title" value="{{ file.title or file.filename }}">
+                            <button type="submit" class="button-save-small">Save</button>
+                            <button type="button" class="button-cancel-small" onclick="cancelEdit({{ file.id }})">Cancel</button>
+                        </form>
+                    </div>
+                    {% endif %}
+                    <div class="detail-item">
+                        <strong>Category:</strong> {{ file.auto_category or 'Uncategorized' }}
+                    </div>
+                    <div class="detail-item">
+                        <strong>Uploaded:</strong> {{ file.upload_date }}
+                    </div>
+                    <div class="detail-item">
+                        <strong>Size:</strong> {{ (file.size / 1024)|round(1) }} KB
+                    </div>
+                    {% if file.description %}
+                    <div class="detail-item">
+                        <strong>Description:</strong> {{ file.description }}
+                    </div>
+                    {% endif %}
+                    {% if file.tags %}
+                    <div class="detail-item">
+                        <strong>Tags:</strong> 
+                        {% if session.get('is_admin') %}
+                        <span id="tags-display-{{ file.id }}">
+                            {% for tag in file.tags %}
+                            <span class="tag">{{ tag }}</span>
+                            {% endfor %}
+                        </span>
+                        <button type="button" class="button-edit-small" onclick="editTags({{ file.id }})">Edit</button>
+                        <form id="tags-form-{{ file.id }}" style="display: none;" method="post" action="/files/edit/{{ file.id }}">
+                            <input type="text" id="tags-input-{{ file.id }}" name="tags" value="{{ file.tags|join(', ') }}">
+                            <button type="submit" class="button-save-small">Save</button>
+                            <button type="button" class="button-cancel-small" onclick="cancelTagsEdit({{ file.id }})">Cancel</button>
+                        </form>
+                        {% else %}
+                        {% for tag in file.tags %}
+                        <span class="tag">{{ tag }}</span>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
                     {% endif %}
                 </div>
             </div>

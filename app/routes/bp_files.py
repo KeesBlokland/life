@@ -1,9 +1,9 @@
 """
 /home/life/app/routes/bp_files.py
-Version: 1.0.2
-Purpose: File handling routes - upload, download, browse, search
+Version: 1.2.0
+Purpose: File handling routes - upload, download, browse, search, edit
 Created: 2025-06-11
-Updated: 2025-06-11 - Fixed category routing for slashes
+Updated: 2025-06-12 - Added file metadata edit functionality
 """
 
 import os
@@ -103,76 +103,38 @@ def browse(category=None):
                          page=page,
                          total_pages=total_pages)
 
-@files_bp.route('/upload', methods=['GET', 'POST'])
-@login_required
-def upload():
-    """Upload files with metadata"""
-    if request.method == 'POST':
-        # Check if file was provided
-        if 'file' not in request.files:
-            flash('No file selected', 'error')
-            return redirect(request.url)
-        
-        file = request.files['file']
-        if file.filename == '':
-            flash('No file selected', 'error')
-            return redirect(request.url)
-        
-        if file and allowed_file(file.filename):
-            # Secure filename
-            original_filename = file.filename
-            filename = secure_filename(file.filename)
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filename = f"{timestamp}_{filename}"
-            
-            # Save to temp location first
-            temp_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-            file.save(temp_path)
-            
-            # Process image if needed (HEIC conversion, resize)
-            if filename.lower().endswith(('.heic', '.jpg', '.jpeg', '.png', '.gif')):
-                temp_path = process_image_file(temp_path)
-                filename = os.path.basename(temp_path)
-            
-            # Calculate checksum
-            checksum = calculate_checksum(temp_path)
-            
-            # Check for duplicates
-            duplicate = query_db('SELECT id, filename FROM files WHERE checksum = ? AND deleted = 0', 
-                               (checksum,), one=True)
-            
-            if duplicate:
-                os.remove(temp_path)
-                flash(f'This file already exists: {duplicate["filename"]}', 'warning')
-                return redirect(url_for('files.browse'))
-            
-            # Get file info
-            filetype = get_file_type(temp_path)
-            size = os.path.getsize(temp_path)
-            category = get_file_category(original_filename, filetype)
-            
-            # Move to storage
-            storage_path = move_to_storage(temp_path, category, filename)
-            
-            # Store in database
-            file_id = execute_db('''
-                INSERT INTO files (filename, filepath, filetype, size, checksum)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (original_filename, storage_path, filetype, size, checksum))
-            
-            # Add metadata
-            title = request.form.get('title', original_filename)
-            description = request.form.get('description', '')
-            tags = request.form.get('tags', '').strip()
-            
+@files_bp.route('/edit/<int:file_id>', methods=['POST'])
+@admin_required
+def edit_file(file_id):
+    """Edit file metadata - title and tags"""
+    file_info = query_db('SELECT * FROM files WHERE id = ? AND deleted = 0', 
+                        (file_id,), one=True)
+    
+    if not file_info:
+        flash('File not found', 'error')
+        return redirect(url_for('files.browse'))
+    
+    # Get form data
+    new_title = request.form.get('title', '').strip()
+    new_tags = request.form.get('tags', '').strip()
+    
+    try:
+        # Update title if provided
+        if new_title:
             execute_db('''
-                INSERT INTO metadata (file_id, title, description, keywords, auto_category)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (file_id, title, description, tags, category))
+                UPDATE metadata 
+                SET title = ? 
+                WHERE file_id = ?
+            ''', (new_title, file_id))
+        
+        # Update tags if provided
+        if 'tags' in request.form:  # Even if empty, user wants to update tags
+            # Remove existing tags
+            execute_db('DELETE FROM file_tags WHERE file_id = ?', (file_id,))
             
-            # Process tags
-            if tags:
-                for tag_name in tags.split(','):
+            # Add new tags
+            if new_tags:
+                for tag_name in new_tags.split(','):
                     tag_name = tag_name.strip().lower()
                     if tag_name:
                         # Get or create tag
@@ -185,21 +147,117 @@ def upload():
                         # Link to file
                         execute_db('INSERT INTO file_tags (file_id, tag_id) VALUES (?, ?)',
                                  (file_id, tag_id))
-            
-            if current_app.config['DEBUG']:
-                current_app.logger.debug(f"File uploaded: {original_filename} -> {storage_path}, "
-                                       f"Category: {category}, Size: {size}, Checksum: {checksum}")
-            
-            flash(f'File uploaded successfully: {title}', 'success')
-            
-            # Check for camera upload (from iPad)
-            if request.form.get('camera_upload') == 'true':
-                return jsonify({'success': True, 'file_id': file_id})
-            
-            return redirect(url_for('files.browse'))
-        else:
-            flash('File type not allowed', 'error')
+        
+        if current_app.config['DEBUG']:
+            current_app.logger.debug(f"Updated file {file_id}: title='{new_title}', tags='{new_tags}'")
+        
+        flash('File updated successfully', 'success')
+        
+    except Exception as e:
+        current_app.logger.error(f"Error updating file {file_id}: {str(e)}")
+        flash('Error updating file', 'error')
+    
+    return redirect(url_for('files.browse'))
+
+@files_bp.route('/upload', methods=['GET', 'POST'])
+@login_required
+def upload():
+    """Upload files with metadata"""
+    if request.method == 'POST':
+        # Check if files were provided
+        if 'files' not in request.files:
+            flash('No files selected', 'error')
             return redirect(request.url)
+        
+        files = request.files.getlist('files')
+        if not files or all(f.filename == '' for f in files):
+            flash('No files selected', 'error')
+            return redirect(request.url)
+        
+        # Get shared metadata
+        shared_tags = request.form.get('tags', '').strip()
+        custom_titles = request.form.getlist('titles')  # Get array of custom titles
+        
+        uploaded_count = 0
+        for index, file in enumerate(files):
+            if file and file.filename != '' and allowed_file(file.filename):
+                # Secure filename
+                original_filename = file.filename
+                filename = secure_filename(file.filename)
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                filename = f"{timestamp}_{filename}"
+                
+                # Save to temp location first
+                temp_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+                file.save(temp_path)
+                
+                # Process image if needed (HEIC conversion, resize)
+                if filename.lower().endswith(('.heic', '.jpg', '.jpeg', '.png', '.gif')):
+                    temp_path = process_image_file(temp_path)
+                    filename = os.path.basename(temp_path)
+                
+                # Calculate checksum
+                checksum = calculate_checksum(temp_path)
+                
+                # Check for duplicates
+                duplicate = query_db('SELECT id, filename FROM files WHERE checksum = ? AND deleted = 0', 
+                                   (checksum,), one=True)
+                
+                if duplicate:
+                    os.remove(temp_path)
+                    flash(f'Duplicate file skipped: {original_filename}', 'warning')
+                    continue
+                
+                # Get file info
+                filetype = get_file_type(temp_path)
+                size = os.path.getsize(temp_path)
+                category = get_file_category(original_filename, filetype)
+                
+                # Move to storage
+                storage_path = move_to_storage(temp_path, category, filename)
+                
+                # Store in database
+                file_id = execute_db('''
+                    INSERT INTO files (filename, filepath, filetype, size, checksum)
+                    VALUES (?, ?, ?, ?, ?)
+                ''', (original_filename, storage_path, filetype, size, checksum))
+                
+                # Add metadata
+                title = custom_titles[index] if index < len(custom_titles) and custom_titles[index].strip() else original_filename
+                
+                execute_db('''
+                    INSERT INTO metadata (file_id, title, description, keywords, auto_category)
+                    VALUES (?, ?, ?, ?, ?)
+                ''', (file_id, title, '', shared_tags, category))
+                
+                # Process shared tags
+                if shared_tags:
+                    for tag_name in shared_tags.split(','):
+                        tag_name = tag_name.strip().lower()
+                        if tag_name:
+                            # Get or create tag
+                            tag = query_db('SELECT id FROM tags WHERE name = ?', (tag_name,), one=True)
+                            if not tag:
+                                tag_id = execute_db('INSERT INTO tags (name) VALUES (?)', (tag_name,))
+                            else:
+                                tag_id = tag['id']
+                            
+                            # Link to file
+                            execute_db('INSERT INTO file_tags (file_id, tag_id) VALUES (?, ?)',
+                                     (file_id, tag_id))
+                
+                uploaded_count += 1
+                
+                if current_app.config['DEBUG']:
+                    current_app.logger.debug(f"File uploaded: {original_filename} -> {storage_path}, "
+                                           f"Category: {category}, Size: {size}")
+        
+        if uploaded_count > 0:
+            flash(f'Successfully uploaded {uploaded_count} file{"s" if uploaded_count != 1 else ""}', 'success')
+        else:
+            flash('No files were uploaded', 'error')
+        
+        return redirect(url_for('files.browse'))
     
     # GET request - show upload form
     return render_template('temp_upload.html')

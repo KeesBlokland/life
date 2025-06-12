@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <!--
 base.html - Base template for Life app
-Version: 1.0.0
+Version: 1.2.0
 Purpose: Common layout, navigation, and debug footer
 Created: 2024-12-XX
+Updated: 2025-06-12 - Added auto-hide flash messages after 1 second
 -->
 <html lang="en">
 <head>
@@ -20,7 +21,7 @@ Created: 2024-12-XX
     <header>
         <nav>
             <div class="nav-container">
-                <h1><a href="{{ url_for('main.index') }}">Life</a></h1>
+                <h1><a href="{{ url_for('main.index') }}">Life{% block page_name %}{% endblock %}</a></h1>
                 <div class="nav-links">
                     {% if session.get('logged_in') %}
                         <a href="{{ url_for('main.index') }}">Home</a>
@@ -58,15 +59,30 @@ Created: 2024-12-XX
 
     <footer>
         <div class="footer-container">
-            <p>&copy; 2024 Life Family Archive System</p>
+            <p>&copy; 2025 Life Family Archive System</p>
             {% if config.FOOTER_INFO %}
                 <div class="debug-footer">
-                    Template: {% block template_info %}base.html v1.0 - Base layout template{% endblock %}
+                    Template: {% block template_info %}base.html v1.1.0 - Base layout with dynamic page titles{% endblock %}
                 </div>
             {% endif %}
         </div>
     </footer>
 
     {% block scripts %}{% endblock %}
+    
+    <script>
+    // Auto-hide flash messages after 1 second
+    document.addEventListener('DOMContentLoaded', function() {
+        const messages = document.querySelectorAll('.message');
+        messages.forEach(function(message) {
+            setTimeout(function() {
+                message.classList.add('fade-out');
+                setTimeout(function() {
+                    message.remove();
+                }, 500); // Remove after fade completes
+            }, 1000); // Start fade after 1 second
+        });
+    });
+    </script>
 </body>
 </html>

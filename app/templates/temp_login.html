@@ -1,87 +1,29 @@
 {% extends "base.html" %}
 <!--
 temp_login.html - Login page for Life app
-Version: 1.0.1
-Purpose: User authentication with video help - Fixed required field issue
+Version: 1.1.0
+Purpose: Simplified single password authentication
 Created: 2024-12-XX
-Updated: 2025-06-11
+Updated: 2025-06-12 - Cleaned up, single password field, removed help section
 -->
 
 {% block title %}Login - Life{% endblock %}
 
-{% block template_info %}login.html v1.0 - User authentication screen{% endblock %}
+{% block template_info %}temp_login.html v1.1.0 - Simplified authentication{% endblock %}
 
 {% block content %}
 <div class="container">
-    <h1>Life Information system</h1>
-    <!--<p>Please log in.</p> -->
+    <h1>Life Family Archive</h1>
     
     <form method="post" class="login-form">
         <div class="form-group">
-            <label for="password">View Password (for browsing only)</label>
-            <input type="password" id="password" name="password" autofocus>
-            <small class="form-help">
-                <a href="{{ url_for('auth.login_help') }}">Forgot password hint?</a>
-            </small>
-        </div>
-        
-        <div class="form-group">
-            <label for="admin_password">Admin Password (for uploading & editing)</label>
-            <input type="password" id="admin_password" name="admin_password">
-            <small class="form-help">Use this for full access to upload and manage files</small>
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required autofocus>
         </div>
         
         <div class="form-actions">
             <button type="submit">Login</button>
-            <a href="{{ url_for('auth.login_help') }}" class="button button-secondary">
-                Watch Help Video
-            </a>
         </div>
     </form>
-    
-    <div class="login-help-section">
-        <h3>Having trouble?</h3>
-        <ul>
-            <li>Password is case sensitive</li>
-            <li>Check keyboard didn't autocorrect</li>
-            <li>Click video for demo</li>
-            <li>You only need to fill ONE password field</li>
-        </ul>
-    </div>
 </div>
-
-<style>
-.login-form {
-    max-width: 400px;
-    margin: 2rem auto;
-    padding: 2rem;
-    background-color: var(--bg-accent);
-    border-radius: 8px;
-}
-
-.form-help {
-    display: block;
-    margin-top: 0.5rem;
-    font-size: 0.9rem;
-}
-
-.form-actions {
-    display: flex;
-    gap: 1rem;
-    margin-top: 2rem;
-}
-
-.login-help-section {
-    max-width: 400px;
-    margin: 2rem auto;
-    padding: 1.5rem;
-    background-color: var(--bg-secondary);
-    border-radius: 8px;
-}
-
-.login-help-section ul {
-    list-style-position: inside;
-    margin-top: 0.5rem;
-}
-</style>
 {% endblock %}

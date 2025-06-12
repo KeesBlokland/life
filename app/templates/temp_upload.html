@@ -1,19 +1,20 @@
 {% extends "base.html" %}
 <!--
 /home/life/app/templates/temp_upload.html
-Version: 1.0.0
-Purpose: File upload interface with drag-drop and camera capture
+Version: 1.2.0
+Purpose: Multiple file upload interface with drag-drop and camera capture
 Created: 2025-06-11
+Updated: 2025-06-12 - Added multiple file upload support
 -->
 
 {% block title %}Upload - Life{% endblock %}
 
-{% block template_info %}temp_upload.html v1.0 - File upload interface{% endblock %}
+{% block page_name %}: Upload{% endblock %}
+
+{% block template_info %}temp_upload.html v1.1.0 - Multiple file upload interface{% endblock %}
 
 {% block content %}
 <div class="container">
-    <h1>Upload Document</h1>
-    
     <form id="uploadForm" method="post" enctype="multipart/form-data">
         <!-- File selection -->
         <div class="upload-area" id="uploadArea">
@@ -21,35 +22,24 @@ Created: 2025-06-11
                 <p>Drag and drop files here</p>
                 <p>or</p>
                 <label for="fileInput" class="button">Choose Files</label>
-                <input type="file" id="fileInput" name="file" accept="{{ config.ALLOWED_EXTENSIONS|join(',') }}" style="display: none;">
+                <input type="file" id="fileInput" name="files" accept="{{ config.ALLOWED_EXTENSIONS|join(',') }}" multiple style="display: none;">
                 
                 <!-- Camera capture for mobile -->
                 <label for="cameraInput" class="button button-secondary">Take Photo</label>
-                <input type="file" id="cameraInput" name="file" accept="image/*" capture="camera" style="display: none;">
+                <input type="file" id="cameraInput" name="files" accept="image/*" capture="camera" style="display: none;">
             </div>
             
             <div class="file-preview" id="filePreview" style="display: none;">
-                <p class="file-name"></p>
-                <p class="file-size"></p>
-                <button type="button" onclick="clearFile()" class="button button-danger">Remove</button>
+                <div id="fileList"></div>
+                <button type="button" onclick="clearFiles()" class="button button-danger">Remove All</button>
             </div>
         </div>
         
-        <!-- Metadata -->
+        <!-- Shared metadata for all files -->
         <div class="form-group">
-            <label for="title">Title (optional)</label>
-            <input type="text" id="title" name="title" placeholder="Leave blank to use filename">
-        </div>
-        
-        <div class="form-group">
-            <label for="description">Description (optional)</label>
-            <textarea id="description" name="description" rows="3" placeholder="Brief description of the document"></textarea>
-        </div>
-        
-        <div class="form-group">
-            <label for="tags">Tags (comma separated)</label>
-            <input type="text" id="tags" name="tags" placeholder="e.g., insurance, car, 2025">
-            <small class="form-help">Tags help find documents later</small>
+            <label for="tags">Tags for all files (comma separated)</label>
+            <input type="text" id="tags" name="tags" placeholder="e.g., passport, travel, 2025">
+            <small class="form-help">These tags will be applied to all uploaded files</small>
         </div>
         
         <!-- Common tags -->
@@ -66,7 +56,7 @@ Created: 2025-06-11
         </div>
         
         <div class="form-actions">
-            <button type="submit" id="uploadButton" class="button" disabled>Upload</button>
+            <button type="submit" id="uploadButton" class="button" disabled>Upload Files</button>
             <a href="{{ url_for('files.browse') }}" class="button button-secondary">Cancel</a>
         </div>
     </form>
@@ -97,14 +87,51 @@ Created: 2025-06-11
     text-align: left;
 }
 
+.file-item {
+    padding: 0.5rem;
+    background-color: white;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.file-info {
+    flex: 1;
+}
+
 .file-name {
     font-weight: 500;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.3rem;
 }
 
 .file-size {
     color: var(--text-secondary);
     font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.title-edit {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.title-edit label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.title-input {
+    padding: 0.4rem;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font-size: 0.9rem;
+    width: 100%;
+    max-width: 400px;
 }
 
 .common-tags {
@@ -153,7 +180,7 @@ Created: 2025-06-11
 </style>
 
 <script>
-let selectedFile = null;
+let selectedFiles = [];
 
 // File input handlers
 document.getElementById('fileInput').addEventListener('change', handleFileSelect);
@@ -175,53 +202,70 @@ uploadArea.addEventListener('drop', (e) => {
     e.preventDefault();
     uploadArea.classList.remove('dragover');
     
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-        handleFile(files[0]);
-    }
+    const files = Array.from(e.dataTransfer.files);
+    addFiles(files);
 });
 
 function handleFileSelect(e) {
-    if (e.target.files.length > 0) {
-        handleFile(e.target.files[0]);
-    }
+    const files = Array.from(e.target.files);
+    addFiles(files);
 }
 
 function handleCameraCapture(e) {
-    if (e.target.files.length > 0) {
-        const file = e.target.files[0];
-        handleFile(file);
-        
-        // Add camera flag for server processing
-        const form = document.getElementById('uploadForm');
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'camera_upload';
-        input.value = 'true';
-        form.appendChild(input);
+    const files = Array.from(e.target.files);
+    addFiles(files);
+}
+
+function addFiles(files) {
+    selectedFiles = selectedFiles.concat(files);
+    updateFilePreview();
+}
+
+function updateFilePreview() {
+    const fileList = document.getElementById('fileList');
+    fileList.innerHTML = '';
+    
+    selectedFiles.forEach((file, index) => {
+        const fileItem = document.createElement('div');
+        fileItem.className = 'file-item';
+        fileItem.innerHTML = `
+            <div class="file-info">
+                <div class="file-name">${file.name}</div>
+                <div class="file-size">${formatFileSize(file.size)}</div>
+                <div class="title-edit">
+                    <label>Display as:</label>
+                    <input type="text" name="titles" value="${file.name}" class="title-input" data-index="${index}">
+                </div>
+            </div>
+            <button type="button" onclick="removeFile(${index})" class="button button-small button-danger">Remove</button>
+        `;
+        fileList.appendChild(fileItem);
+    });
+    
+    // Show/hide sections
+    if (selectedFiles.length > 0) {
+        document.querySelector('.upload-prompt').style.display = 'none';
+        document.getElementById('filePreview').style.display = 'block';
+        document.getElementById('uploadButton').disabled = false;
+        document.getElementById('uploadButton').textContent = 
+            selectedFiles.length === 1 ? 'Upload File' : `Upload ${selectedFiles.length} Files`;
+    } else {
+        document.querySelector('.upload-prompt').style.display = 'block';
+        document.getElementById('filePreview').style.display = 'none';
+        document.getElementById('uploadButton').disabled = true;
     }
 }
 
-function handleFile(file) {
-    selectedFile = file;
-    
-    // Update preview
-    document.querySelector('.file-name').textContent = file.name;
-    document.querySelector('.file-size').textContent = formatFileSize(file.size);
-    document.querySelector('.upload-prompt').style.display = 'none';
-    document.getElementById('filePreview').style.display = 'block';
-    
-    // Enable upload button
-    document.getElementById('uploadButton').disabled = false;
+function removeFile(index) {
+    selectedFiles.splice(index, 1);
+    updateFilePreview();
 }
 
-function clearFile() {
-    selectedFile = null;
+function clearFiles() {
+    selectedFiles = [];
     document.getElementById('fileInput').value = '';
     document.getElementById('cameraInput').value = '';
-    document.querySelector('.upload-prompt').style.display = 'block';
-    document.getElementById('filePreview').style.display = 'none';
-    document.getElementById('uploadButton').disabled = true;
+    updateFilePreview();
 }
 
 function formatFileSize(bytes) {

@@ -1,9 +1,9 @@
 """
 /home/life/app/routes/bp_auth.py
-Version: 1.0.1
+Version: 1.1.0
 Purpose: Authentication routes - login, logout, session management
 Created: 2025-06-11
-Updated: 2025-06-12 - Removed redundant login success messages
+Updated: 2025-06-12 - Single password field, direct redirect to dashboard
 """
 
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
@@ -40,17 +40,19 @@ def login():
     """Login page and authentication"""
     if request.method == 'POST':
         password = request.form.get('password', '').strip()
-        admin_password = request.form.get('admin_password', '').strip()
         
         if current_app.config['DEBUG']:
-            current_app.logger.debug(f"Login attempt - view password: {bool(password)}, admin password: {bool(admin_password)}")
+            current_app.logger.debug(f"Login attempt with password provided: {bool(password)}")
+        
+        if not password:
+            flash('Please enter a password.', 'error')
+            return render_template('temp_login.html')
         
         # Check admin password first (gives full access)
-        if admin_password and admin_password == current_app.config['ADMIN_PASSWORD']:
+        if password == current_app.config['ADMIN_PASSWORD']:
             session['logged_in'] = True
             session['is_admin'] = True
             session.permanent = True
-            # Removed redundant flash message - user can see they're logged in
             
             if current_app.config['DEBUG']:
                 current_app.logger.debug("Admin login successful")
@@ -62,11 +64,10 @@ def login():
             return redirect(url_for('main.index'))
         
         # Check view password (gives basic access)
-        elif password and password == current_app.config['VIEW_PASSWORD']:
+        elif password == current_app.config['VIEW_PASSWORD']:
             session['logged_in'] = True
             session['is_admin'] = False
             session.permanent = True
-            # Removed redundant flash message - user can see they're logged in
             
             if current_app.config['DEBUG']:
                 current_app.logger.debug("User login successful")

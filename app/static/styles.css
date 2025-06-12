@@ -1,9 +1,9 @@
 /*
 styles.css - Compact iPad-friendly stylesheet for Life app
-Version: 1.2.1
+Version: 1.3.3
 Purpose: Reduced spacing, compact layout for elderly tablet users
 Created: 2025-06-11
-Updated: 2025-06-12 - Fixed file browser layout and restored colors
+Updated: 2025-06-12 - Clean single-line file list with thick separators
 */
 
 /* CSS Variables */
@@ -224,6 +224,11 @@ button:hover,
     background-color: var(--bg-accent);
     border: 1px solid var(--border);
     font-size: 0.9rem;         /* Smaller text */
+    transition: opacity 0.5s ease-out;
+}
+
+.message.fade-out {
+    opacity: 0;
 }
 
 .message.success {
@@ -393,81 +398,103 @@ button:hover,
     gap: 0.5rem;
 }
 
-/* File Browser - restore original card layout but more compact */
-.file-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1rem;
-    margin-bottom: 1rem;
-}
-
-.file-card {
-    padding: 1rem;
+/* Single-line File List - Clean design */
+.file-list {
     background-color: white;
     border: 1px solid var(--border);
     border-radius: 6px;
-    box-shadow: 0 2px 4px var(--shadow);
-    transition: box-shadow 0.2s;
+    overflow: hidden;
 }
 
-.file-card:hover {
-    box-shadow: 0 4px 8px var(--shadow);
+.file-row {
+    border-bottom: 2px solid var(--border);
+    transition: background-color 0.2s;
 }
 
-.file-header {
+.file-row:last-child {
+    border-bottom: none;
+}
+
+.file-row:hover {
+    background-color: var(--bg-accent);
+}
+
+.file-line {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 0.5rem;
+    align-items: center;
+    padding: 0.8rem;
+    gap: 1rem;
 }
 
-.file-header h4 {
-    margin: 0;
-    font-size: 1rem;
+.file-title {
+    font-weight: 500;
     color: var(--text-primary);
-}
-
-.file-category {
-    font-size: 0.8rem;
-    color: white;
-    background-color: var(--accent);
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    white-space: nowrap;
-}
-
-.file-meta {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-}
-
-.file-description {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.5rem;
-    line-height: 1.4;
-}
-
-.file-tags {
-    margin-bottom: 0.5rem;
-}
-
-.tag {
-    display: inline-block;
-    background-color: var(--bg-secondary);
-    color: var(--text-secondary);
-    padding: 0.2rem 0.4rem;
-    margin: 0.2rem 0.2rem 0.2rem 0;
-    border-radius: 8px;
-    font-size: 0.8rem;
+    flex: 1;
+    font-size: 1rem;
 }
 
 .file-actions {
     display: flex;
     gap: 0.5rem;
+    align-items: center;
+}
+
+.file-actions form {
+    margin: 0;
+    display: inline;
+}
+
+.file-details {
+    padding: 0.8rem;
+    background-color: var(--bg-accent);
+    border-top: 1px solid var(--border);
+}
+
+.detail-item {
+    margin-bottom: 0.4rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.detail-item:last-child {
+    margin-bottom: 0;
+}
+
+.detail-item strong {
+    color: var(--text-primary);
+    margin-right: 0.5rem;
+}
+
+.button-edit-small,
+.button-save-small,
+.button-cancel-small {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.button-edit-small {
+    background-color: var(--accent);
+    color: white;
+}
+
+.button-save-small {
+    background-color: var(--success);
+    color: white;
+}
+
+.button-cancel-small {
+    background-color: var(--text-secondary);
+    color: white;
+}
+
+#title-form input {
+    width: 300px;
+    padding: 0.3rem;
+    margin-right: 0.5rem;
 }
 
 .pagination {
@@ -885,6 +912,16 @@ footer {
         flex-direction: column;
         align-items: center;
     }
+    
+    .file-main {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+    
+    .file-actions {
+        justify-content: center;
+    }
 }
 
 @keyframes slideIn {
@@ -948,10 +985,6 @@ footer {
         border-radius: 0;
     }
     
-    .file-grid {
-        grid-template-columns: 1fr;
-    }
-    
     .quick-actions {
         grid-template-columns: repeat(2, 1fr);  /* 2 columns on mobile */
     }
@@ -965,9 +998,5 @@ footer {
     
     .quick-actions {
         grid-template-columns: repeat(4, 1fr);  /* 4 columns on iPad */
-    }
-    
-    .file-grid {
-        grid-template-columns: repeat(3, 1fr);  /* 3 columns on iPad */
     }
 }
