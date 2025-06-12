@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+<!--
+/home/life/app/templates/temp_index.html
+Version: 1.0.0
+Purpose: Homepage with daily dashboard - reminders, appointments, quick access
+Created: 2025-06-11
+-->
+
+{% block title %}Home - Life{% endblock %}
+
+{% block template_info %}temp_index.html v1.0 - Homepage daily dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Life - {{ today.strftime('%A, %B %d') }}</h1>
+    
+    <!-- Today's Reminders -->
+    <div class="dashboard-section">
+        <h2>Today's Reminders</h2>
+        {% if reminders %}
+            <ul class="reminder-list">
+                {% for reminder in reminders %}
+                <li class="reminder-item {% if reminder.completed %}completed{% endif %}" 
+                    data-id="{{ reminder.id }}">
+                    <input type="checkbox" 
+                           {% if reminder.completed %}checked{% endif %}
+                           onchange="toggleReminder({{ reminder.id }})">
+                    <span>{{ reminder.title }}</span>
+                    {% if reminder.recurring %}
+                        <small class="recurring">({{ reminder.recurring }})</small>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="no-items">No reminders for today</p>
+        {% endif %}
+        
+        <!-- Refuse Bins Alert -->
+        {% if refuse_bins %}
+            <div class="refuse-alert">
+                <h3>Bins Out Tonight!</h3>
+                {% for bin in refuse_bins %}
+                    <span class="bin-badge bin-{{ bin.color }}">{{ bin.type }}</span>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Appointments -->
+    <div class="dashboard-section">
+        <h2>Upcoming Appointments</h2>
+        {% if appointments %}
+            <ul class="appointment-list">
+                {% for appt in appointments %}
+                <li class="appointment-item">
+                    <div class="appt-date">
+                        {% if appt.date == today.strftime('%Y-%m-%d') %}
+                            Today
+                        {% else %}
+                            {{ appt.date }}
+                        {% endif %}
+                        {% if appt.time %}
+                            at {{ appt.time }}
+                        {% endif %}
+                    </div>
+                    <div class="appt-title">{{ appt.title }}</div>
+                </li>
+                {% endfor %}
+            </ul>
+            <a href="{{ url_for('main.calendar') }}" class="button button-secondary">View Calendar</a>
+        {% else %}
+            <p class="no-items">No upcoming appointments</p>
+        {% endif %}
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="dashboard-section">
+        <h2>Quick Actions</h2>
+        <div class="quick-actions">
+            <a href="{{ url_for('files.upload') }}" class="button">
+                Upload Document
+            </a>
+            <a href="{{ url_for('main.lists') }}" class="button">
+                Shopping List {% if shopping_count > 0 %}({{ shopping_count }}){% endif %}
+            </a>
+            <a href="{{ url_for('main.add_event') }}" class="button">
+                Add Appointment
+            </a>
+            <a href="{{ url_for('files.search') }}" class="button">
+                Search Files
+            </a>
+        </div>
+    </div>
+    
+    <!-- Recent Files -->
+    <div class="dashboard-section">
+        <h2>Recent Documents</h2>
+        {% if recent_files %}
+            <div class="file-list">
+                {% for file in recent_files %}
+                <div class="file-item">
+                    <a href="{{ url_for('files.download', file_id=file.id) }}">
+                        {{ file.title or file.filename }}
+                    </a>
+                    <small>{{ file.upload_date }}</small>
+                </div>
+                {% endfor %}
+            </div>
+            <a href="{{ url_for('files.browse') }}" class="button button-secondary">Browse All Files</a>
+        {% else %}
+            <p class="no-items">No documents uploaded yet</p>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+/* Dashboard-specific styles */
+.dashboard-section {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background-color: var(--bg-accent);
+    border-radius: 8px;
+}
+
+.reminder-list,
+.appointment-list {
+    list-style: none;
+    padding: 0;
+}
+
+.reminder-item {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.reminder-item:last-child {
+    border-bottom: none;
+}
+
+.reminder-item input[type="checkbox"] {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.reminder-item.completed {
+    opacity: 0.6;
+}
+
+.reminder-item.completed span {
+    text-decoration: line-through;
+}
+
+.recurring {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.refuse-alert {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: var(--warning);
+    color: white;
+    border-radius: 4px;
+}
+
+.refuse-alert h3 {
+    margin: 0 0 0.5rem 0;
+    color: white;
+}
+
+.bin-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    margin-right: 0.5rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.bin-blue {
+    background-color: #4A90E2;
+    color: white;
+}
+
+.bin-yellow {
+    background-color: #F5A623;
+    color: white;
+}
+
+.bin-brown {
+    background-color: #8B6914;
+    color: white;
+}
+
+.appointment-item {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.appointment-item:last-child {
+    border-bottom: none;
+}
+
+.appt-date {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.appt-title {
+    font-weight: 500;
+}
+
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.file-item {
+    padding: 0.5rem 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.file-item small {
+    color: var(--text-secondary);
+}
+
+.no-items {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .quick-actions {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+function toggleReminder(reminderId) {
+    fetch(`/reminder/toggle/${reminderId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const item = document.querySelector(`[data-id="${reminderId}"]`);
+        if (data.completed) {
+            item.classList.add('completed');
+        } else {
+            item.classList.remove('completed');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Revert checkbox on error
+        const checkbox = document.querySelector(`[data-id="${reminderId}"] input`);
+        checkbox.checked = !checkbox.checked;
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+<!--
+login.html - Login page for Life app
+Version: 1.0.0
+Purpose: User authentication with video help
+Created: 2024-12-XX
+-->
+
+{% block title %}Login - Life{% endblock %}
+
+{% block template_info %}login.html v1.0 - User authentication screen{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Welcome to Life</h1>
+    <p>Please log in to access your family archive.</p>
+    
+    <form method="post" class="login-form">
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required autofocus>
+            <small class="form-help">
+                <a href="{{ url_for('auth.login_help') }}">Forgot password hint?</a>
+            </small>
+        </div>
+        
+        <div class="form-group">
+            <label for="admin_password">Admin Password (optional)</label>
+            <input type="password" id="admin_password" name="admin_password">
+            <small class="form-help">Only needed for editing and admin functions</small>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit">Login</button>
+            <a href="{{ url_for('auth.login_help') }}" class="button button-secondary">
+                Watch Help Video
+            </a>
+        </div>
+    </form>
+    
+    <div class="login-help-section">
+        <h3>Having trouble?</h3>
+        <ul>
+            <li>Password is case sensitive</li>
+            <li>Check keyboard didn't autocorrect</li>
+            <li>Click video for demo</li>
+        </ul>
+    </div>
+</div>
+
+<style>
+.login-form {
+    max-width: 400px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: var(--bg-accent);
+    border-radius: 8px;
+}
+
+.form-help {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.login-help-section {
+    max-width: 400px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+}
+
+.login-help-section ul {
+    list-style-position: inside;
+    margin-top: 0.5rem;
+}
+</style>
+{% endblock %}

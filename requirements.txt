@@ -1,0 +1,27 @@
+# /home/life/requirements.txt
+# Life App Python Dependencies
+# Version: 1.0.0
+# Created: 2025-06-11
+
+# Core Flask
+Flask==2.3.3
+Werkzeug==2.3.7
+
+# Image Processing
+Pillow==10.0.0
+pillow-heif==0.13.0
+
+# File Type Detection
+python-magic==0.4.27
+
+# OCR and Document Processing
+pytesseract==0.3.10
+PyPDF2==3.0.1
+python-docx==0.8.11
+
+# Search
+Whoosh==2.7.4
+
+# Optional but recommended
+python-dateutil==2.8.2
+pytz==2023.3

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<!--
+base.html - Base template for Life app
+Version: 1.0.0
+Purpose: Common layout, navigation, and debug footer
+Created: 2024-12-XX
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Life - Family Archive{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    {% if request.args.get('print') %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='print.css') }}">
+    {% endif %}
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="{% if session.get('dyslexia_mode') %}dyslexia{% endif %} {% if session.get('high_contrast') %}high-contrast{% endif %}">
+    <header>
+        <nav>
+            <div class="nav-container">
+                <h1><a href="{{ url_for('main.index') }}">Life</a></h1>
+                <div class="nav-links">
+                    {% if session.get('logged_in') %}
+                        <a href="{{ url_for('main.index') }}">Home</a>
+                        
+                        <a href="{{ url_for('files.browse') }}">Documents</a>
+                        <a href="{{ url_for('main.calendar') }}">Calendar</a>
+                        <a href="{{ url_for('main.lists') }}">Lists</a>
+                        
+                        {% if session.get('is_admin') %}
+                            <a href="{{ url_for('admin.dashboard') }}">Admin</a>
+                        {% endif %}
+                
+                        <a href="{{ url_for('auth.logout') }}">Logout</a>
+                    {% else %}
+                        <a href="{{ url_for('auth.login') }}">Login</a>
+                    {% endif %}
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="messages">
+                    {% for category, message in messages %}
+                        <div class="message {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <p>&copy; 2024 Life Family Archive System</p>
+            {% if config.FOOTER_INFO %}
+                <div class="debug-footer">
+                    Template: {% block template_info %}base.html v1.0 - Base layout template{% endblock %}
+                </div>
+            {% endif %}
+        </div>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

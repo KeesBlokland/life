@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+<!--
+/home/life/app/templates/temp_upload.html
+Version: 1.0.0
+Purpose: File upload interface with drag-drop and camera capture
+Created: 2025-06-11
+-->
+
+{% block title %}Upload - Life{% endblock %}
+
+{% block template_info %}temp_upload.html v1.0 - File upload interface{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Upload Document</h1>
+    
+    <form id="uploadForm" method="post" enctype="multipart/form-data">
+        <!-- File selection -->
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-prompt">
+                <p>Drag and drop files here</p>
+                <p>or</p>
+                <label for="fileInput" class="button">Choose Files</label>
+                <input type="file" id="fileInput" name="file" accept="{{ config.ALLOWED_EXTENSIONS|join(',') }}" style="display: none;">
+                
+                <!-- Camera capture for mobile -->
+                <label for="cameraInput" class="button button-secondary">Take Photo</label>
+                <input type="file" id="cameraInput" name="file" accept="image/*" capture="camera" style="display: none;">
+            </div>
+            
+            <div class="file-preview" id="filePreview" style="display: none;">
+                <p class="file-name"></p>
+                <p class="file-size"></p>
+                <button type="button" onclick="clearFile()" class="button button-danger">Remove</button>
+            </div>
+        </div>
+        
+        <!-- Metadata -->
+        <div class="form-group">
+            <label for="title">Title (optional)</label>
+            <input type="text" id="title" name="title" placeholder="Leave blank to use filename">
+        </div>
+        
+        <div class="form-group">
+            <label for="description">Description (optional)</label>
+            <textarea id="description" name="description" rows="3" placeholder="Brief description of the document"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="tags">Tags (comma separated)</label>
+            <input type="text" id="tags" name="tags" placeholder="e.g., insurance, car, 2025">
+            <small class="form-help">Tags help find documents later</small>
+        </div>
+        
+        <!-- Common tags -->
+        <div class="common-tags">
+            <p>Quick tags:</p>
+            <button type="button" class="tag-button" onclick="addTag('medical')">medical</button>
+            <button type="button" class="tag-button" onclick="addTag('financial')">financial</button>
+            <button type="button" class="tag-button" onclick="addTag('insurance')">insurance</button>
+            <button type="button" class="tag-button" onclick="addTag('car')">car</button>
+            <button type="button" class="tag-button" onclick="addTag('house')">house</button>
+            <button type="button" class="tag-button" onclick="addTag('legal')">legal</button>
+            <button type="button" class="tag-button" onclick="addTag('travel')">travel</button>
+            <button type="button" class="tag-button" onclick="addTag('family')">family</button>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" id="uploadButton" class="button" disabled>Upload</button>
+            <a href="{{ url_for('files.browse') }}" class="button button-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.upload-area {
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    padding: 3rem;
+    text-align: center;
+    margin-bottom: 2rem;
+    background-color: var(--bg-accent);
+    transition: all 0.3s ease;
+}
+
+.upload-area.dragover {
+    border-color: var(--accent);
+    background-color: rgba(125, 154, 150, 0.1);
+}
+
+.upload-prompt p {
+    margin: 0.5rem 0;
+    color: var(--text-secondary);
+}
+
+.file-preview {
+    text-align: left;
+}
+
+.file-name {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.file-size {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.common-tags {
+    margin-bottom: 2rem;
+}
+
+.common-tags p {
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.tag-button {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    margin: 0.25rem;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tag-button:hover {
+    background-color: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .upload-area {
+        padding: 2rem 1rem;
+    }
+    
+    .common-tags {
+        text-align: center;
+    }
+}
+</style>
+
+<script>
+let selectedFile = null;
+
+// File input handlers
+document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+document.getElementById('cameraInput').addEventListener('change', handleCameraCapture);
+
+// Drag and drop
+const uploadArea = document.getElementById('uploadArea');
+
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+});
+
+uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('dragover');
+});
+
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        handleFile(files[0]);
+    }
+});
+
+function handleFileSelect(e) {
+    if (e.target.files.length > 0) {
+        handleFile(e.target.files[0]);
+    }
+}
+
+function handleCameraCapture(e) {
+    if (e.target.files.length > 0) {
+        const file = e.target.files[0];
+        handleFile(file);
+        
+        // Add camera flag for server processing
+        const form = document.getElementById('uploadForm');
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'camera_upload';
+        input.value = 'true';
+        form.appendChild(input);
+    }
+}
+
+function handleFile(file) {
+    selectedFile = file;
+    
+    // Update preview
+    document.querySelector('.file-name').textContent = file.name;
+    document.querySelector('.file-size').textContent = formatFileSize(file.size);
+    document.querySelector('.upload-prompt').style.display = 'none';
+    document.getElementById('filePreview').style.display = 'block';
+    
+    // Enable upload button
+    document.getElementById('uploadButton').disabled = false;
+}
+
+function clearFile() {
+    selectedFile = null;
+    document.getElementById('fileInput').value = '';
+    document.getElementById('cameraInput').value = '';
+    document.querySelector('.upload-prompt').style.display = 'block';
+    document.getElementById('filePreview').style.display = 'none';
+    document.getElementById('uploadButton').disabled = true;
+}
+
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return Math.round(bytes / 1024) + ' KB';
+    return Math.round(bytes / 1048576 * 10) / 10 + ' MB';
+}
+
+function addTag(tag) {
+    const tagsInput = document.getElementById('tags');
+    const currentTags = tagsInput.value.split(',').map(t => t.trim()).filter(t => t);
+    
+    if (!currentTags.includes(tag)) {
+        currentTags.push(tag);
+        tagsInput.value = currentTags.join(', ');
+    }
+}
+</script>
+{% endblock %}
