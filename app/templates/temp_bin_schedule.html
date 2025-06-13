@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+<!--
+/home/life/app/templates/temp_bin_schedule.html
+Version: 1.0.1
+Purpose: Simple bin collection reminders using regular calendar events
+Created: 2025-06-13
+Updated: 2025-06-13 - Fixed broken URLs, removed unwanted features, simplified
+-->
+
+{% block title %}Bin Collection - Life{% endblock %}
+
+{% block template_info %}temp_bin_schedule.html v1.0.1 - Simple bin reminders{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Bin Collection Reminders</h1>
+    
+    <div class="bin-info">
+        <p>Use the calendar to add bin collection reminders.</p>
+        <p>Select "Bin Collection" category when adding events.</p>
+    </div>
+    
+    <div class="actions">
+        <a href="{{ url_for('main.add_event') }}" class="button">Add Bin Collection Event</a>
+        <a href="{{ url_for('main.calendar') }}" class="button button-secondary">View Calendar</a>
+        <a href="{{ url_for('main.index') }}" class="button button-secondary">Back to Home</a>
+    </div>
+</div>
+{% endblock %}

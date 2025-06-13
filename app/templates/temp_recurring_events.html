@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+<!--
+/home/life/app/templates/temp_recurring_events.html
+Version: 1.0.0
+Purpose: Manage recurring events - view and delete problematic ones
+Created: 2025-06-13
+-->
+
+{% block title %}Recurring Events - Life{% endblock %}
+
+{% block template_info %}temp_recurring_events.html v1.0.0 - Recurring events management{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Manage Recurring Events</h1>
+    
+    <div class="help-section">
+        <p><strong>Problem:</strong> Unwanted recurring events showing up on wrong dates?</p>
+        <p><strong>Solution:</strong> Delete problematic recurring events below. Settings-based bin reminders don't need database entries.</p>
+    </div>
+    
+    {% if recurring_events %}
+        <div class="recurring-section">
+            <h2>Recurring Events Found ({{ recurring_events|length }})</h2>
+            <p>These events repeat automatically. Delete the ones you don't want:</p>
+            
+            <div class="events-table">
+                {% for event in recurring_events %}
+                <div class="event-row">
+                    <div class="event-info">
+                        <div class="event-title">
+                            <strong>{{ event.title }}</strong>
+                            {% if event.category == 'bin' %}
+                                <span class="bin-badge bin-{{ event.description }}">{{ event.description }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="event-details">
+                            <span>Repeats: {{ event.recurring }}</span>
+                            <span>Created: {{ event.created_date }}</span>
+                            <span>Category: {{ event.category }}</span>
+                            {% if event.date %}
+                                <span>Original date: {{ event.date }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="event-actions">
+                        <form method="post" action="{{ url_for('main.delete_recurring_event', event_id=event.id) }}" 
+                              style="display: inline;" 
+                              onsubmit="return confirm('Delete recurring event: {{ event.title }}?')">
+                            <button type="submit" class="button button-danger button-small">Delete</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            {% if session.get('is_admin') %}
+            <div class="bulk-actions">
+                <form method="post" action="{{ url_for('main.delete_all_recurring') }}" 
+                      onsubmit="return confirm('DELETE ALL {{ recurring_events|length }} recurring events? This cannot be undone!')">
+                    <button type="submit" class="button button-danger">Delete All Recurring Events</button>
+                </form>
+                <p><small>Admin only - removes all recurring events from database</small></p>
+            </div>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="no-recurring">
+            <h2>No Recurring Events Found</h2>
+            <p>Great! No problematic recurring events in the database.</p>
+            <p>Bin reminders should come from settings, not database entries.</p>
+        </div>
+    {% endif %}
+    
+    <!-- Recent Events for Reference -->
+    {% if all_events %}
+    <div class="recent-section">
+        <h2>Recent Events (Last 50)</h2>
+        <p>All events for reference - recurring events marked with (R):</p>
+        
+        <div class="events-list">
+            {% for event in all_events[:20] %}
+            <div class="event-item">
+                <span class="event-date">{{ event.date }}</span>
+                <span class="event-title">
+                    {{ event.title }}
+                    {% if event.recurring %}(R){% endif %}
+                </span>
+                <span class="event-category">{{ event.category }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="actions">
+        <a href="{{ url_for('main.calendar') }}" class="button">Back to Calendar</a>
+        <a href="{{ url_for('main.add_event') }}" class="button button-secondary">Add New Event</a>
+    </div>
+</div>
+
+<style>
+.help-section {
+    background-color: var(--bg-accent);
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 2rem;
+    border-left: 4px solid var(--warning);
+}
+
+.recurring-section,
+.recent-section {
+    margin-bottom: 2rem;
+}
+
+.events-table {
+    background-color: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.event-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.event-row:last-child {
+    border-bottom: none;
+}
+
+.event-row:hover {
+    background-color: var(--bg-accent);
+}
+
+.event-info {
+    flex: 1;
+}
+
+.event-title {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.event-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.event-actions {
+    margin-left: 1rem;
+}
+
+.bulk-actions {
+    margin-top: 2rem;
+    padding: 1rem;
+    background-color: rgba(184, 122, 122, 0.1);
+    border: 1px solid var(--error);
+    border-radius: 6px;
+    text-align: center;
+}
+
+.no-recurring {
+    text-align: center;
+    padding: 3rem;
+    background-color: var(--bg-accent);
+    border-radius: 6px;
+    border: 2px solid var(--success);
+}
+
+.no-recurring h2 {
+    color: var(--success);
+    margin-bottom: 1rem;
+}
+
+.events-list {
+    background-color: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.event-item {
+    display: grid;
+    grid-template-columns: 100px 1fr 100px;
+    gap: 1rem;
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+}
+
+.event-item:last-child {
+    border-bottom: none;
+}
+
+.event-date {
+    color: var(--text-secondary);
+}
+
+.event-category {
+    text-align: right;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
+.actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.bin-badge {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .event-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .event-actions {
+        margin-left: 0;
+        width: 100%;
+    }
+    
+    .event-details {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .event-item {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    .actions {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+</style>
+{% endblock %}

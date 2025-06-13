@@ -1,9 +1,9 @@
 /*
 styles.css - Compact iPad-friendly stylesheet for Life app
-Version: 1.3.3
-Purpose: Reduced spacing, compact layout for elderly tablet users
+Version: 1.3.5
+Purpose: Updated bin colors to match exact config
 Created: 2025-06-11
-Updated: 2025-06-12 - Clean single-line file list with thick separators
+Updated: 2025-06-13 - Removed blue bins, matched exact config
 */
 
 /* CSS Variables */
@@ -650,6 +650,33 @@ footer {
     opacity: 0.9;
 }
 
+/* Bin Event Color Coding - Exact match to config */
+.event.bin-brown {
+    background-color: #8B6914 !important;
+    color: white;
+}
+
+.event.bin-yellow {
+    background-color: #F5A623 !important;
+    color: white;
+}
+
+.event.bin-green {
+    background-color: #228B22 !important;
+    color: white;
+}
+
+.event.bin-grey,
+.event.bin-gray {
+    background-color: #666666 !important;
+    color: white;
+}
+
+.event.bin-glass {
+    background-color: #20B2AA !important;
+    color: white;
+}
+
 .calendar-actions {
     text-align: center;
 }
@@ -716,6 +743,193 @@ footer {
     z-index: 1001;
     animation: slideIn 0.3s ease;
 }
+
+/* Calendar List View - Compact like file browser */
+.calendar-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 0.8rem;
+    background-color: var(--bg-accent);
+    border-radius: 6px;
+}
+
+.calendar-nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.calendar-period {
+    font-weight: 500;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    min-width: 150px;
+    text-align: center;
+}
+
+.calendar-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Quick navigation */
+.quick-nav {
+    margin-bottom: 1rem;
+    padding: 0.8rem;
+    background-color: var(--bg-secondary);
+    border-radius: 6px;
+}
+
+.quick-nav h3 {
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.quick-nav-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+/* Debug info */
+.debug-info {
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+/* Events list - same style as file list */
+.events-list {
+    background-color: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.event-row {
+    border-bottom: 2px solid var(--border);
+    transition: background-color 0.2s;
+}
+
+.event-row:last-child {
+    border-bottom: none;
+}
+
+.event-row:hover {
+    background-color: var(--bg-accent);
+}
+
+.event-line {
+    display: flex;
+    align-items: center;
+    padding: 0.8rem;
+    gap: 1rem;
+}
+
+.event-title {
+    font-weight: 500;
+    color: var(--text-primary);
+    flex: 1;
+    font-size: 1rem;
+}
+
+.event-actions {
+    display: flex;
+    gap: 0.3rem;
+}
+
+.date-row {
+    border-bottom: 2px solid var(--border);
+    transition: background-color 0.2s;
+}
+
+.date-row:last-child {
+    border-bottom: none;
+}
+
+.date-row:hover {
+    background-color: var(--bg-accent);
+}
+
+.date-line {
+    display: flex;
+    align-items: center;
+    padding: 0.8rem;
+    gap: 1rem;
+}
+
+.date-title {
+    font-weight: 500;
+    color: var(--text-primary);
+    flex: 1;
+    font-size: 1rem;
+}
+
+.date-info {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.event-count {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Events for this date */
+.date-events {
+    padding: 0.8rem;
+    background-color: var(--bg-accent);
+    border-top: 1px solid var(--border);
+}
+
+.event-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.event-item:last-child {
+    border-bottom: none;
+}
+
+.event-content {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    flex: 1;
+}
+
+.event-title {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.event-time {
+    color: var(--accent);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.event-category {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-style: italic;
+}
+
+.event-actions {
+    display: flex;
+    gap: 0.3rem;
+}
+
 
 /* Day View - Compact like homepage */
 .day-nav {
@@ -1000,3 +1214,195 @@ footer {
         grid-template-columns: repeat(4, 1fr);  /* 4 columns on iPad */
     }
 }
+
+/* Bin Schedule Styles */
+.bin-form {
+    background-color: var(--bg-accent);
+    padding: 2rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.bin-checkboxes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.bin-checkbox {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    background-color: white;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.bin-checkbox:hover {
+    border-color: var(--accent);
+}
+
+.bin-checkbox input[type="checkbox"] {
+    margin-bottom: 0.5rem;
+    width: 18px;
+    height: 18px;
+}
+
+.bin-checkbox input[type="checkbox"]:checked + .bin-badge {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.bin-badge-small {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    color: white;
+    font-weight: 500;
+    font-size: 0.7rem;
+    margin-right: 0.2rem;
+}
+
+.bin-checkbox small {
+    color: var(--text-secondary);
+    text-align: center;
+    font-size: 0.8rem;
+}
+
+.quick-schedule {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+}
+
+.quick-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.quick-btn {
+    padding: 1rem;
+    background-color: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+
+.quick-btn:hover {
+    background-color: var(--accent);
+    color: white;
+}
+
+.upcoming-collections,
+.past-collections {
+    margin-bottom: 2rem;
+}
+
+.collections-list {
+    background-color: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.collection-item {
+    display: grid;
+    grid-template-columns: 2fr 2fr 1fr;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+}
+
+.collection-item:last-child {
+    border-bottom: none;
+}
+
+.collection-date {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.collection-time {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.days-until {
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.collection-bins {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.collection-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+.no-collections {
+    text-align: center;
+    padding: 3rem;
+    background-color: var(--bg-accent);
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.past-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.past-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: var(--bg-accent);
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.past-date {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.past-bins {
+    display: flex;
+    gap: 0.2rem;
+}
+
+/* Homepage Styles */
+.homepage-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.left-column,
+.right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+

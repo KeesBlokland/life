@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <!--
 base.html - Base template for Life app
-Version: 1.2.0
-Purpose: Common layout, navigation, and debug footer
+Version: 1.2.1
+Purpose: Common layout with bin schedule navigation
 Created: 2024-12-XX
-Updated: 2025-06-12 - Added auto-hide flash messages after 1 second
+Updated: 2025-06-13 - Added bin schedule link to navigation
 -->
 <html lang="en">
 <head>
@@ -28,6 +28,7 @@ Updated: 2025-06-12 - Added auto-hide flash messages after 1 second
                         
                         <a href="{{ url_for('files.browse') }}">Documents</a>
                         <a href="{{ url_for('main.calendar') }}">Calendar</a>
+                        <a href="{{ url_for('main.bin_schedule') }}">Bins</a>
                         <a href="{{ url_for('main.lists') }}">Lists</a>
                         
                         {% if session.get('is_admin') %}
@@ -62,7 +63,7 @@ Updated: 2025-06-12 - Added auto-hide flash messages after 1 second
             <p>&copy; 2025 Life Family Archive System</p>
             {% if config.FOOTER_INFO %}
                 <div class="debug-footer">
-                    Template: {% block template_info %}base.html v1.1.0 - Base layout with dynamic page titles{% endblock %}
+                    Template: {% block template_info %}base.html v1.2.1 - Added bin schedule navigation{% endblock %}
                 </div>
             {% endif %}
         </div>

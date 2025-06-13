@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 <!--
 /home/life/app/templates/temp_add_event.html
-Version: 1.0.2
-Purpose: Add calendar event form - simplified bin events
+Version: 1.0.4
+Purpose: Add calendar event form - exact bin types
 Created: 2025-06-11
-Updated: 2025-06-12 - KISS principle for bin events
+Updated: 2025-06-13 - Updated to match exact bin types in config
 -->
 
 {% block title %}Add Event - Life{% endblock %}
 
-{% block template_info %}temp_add_event.html v1.0.2 - Simplified bin events{% endblock %}
+{% block template_info %}temp_add_event.html v1.0.4 - Exact bin types{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -45,13 +45,12 @@ Updated: 2025-06-12 - KISS principle for bin events
         <!-- Bin options - shown only when Bin category selected -->
         <div id="binOptions" class="form-group" style="display: none;">
             <label for="bin_type">Bin Type & Color</label>
-            <select id="bin_type" name="bin_type">
-                <option value="blue">Blue - Paper/Cardboard</option>
-                <option value="yellow">Yellow - Recycling</option>
-                <option value="brown">Brown - Bio/Organic</option>
-                <option value="green">Green - Garden</option>
-                <option value="black">Black - General Waste</option>
-                <option value="glass">Glass Collection</option>
+            <select id="bin_type" name="bin_type" onchange="updateBinTitle()">
+                <option value="brown">Brown - Green Waste</option>
+                <option value="yellow">Yellow - Plastic</option>
+                <option value="green">Green - Paper</option>
+                <option value="grey">Grey - General Waste</option>
+                <option value="glass">Glass - Glass Bottles/Jars</option>
             </select>
         </div>
         
@@ -131,20 +130,35 @@ function toggleBinOptions() {
     const descriptionSection = document.getElementById('descriptionSection');
     
     if (category === 'bin') {
-        // Simplify for bin events
-        title.value = 'Bin';
+        // Simplify for bin events and set initial title
+        updateBinTitle();
         title.readOnly = true;
         binOptions.style.display = 'block';
         timeRecurringSection.style.display = 'none';
         descriptionSection.style.display = 'none';
     } else {
         // Normal event
-        if (title.value === 'Bin') title.value = '';
+        if (title.value && title.value.includes('Bin')) title.value = '';
         title.readOnly = false;
         binOptions.style.display = 'none';
         timeRecurringSection.style.display = 'block';
         descriptionSection.style.display = 'block';
     }
+}
+
+function updateBinTitle() {
+    const binType = document.getElementById('bin_type').value;
+    const title = document.getElementById('title');
+    
+    const binLabels = {
+        'brown': 'Brown Bin',
+        'yellow': 'Yellow Bin',
+        'green': 'Green Bin',
+        'grey': 'Grey Bin',
+        'glass': 'Glass Collection'
+    };
+    
+    title.value = binLabels[binType] || 'Bin';
 }
 </script>
 {% endblock %}

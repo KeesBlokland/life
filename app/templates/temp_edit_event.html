@@ -1,22 +1,15 @@
 {% extends "base.html" %}
 <!--
 /home/life/app/templates/temp_edit_event.html
-Version: 1.0.1
-Purpose: Edit calendar event form
+Version: 1.0.3
+Purpose: Edit calendar event form with exact bin types
 Created: 2025-06-12
-Updated: 2025-06-12 - Added bin collection category with color selection
+Updated: 2025-06-13 - Updated to match exact bin types in config
 -->
 
-{% block title %}Edit Event - Life<script>
-function toggleBinOptions() {
-    const category = document.getElementById('category').value;
-    const binOptions = document.getElementById('binOptions');
-    binOptions.style.display = category === 'bin' ? 'block' : 'none';
-}
-</script>
-{% endblock %}
+{% block title %}Edit Event - Life{% endblock %}
 
-{% block template_info %}temp_edit_event.html v1.0 - Edit calendar event form{% endblock %}
+{% block template_info %}temp_edit_event.html v1.0.3 - Exact bin types{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -57,13 +50,12 @@ function toggleBinOptions() {
         <!-- Bin options - shown only when Bin category selected -->
         <div id="binOptions" class="form-group" style="display: {% if event.category == 'bin' %}block{% else %}none{% endif %};">
             <label for="bin_type">Bin Type & Color</label>
-            <select id="bin_type" name="bin_type">
-                <option value="blue" {% if event.description == 'blue' %}selected{% endif %}>Blue - Paper/Cardboard</option>
-                <option value="yellow" {% if event.description == 'yellow' %}selected{% endif %}>Yellow - Recycling</option>
-                <option value="brown" {% if event.description == 'brown' %}selected{% endif %}>Brown - Bio/Organic</option>
-                <option value="green" {% if event.description == 'green' %}selected{% endif %}>Green - Garden</option>
-                <option value="black" {% if event.description == 'black' %}selected{% endif %}>Black - General Waste</option>
-                <option value="glass" {% if event.description == 'glass' %}selected{% endif %}>Glass Collection</option>
+            <select id="bin_type" name="bin_type" onchange="updateBinTitle()">
+                <option value="brown" {% if event.description == 'brown' %}selected{% endif %}>Brown - Green Waste</option>
+                <option value="yellow" {% if event.description == 'yellow' %}selected{% endif %}>Yellow - Plastic</option>
+                <option value="green" {% if event.description == 'green' %}selected{% endif %}>Green - Paper</option>
+                <option value="grey" {% if event.description == 'grey' %}selected{% endif %}>Grey - General Waste</option>
+                <option value="glass" {% if event.description == 'glass' %}selected{% endif %}>Glass - Glass Bottles/Jars</option>
             </select>
         </div>
         
@@ -78,9 +70,9 @@ function toggleBinOptions() {
             </select>
         </div>
         
-        <div class="form-group">
+        <div id="descriptionSection" class="form-group" {% if event.category == 'bin' %}style="display: none;"{% endif %}>
             <label for="description">Description (optional)</label>
-            <textarea id="description" name="description" rows="3" {% if event.category == 'bin' %}style="display: none;"{% endif %}>{{ event.description or '' }}</textarea>
+            <textarea id="description" name="description" rows="3">{% if event.category != 'bin' %}{{ event.description or '' }}{% endif %}</textarea>
         </div>
         
         <div class="form-actions">
@@ -95,5 +87,46 @@ function toggleBinOptions() {
     </form>
 </div>
 
+<script>
+function toggleBinOptions() {
+    const category = document.getElementById('category').value;
+    const binOptions = document.getElementById('binOptions');
+    const title = document.getElementById('title');
+    const descriptionSection = document.getElementById('descriptionSection');
+    
+    if (category === 'bin') {
+        // Simplify for bin events and update title
+        updateBinTitle();
+        title.readOnly = true;
+        binOptions.style.display = 'block';
+        descriptionSection.style.display = 'none';
+    } else {
+        // Normal event
+        if (title.value && title.value.includes('Bin')) title.value = '';
+        title.readOnly = false;
+        binOptions.style.display = 'none';
+        descriptionSection.style.display = 'block';
+    }
+}
 
+function updateBinTitle() {
+    const binType = document.getElementById('bin_type').value;
+    const title = document.getElementById('title');
+    
+    const binLabels = {
+        'brown': 'Brown Bin',
+        'yellow': 'Yellow Bin',
+        'green': 'Green Bin',
+        'grey': 'Grey Bin',
+        'glass': 'Glass Collection'
+    };
+    
+    title.value = binLabels[binType] || 'Bin';
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    toggleBinOptions();
+});
+</script>
 {% endblock %}

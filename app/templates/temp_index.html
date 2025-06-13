@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 <!--
 /home/life/app/templates/temp_index.html
-Version: 1.1.1
-Purpose: Compact homepage - fits on one iPad screen without scrolling
+Version: 1.1.2
+Purpose: Compact homepage with new bin collection system
 Created: 2025-06-11
-Updated: 2025-06-12 - Fixed datetime string formatting error
+Updated: 2025-06-13 - Updated for new bin collection schedule system
 -->
 
 {% block title %}Home - Life{% endblock %}
 
-{% block template_info %}temp_index.html v1.1 - Compact homepage{% endblock %}
+{% block template_info %}temp_index.html v1.1.2 - New bin collection system{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -43,7 +43,13 @@ Updated: 2025-06-12 - Fixed datetime string formatting error
                 <!-- Refuse Bins Alert -->
                 {% if refuse_bins %}
                     <div class="refuse-alert">
-                        <strong>Bins Out Tonight!</strong>
+                        <strong>
+                            {% if refuse_bins|selectattr('when', 'equalto', 'today')|list %}
+                                Bins Out Today!
+                            {% elif refuse_bins|selectattr('when', 'equalto', 'tomorrow')|list %}
+                                Bins Out Tomorrow!
+                            {% endif %}
+                        </strong>
                         {% for bin in refuse_bins %}
                             <span class="bin-badge bin-{{ bin.color }}">{{ bin.type.split('(')[0].strip() }}</span>
                         {% endfor %}
@@ -60,6 +66,9 @@ Updated: 2025-06-12 - Fixed datetime string formatting error
                     </a>
                     <a href="{{ url_for('main.lists') }}" class="button">
                         Shopping {% if shopping_count > 0 %}({{ shopping_count }}){% endif %}
+                    </a>
+                    <a href="{{ url_for('main.bin_schedule') }}" class="button">
+                        Bins
                     </a>
                     <a href="{{ url_for('main.add_event') }}" class="button">
                         Add Event
@@ -125,121 +134,6 @@ Updated: 2025-06-12 - Fixed datetime string formatting error
         </div>
     </div>
 </div>
-
-<style>
-/* Homepage-specific compact styles */
-.homepage-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    margin-top: 0.5rem;
-}
-
-.left-column,
-.right-column {
-    display: flex;
-    flex-direction: column;
-    gap: 0.8rem;
-}
-
-/* Compact dashboard sections */
-.dashboard-section {
-    margin-bottom: 0;  /* Remove bottom margin since we use gap */
-    flex: 1;
-    min-height: fit-content;
-}
-
-/* Compact reminder/appointment items */
-.reminder-item,
-.appointment-item {
-    padding: 0.3rem 0;  /* Even more compact */
-    font-size: 0.9rem;
-}
-
-.reminder-item input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-}
-
-/* Compact refuse alert */
-.refuse-alert {
-    margin-top: 0.5rem;
-    padding: 0.5rem;
-    font-size: 0.9rem;
-}
-
-.bin-badge {
-    padding: 0.1rem 0.4rem;
-    margin-right: 0.2rem;
-    font-size: 0.7rem;
-}
-
-/* Compact quick actions - 2x2 grid */
-.quick-actions {
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
-}
-
-.quick-actions .button {
-    padding: 0.6rem 0.5rem;
-    font-size: 0.8rem;
-    text-align: center;
-}
-
-/* Compact file list */
-.file-list {
-    max-height: 120px;  /* Limit height */
-    overflow-y: auto;
-}
-
-.file-item {
-    padding: 0.2rem 0;
-    font-size: 0.9rem;
-}
-
-.file-item a {
-    font-weight: 500;
-}
-
-.file-item small {
-    font-size: 0.75rem;
-}
-
-/* Mobile adjustments */
-@media (max-width: 768px) {
-    .homepage-grid {
-        grid-template-columns: 1fr;
-        gap: 0.5rem;
-    }
-    
-    .quick-actions {
-        grid-template-columns: repeat(4, 1fr);
-    }
-    
-    .quick-actions .button {
-        font-size: 0.7rem;
-        padding: 0.5rem 0.3rem;
-    }
-}
-
-/* iPad portrait optimization */
-@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
-    .homepage-grid {
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-    }
-    
-    /* Ensure everything fits in viewport */
-    .dashboard-section {
-        padding: 0.6rem;
-    }
-    
-    .quick-actions .button {
-        padding: 0.7rem 0.4rem;
-        font-size: 0.85rem;
-    }
-}
-</style>
 
 <script>
 function toggleReminder(reminderId) {

@@ -1,119 +1,99 @@
 {% extends "base.html" %}
 <!--
 /home/life/app/templates/temp_calendar.html
-Version: 1.0.5
-Purpose: Interactive calendar view with event edit/delete/move functionality
+Version: 1.2.2
+Purpose: Simple calendar list - one line per event like documents layout
 Created: 2025-06-11
-Updated: 2025-06-12 - Fixed template error for empty calendar cells, removed emojis
+Updated: 2025-06-13 - Simplified to one line per event (like documents), no more confusing grouping
 -->
 
 {% block title %}Calendar - Life{% endblock %}
 
-{% block template_info %}temp_calendar.html v1.0.3 - Interactive calendar{% endblock %}
+{% block page_name %}: Calendar{% endblock %}
+
+{% block template_info %}temp_calendar.html v1.2.0 - Elderly-friendly calendar list{% endblock %}
 
 {% block content %}
 <div class="container">
-    <h1>Calendar - {{ month }}/{{ year }}</h1>
-    
-    <div class="calendar-nav">
-        <a href="{{ url_for('main.calendar', year=year, month=month-1 if month > 1 else 12) }}" class="button button-secondary">Previous</a>
-        <a href="{{ url_for('main.calendar') }}" class="button">Today</a>
-        <a href="{{ url_for('main.calendar', year=year, month=month+1 if month < 12 else 1) }}" class="button button-secondary">Next</a>
-    </div>
-    
-    <div class="calendar-grid">
-        <div class="calendar-header">
-            <div>Mon</div>
-            <div>Tue</div>
-            <div>Wed</div>
-            <div>Thu</div>
-            <div>Fri</div>
-            <div>Sat</div>
-            <div>Sun</div>
+    <!-- Simple, clear controls -->
+    <div class="calendar-controls">
+        <div class="calendar-nav">
+            <a href="{{ url_for('main.calendar', year=year, month=month-1 if month > 1 else 12) }}" class="button">← Last Month</a>
+            <span class="calendar-period">
+                {% set month_names = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] %}
+                {{ month_names[month] }} {{ year }}
+            </span>
+            <a href="{{ url_for('main.calendar', year=year, month=month+1 if month < 12 else 1) }}" class="button">Next Month →</a>
         </div>
         
-        {% for week in calendar_data %}
-            {% for day in week %}
-                <div class="calendar-day {% if day.is_today %}today{% endif %}" 
-                     data-date="{{ day.date }}" 
-                     ondrop="drop(event)" 
-                     ondragover="allowDrop(event)"
-                     onclick="window.location.href='{{ url_for('main.day_view', date_str=day.date.strftime('%Y-%m-%d')) if day.date else '#' }}'">>
-                    {% if day.day %}
-                        <div class="day-number">{{ day.day }}</div>
-                        {% if day.events %}
-                            {% for event in day.events %}
-                            <div class="event" 
-                                 draggable="true" 
-                                 ondragstart="drag(event)" 
-                                 data-event-id="{{ event.id }}"
-                                 onclick="event.stopPropagation(); showEventMenu({{ event.id }}, '{{ event.title }}', event)">
-                                <span class="event-title">{{ event.title }}</span>
-                                {% if event.time %}
-                                <span class="event-time">{{ event.time }}</span>
-                                {% endif %}
-                            </div>
-                            {% endfor %}
-                        {% endif %}
-                    {% endif %}
-                </div>
-            {% endfor %}
-        {% endfor %}
+        <div class="calendar-actions">
+            <a href="{{ url_for('main.add_event') }}" class="button">Add Event</a>
+            <a href="{{ url_for('main.calendar') }}" class="button button-secondary">This Month</a>
+        </div>
     </div>
     
-    <div class="calendar-actions">
-        <a href="{{ url_for('main.add_event') }}" class="button">Add Event</a>
+    <!-- Quick navigation -->
+    <div class="quick-nav">
+        <h3>Jump to:</h3>
+        <div class="quick-nav-buttons">
+            <a href="{{ url_for('main.calendar') }}" class="button button-small">This Month</a>
+            <a href="{{ url_for('main.calendar', year=year, month=month+1 if month < 12 else 1) }}" class="button button-small">Next Month</a>
+            <a href="{{ url_for('main.calendar', year=year+1, month=month) }}" class="button button-small">Next Year</a>
+        </div>
     </div>
+    
+    <!-- Debug: Show what data we have -->
+    {% if config.DEBUG %}
+    <div class="debug-info">
+        <small>Debug: calendar_data has {{ calendar_data|length }} weeks</small>
+    </div>
+    {% endif %}
+    
+    <!-- Events list - simple one line per event like documents -->
+    {% set all_events = [] %}
+    {% for week in calendar_data %}
+        {% for day in week %}
+            {% if day.day and day.events %}
+                {% for event in day.events %}
+                    {% if all_events.append({'date': day.date, 'event': event}) %}{% endif %}
+                {% endfor %}
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+    
+    {% if all_events %}
+        <div class="events-list">
+            {% for item in all_events %}
+            <div class="event-row">
+                <div class="event-line">
+                    <a href="{{ url_for('main.day_view', date_str=item.date.strftime('%Y-%m-%d')) }}" class="button button-small">View Day</a>
+                    <span class="event-title">{{ item.event.title }}</span>
+                    <span class="event-date">{{ item.date.strftime('%a %b %d') }}</span>
+                    <div class="event-actions">
+                        <button onclick="showEventMenu({{ item.event.id }}, '{{ item.event.title }}', event)" class="button button-small button-secondary">⋯</button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-events">
+            <h3>No Events in {{ month_names[month] }}</h3>
+            <p>Nothing scheduled for {{ month_names[month] }} {{ year }}.</p>
+            <a href="{{ url_for('main.add_event') }}" class="button">Add Your First Event</a>
+        </div>
+    {% endif %}
 </div>
 
 <!-- Event context menu -->
 <div id="eventMenu" class="event-menu" style="display: none;">
-    <button onclick="editEvent()" class="menu-item">✏️ Edit</button>
-    <button onclick="deleteEvent()" class="menu-item menu-danger">🗑️ Delete</button>
-    <button onclick="closeMenu()" class="menu-item">❌ Cancel</button>
+    <button onclick="editEvent()" class="menu-item">Edit</button>
+    <button onclick="deleteEvent()" class="menu-item menu-danger">Delete</button>
+    <button onclick="closeMenu()" class="menu-item">Cancel</button>
 </div>
-
-
 
 <script>
 let currentEventId = null;
-let draggedEventId = null;
-
-// Drag and drop functionality
-function allowDrop(ev) {
-    ev.preventDefault();
-    ev.currentTarget.classList.add('drag-over');
-}
-
-function drag(ev) {
-    draggedEventId = ev.target.getAttribute('data-event-id');
-    ev.target.classList.add('dragging');
-    ev.dataTransfer.setData("text", draggedEventId);
-}
-
-function drop(ev) {
-    ev.preventDefault();
-    ev.currentTarget.classList.remove('drag-over');
-    
-    const eventId = ev.dataTransfer.getData("text");
-    const newDate = ev.currentTarget.getAttribute('data-date');
-    
-    if (eventId && newDate) {
-        moveEventToDate(eventId, newDate);
-    }
-    
-    // Clean up dragging class
-    document.querySelectorAll('.event.dragging').forEach(el => {
-        el.classList.remove('dragging');
-    });
-}
-
-// Remove drag-over class when leaving
-document.addEventListener('dragleave', function(ev) {
-    if (ev.target.classList.contains('calendar-day')) {
-        ev.target.classList.remove('drag-over');
-    }
-});
 
 // Event context menu
 function showEventMenu(eventId, eventTitle, event) {
@@ -165,45 +145,9 @@ function closeMenu() {
 
 // Close menu when clicking elsewhere
 document.addEventListener('click', function(event) {
-    if (!event.target.closest('.event-menu') && !event.target.closest('.event')) {
+    if (!event.target.closest('.event-menu') && !event.target.closest('button[onclick*="showEventMenu"]')) {
         closeMenu();
     }
 });
-
-// Move event to new date
-function moveEventToDate(eventId, newDate) {
-    fetch(`/event/move/${eventId}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ new_date: newDate })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showFeedback(data.message);
-            // Reload calendar after short delay
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            alert('Failed to move event: ' + data.error);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Failed to move event');
-    });
-}
-
-function showFeedback(message) {
-    const feedback = document.createElement('div');
-    feedback.className = 'move-feedback';
-    feedback.textContent = message;
-    document.body.appendChild(feedback);
-    
-    setTimeout(() => {
-        feedback.remove();
-    }, 3000);
-}
 </script>
 {% endblock %}

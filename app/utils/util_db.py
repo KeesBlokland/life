@@ -1,8 +1,9 @@
 """
 /home/life/app/utils/util_db.py
-Version: 1.0.0
-Purpose: Database operations - initialization, queries, helper functions
+Version: 1.1.0
+Purpose: Database operations with bin collection table
 Created: 2025-06-11
+Updated: 2025-06-13 - Added bin_collections table
 """
 
 import sqlite3
@@ -165,6 +166,19 @@ def create_tables(db):
         )
     ''')
     
+    # Bin collection schedule
+    db.execute('''
+        CREATE TABLE IF NOT EXISTS bin_collections (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date DATE NOT NULL,
+            time TIME,
+            bin_types TEXT NOT NULL,
+            completed BOOLEAN DEFAULT 0,
+            notes TEXT,
+            created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
     # Shopping list
     db.execute('''
         CREATE TABLE IF NOT EXISTS shopping_items (
@@ -204,6 +218,7 @@ def create_tables(db):
     db.execute('CREATE INDEX IF NOT EXISTS idx_files_deleted ON files(deleted)')
     db.execute('CREATE INDEX IF NOT EXISTS idx_metadata_keywords ON metadata(keywords)')
     db.execute('CREATE INDEX IF NOT EXISTS idx_events_date ON events(date)')
+    db.execute('CREATE INDEX IF NOT EXISTS idx_bin_collections_date ON bin_collections(date)')
 
 def insert_defaults(db):
     """Insert default data"""
@@ -225,11 +240,8 @@ def insert_defaults(db):
             (term, json.dumps(related))
         )
     
-    # Default settings
+    # Default settings (keep for backwards compatibility, but bin schedule now uses bin_collections table)
     default_settings = {
-        'refuse_blue_day': 'monday',
-        'refuse_yellow_day': 'tuesday',
-        'refuse_brown_day': 'friday',
         'backup_enabled': 'true',
         'backup_time': '02:00'
     }
@@ -272,3 +284,23 @@ def execute_db(query, args=()):
         current_app.logger.debug(f"DB Rows affected: {cur.rowcount}")
     
     return cur.lastrowid
+
+def parse_any_timestamp(timestamp_str):
+    """Handle ALL timestamp formats created across sessions."""
+    if not timestamp_str:
+        return None
+    
+    try:
+        ts = str(timestamp_str).strip()
+        # Remove microseconds and timezone info
+        ts = ts.split('.')[0].split('+')[0].split('Z')[0].replace('T', ' ')
+        
+        formats = ['%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%d']
+        for fmt in formats:
+            try:
+                return datetime.strptime(ts, fmt).strftime('%Y-%m-%d %H:%M:%S')
+            except ValueError:
+                continue
+        return None
+    except:
+        return None
