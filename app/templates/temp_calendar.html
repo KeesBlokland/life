@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 <!--
 /home/life/app/templates/temp_calendar.html
-Version: 1.2.2
-Purpose: Simple calendar list - one line per event like documents layout
+Version: 1.3.1
+Purpose: 4-week rolling view with working navigation buttons
 Created: 2025-06-11
-Updated: 2025-06-13 - Simplified to one line per event (like documents), no more confusing grouping
+Updated: 2025-06-13 - Fixed navigation buttons to work with 4-week system instead of broken monthly logic
 -->
 
 {% block title %}Calendar - Life{% endblock %}
@@ -15,20 +15,20 @@ Updated: 2025-06-13 - Simplified to one line per event (like documents), no more
 
 {% block content %}
 <div class="container">
-    <!-- Simple, clear controls -->
+    <!-- Simple, practical controls -->
     <div class="calendar-controls">
         <div class="calendar-nav">
-            <a href="{{ url_for('main.calendar', year=year, month=month-1 if month > 1 else 12) }}" class="button">← Last Month</a>
+            <a href="{{ url_for('main.calendar', year=year, month=month-1 if month > 1 else 12) }}" class="button">← Previous 4 Weeks</a>
             <span class="calendar-period">
-                {% set month_names = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] %}
-                {{ month_names[month] }} {{ year }}
+                Next 4 Weeks
+                <small>(from {% set month_names = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] %}{{ month_names[month] }})</small>
             </span>
-            <a href="{{ url_for('main.calendar', year=year, month=month+1 if month < 12 else 1) }}" class="button">Next Month →</a>
+            <a href="{{ url_for('main.calendar', year=year, month=month+1 if month < 12 else 1) }}" class="button">Next 4 Weeks →</a>
         </div>
         
         <div class="calendar-actions">
             <a href="{{ url_for('main.add_event') }}" class="button">Add Event</a>
-            <a href="{{ url_for('main.calendar') }}" class="button button-secondary">This Month</a>
+            <a href="{{ url_for('main.calendar') }}" class="button button-secondary">Current Period</a>
         </div>
     </div>
     
@@ -36,8 +36,8 @@ Updated: 2025-06-13 - Simplified to one line per event (like documents), no more
     <div class="quick-nav">
         <h3>Jump to:</h3>
         <div class="quick-nav-buttons">
-            <a href="{{ url_for('main.calendar') }}" class="button button-small">This Month</a>
-            <a href="{{ url_for('main.calendar', year=year, month=month+1 if month < 12 else 1) }}" class="button button-small">Next Month</a>
+            <a href="{{ url_for('main.calendar') }}" class="button button-small">This Period</a>
+            <a href="{{ url_for('main.calendar', year=year, month=month+1 if month < 12 else 1) }}" class="button button-small">Next Period</a>
             <a href="{{ url_for('main.calendar', year=year+1, month=month) }}" class="button button-small">Next Year</a>
         </div>
     </div>
@@ -45,32 +45,40 @@ Updated: 2025-06-13 - Simplified to one line per event (like documents), no more
     <!-- Debug: Show what data we have -->
     {% if config.DEBUG %}
     <div class="debug-info">
-        <small>Debug: calendar_data has {{ calendar_data|length }} weeks</small>
+        <small>Debug: 4-week period from {{ start_date.strftime('%Y-%m-%d') }} to {{ end_date.strftime('%Y-%m-%d') }}</small>
     </div>
     {% endif %}
     
-    <!-- Events list - simple one line per event like documents -->
-    {% set all_events = [] %}
+    <!-- Events list - true one line per date -->
+    {% set dates_with_events = [] %}
     {% for week in calendar_data %}
         {% for day in week %}
             {% if day.day and day.events %}
-                {% for event in day.events %}
-                    {% if all_events.append({'date': day.date, 'event': event}) %}{% endif %}
+                {% set found = false %}
+                {% for existing in dates_with_events %}
+                    {% if existing.date.strftime('%Y-%m-%d') == day.date.strftime('%Y-%m-%d') %}
+                        {% set found = true %}
+                        {% for event in day.events %}
+                            {% set _ = existing.events.append(event) %}
+                        {% endfor %}
+                    {% endif %}
                 {% endfor %}
+                {% if not found %}
+                    {% set _ = dates_with_events.append({'date': day.date, 'events': day.events[:]}) %}
+                {% endif %}
             {% endif %}
         {% endfor %}
     {% endfor %}
     
-    {% if all_events %}
+    {% if dates_with_events %}
         <div class="events-list">
-            {% for item in all_events %}
+            {% for date_data in dates_with_events %}
             <div class="event-row">
                 <div class="event-line">
-                    <a href="{{ url_for('main.day_view', date_str=item.date.strftime('%Y-%m-%d')) }}" class="button button-small">View Day</a>
-                    <span class="event-title">{{ item.event.title }}</span>
-                    <span class="event-date">{{ item.date.strftime('%a %b %d') }}</span>
+                    <a href="{{ url_for('main.day_view', date_str=date_data.date.strftime('%Y-%m-%d')) }}" class="button button-small">View Day</a>
+                    <span class="event-title">{{ date_data.date.strftime('%a %b %d') }}: {% for event in date_data.events %}{{ event.title }}{% if not loop.last %}, {% endif %}{% endfor %}</span>
                     <div class="event-actions">
-                        <button onclick="showEventMenu({{ item.event.id }}, '{{ item.event.title }}', event)" class="button button-small button-secondary">⋯</button>
+                        <span class="event-count">{{ date_data.events|length }}</span>
                     </div>
                 </div>
             </div>
@@ -78,8 +86,8 @@ Updated: 2025-06-13 - Simplified to one line per event (like documents), no more
         </div>
     {% else %}
         <div class="no-events">
-            <h3>No Events in {{ month_names[month] }}</h3>
-            <p>Nothing scheduled for {{ month_names[month] }} {{ year }}.</p>
+            <h3>No Events in Next 4 Weeks</h3>
+            <p>Nothing scheduled for the next 4 weeks.</p>
             <a href="{{ url_for('main.add_event') }}" class="button">Add Your First Event</a>
         </div>
     {% endif %}

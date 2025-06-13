@@ -179,6 +179,42 @@ CREATE TABLE credentials (
 - `styles.css` - Add bin-specific event colors
 - `bp_main.py` - Ensure bin type stored in event description/title
 
+### 2. Calendar Overcomplification - CRITICAL REALIZATION
+Problem: Spent entire day trying to fix complex calendar widgets when user wanted simple event list
+Root Issue: Engineer asked for "show events in chronological order" - I built calendar grids, month boundaries, 4-week periods
+Simple Solution Needed:
+
+Events = rows in table with dates
+Query: SELECT * FROM events WHERE date >= today ORDER BY date LIMIT 20
+Display: Simple chronological list (like homepage "Upcoming" section but longer)
+Navigation: "Show More" / "Show Previous" buttons
+Format: Jun 17: Brown Bin, Green Bin | Aug 25 2026: Birthday
+
+User's Valid Engineering Logic:
+
+Walk through the table
+Display what you find
+Don't overthink it
+Events are just data, not calendar widgets
+
+What NOT to build:
+
+Complex calendar grids
+Month boundary logic
+4-week period calculations
+Navigation that breaks when crossing months
+
+Tomorrow: Build simple chronological event list, not calendar widgets
+Files to Create/Modify:
+
+Simple events list template (chronological, not calendar grid)
+Backend: Basic date-ordered query with pagination
+Remove broken calendar navigation complexity
+
+Key Lesson: User asked for bicycle, I built broken rocket ship. Keep it simple.
+
+
+
 ### 2. Calendar Recurring Events Issues
 **Problem:** Recurring bin entries appearing on unwanted days, not editable, invisible until day selected
 

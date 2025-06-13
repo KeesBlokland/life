@@ -765,8 +765,15 @@ footer {
     font-weight: 500;
     font-size: 1.1rem;
     color: var(--text-primary);
-    min-width: 150px;
+    min-width: 180px;
     text-align: center;
+}
+
+.calendar-period small {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: normal;
 }
 
 .calendar-actions {
@@ -929,6 +936,7 @@ footer {
     display: flex;
     gap: 0.3rem;
 }
+
 
 
 /* Day View - Compact like homepage */

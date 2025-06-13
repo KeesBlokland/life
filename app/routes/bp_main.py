@@ -1,17 +1,16 @@
+#!/usr/bin/env python3
 """
-/home/life/app/routes/bp_main.py
-Version: 1.1.1
-Purpose: Main routes with exact bin collection types
+dir_bp_main.py - Main routes - homepage, calendar, shopping lists, reminders
+Version: 1.0.5
+Purpose: Main routes with 4-week rolling calendar instead of rigid monthly boundaries
 Created: 2025-06-11
-Updated: 2025-06-13 - Updated to use exact bin types from config
+Updated: 2025-06-13 - Modified calendar to show 4-week rolling periods for better planning
 """
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, session
 from datetime import datetime, date, timedelta
-import json
 from routes.bp_auth import login_required, admin_required
 from utils.util_db import get_db, query_db, execute_db
-
 
 main_bp = Blueprint('main', __name__)
 
@@ -47,8 +46,8 @@ def index():
         WHERE completed = 0
     ''', one=True)['count']
     
-    # Check bin collections for today and tomorrow
-    refuse_bins = check_bin_collections(today)
+    # Check refuse bins for today
+    refuse_bins = check_refuse_collection(today)
     
     # Get recent files
     recent_files = query_db('''
@@ -73,231 +72,51 @@ def index():
                          refuse_bins=refuse_bins,
                          recent_files=recent_files)
 
-@main_bp.route('/bins/schedule')
-@login_required
-def bin_schedule():
-    """Manage bin collection schedule"""
-    today = date.today()
-    
-    # Get upcoming collections
-    upcoming = query_db('''
-        SELECT id, date, time, bin_types, completed, notes
-        FROM bin_collections
-        WHERE date >= ? AND completed = 0
-        ORDER BY date
-    ''', (today,))
-    
-    # Get past collections (last 10)
-    past = query_db('''
-        SELECT id, date, time, bin_types, completed
-        FROM bin_collections
-        WHERE date < ? OR completed = 1
-        ORDER BY date DESC
-        LIMIT 10
-    ''', (today,))
-    
-    # Process collections for display
-    upcoming_collections = []
-    for collection in upcoming:
-        bin_types = json.loads(collection['bin_types'])
-        days_until = (collection['date'] - today).days
-        
-        if days_until == 0:
-            days_str = "Today"
-        elif days_until == 1:
-            days_str = "Tomorrow"
-        else:
-            days_str = f"In {days_until} days"
-        
-        upcoming_collections.append({
-            'id': collection['id'],
-            'date': collection['date'],
-            'time': collection['time'],
-            'bin_types': bin_types,
-            'days_until': days_str,
-            'notes': collection['notes']
-        })
-    
-    past_collections = []
-    for collection in past:
-        bin_types = json.loads(collection['bin_types'])
-        past_collections.append({
-            'id': collection['id'],
-            'date': collection['date'],
-            'time': collection['time'],
-            'bin_types': bin_types,
-            'completed': collection['completed']
-        })
-    
-    return render_template('temp_bin_schedule.html',
-                         upcoming_collections=upcoming_collections,
-                         past_collections=past_collections)
-
-@main_bp.route('/bins/add', methods=['POST'])
-@login_required
-def add_bin_collection():
-    """Add new bin collection"""
-    collection_date = request.form.get('collection_date')
-    collection_time = request.form.get('collection_time')
-    bin_types = request.form.getlist('bin_types')
-    
-    if not collection_date or not bin_types:
-        flash('Date and at least one bin type are required', 'error')
-        return redirect(url_for('main.bin_schedule'))
-    
-    # Check for duplicate date
-    existing = query_db('SELECT id FROM bin_collections WHERE date = ? AND completed = 0', 
-                       (collection_date,), one=True)
-    if existing:
-        flash('Collection already scheduled for this date', 'warning')
-        return redirect(url_for('main.bin_schedule'))
-    
-    # Store bin types as JSON
-    bin_types_json = json.dumps(bin_types)
-    
-    execute_db('''
-        INSERT INTO bin_collections (date, time, bin_types)
-        VALUES (?, ?, ?)
-    ''', (collection_date, collection_time, bin_types_json))
-    
-    # Create readable bin names for flash message
-    bin_names = []
-    for bin_type in bin_types:
-        bin_info = current_app.config['BIN_TYPES'].get(bin_type, {})
-        bin_names.append(bin_info.get('name', bin_type))
-    
-    flash(f'Scheduled collection for {collection_date}: {", ".join(bin_names)}', 'success')
-    
-    if current_app.config['DEBUG']:
-        current_app.logger.debug(f"Added bin collection: {collection_date}, bins: {bin_types}")
-    
-    return redirect(url_for('main.bin_schedule'))
-
-@main_bp.route('/bins/delete/<int:collection_id>', methods=['POST'])
-@login_required
-def delete_bin_collection(collection_id):
-    """Delete bin collection"""
-    collection = query_db('SELECT date, bin_types FROM bin_collections WHERE id = ?', 
-                         (collection_id,), one=True)
-    
-    if not collection:
-        flash('Collection not found', 'error')
-        return redirect(url_for('main.bin_schedule'))
-    
-    execute_db('DELETE FROM bin_collections WHERE id = ?', (collection_id,))
-    
-    flash(f'Deleted collection for {collection["date"]}', 'success')
-    
-    if current_app.config['DEBUG']:
-        current_app.logger.debug(f"Deleted bin collection {collection_id}")
-    
-    return redirect(url_for('main.bin_schedule'))
-
-@main_bp.route('/bins/complete/<int:collection_id>', methods=['POST'])
-@login_required
-def complete_bin_collection(collection_id):
-    """Mark bin collection as completed"""
-    execute_db('''
-        UPDATE bin_collections 
-        SET completed = 1 
-        WHERE id = ?
-    ''', (collection_id,))
-    
-    flash('Collection marked as completed', 'success')
-    return redirect(url_for('main.bin_schedule'))
-
 @main_bp.route('/calendar')
-@main_bp.route('/calendar/<int:year>/<int:month>')
+@main_bp.route('/calendar/<date_str>')
 @login_required
-def calendar(year=None, month=None):
-    """Calendar view with events and refuse collection"""
-    if year is None:
-        today = date.today()
-        year = today.year
-        month = today.month
+def calendar(date_str=None):
+    """Calendar view with 4-week rolling periods instead of rigid months"""
     
-    # Get events for the month
-    start_date = date(year, month, 1)
-    if month == 12:
-        end_date = date(year + 1, 1, 1) - timedelta(days=1)
+    # Determine the start date for the 4-week period
+    if date_str:
+        try:
+            start_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            start_date = date.today()
     else:
-        end_date = date(year, month + 1, 1) - timedelta(days=1)
+        start_date = date.today()
     
+    # Calculate 4-week period
+    end_date = start_date + timedelta(days=27)  # 4 weeks (28 days total)
+    
+    # Get events for this 4-week period
     events = query_db('''
-        SELECT id, title, date, time, category, recurring, description
+        SELECT id, title, date, time, category, recurring
         FROM events
         WHERE (date >= ? AND date <= ?) OR recurring IS NOT NULL
         ORDER BY date, time
     ''', (start_date, end_date))
     
-    # Build calendar data
-    calendar_data = build_calendar_data(year, month, events)
+    # Build calendar data for 4-week period
+    calendar_data = build_calendar_data_weeks(start_date, end_date, events)
+    
+    # Calculate navigation dates
+    prev_start = start_date - timedelta(days=28)
+    next_start = start_date + timedelta(days=28)
+    
+    # For template compatibility, pass month/year of start date
+    year = start_date.year
+    month = start_date.month
     
     return render_template('temp_calendar.html',
                          year=year,
                          month=month,
+                         start_date=start_date,
+                         end_date=end_date,
+                         prev_start=prev_start,
+                         next_start=next_start,
                          calendar_data=calendar_data)
-
-@main_bp.route('/calendar/recurring')
-@login_required
-def recurring_events():
-    """Manage recurring events - view and delete problematic ones"""
-    # Get all recurring events
-    recurring = query_db('''
-        SELECT id, title, date, time, category, recurring, description, created_date
-        FROM events
-        WHERE recurring IS NOT NULL AND recurring != ''
-        ORDER BY created_date DESC, title
-    ''')
-    
-    # Get all events (to see duplicates)
-    all_events = query_db('''
-        SELECT id, title, date, time, category, recurring, description
-        FROM events
-        ORDER BY date DESC, title
-        LIMIT 50
-    ''')
-    
-    if current_app.config['DEBUG']:
-        current_app.logger.debug(f"Found {len(recurring)} recurring events")
-    
-    return render_template('temp_recurring_events.html',
-                         recurring_events=recurring,
-                         all_events=all_events)
-
-@main_bp.route('/calendar/recurring/delete/<int:event_id>', methods=['POST'])
-@login_required
-def delete_recurring_event(event_id):
-    """Delete a recurring event"""
-    event = query_db('SELECT title, recurring FROM events WHERE id = ?', (event_id,), one=True)
-    
-    if not event:
-        flash('Event not found', 'error')
-        return redirect(url_for('main.recurring_events'))
-    
-    execute_db('DELETE FROM events WHERE id = ?', (event_id,))
-    
-    flash(f'Deleted recurring event: {event["title"]}', 'success')
-    
-    if current_app.config['DEBUG']:
-        current_app.logger.debug(f"Deleted recurring event {event_id}: {event['title']}")
-    
-    return redirect(url_for('main.recurring_events'))
-
-@main_bp.route('/calendar/recurring/delete_all', methods=['POST'])
-@admin_required
-def delete_all_recurring():
-    """Delete ALL recurring events (admin only)"""
-    count = query_db('SELECT COUNT(*) as count FROM events WHERE recurring IS NOT NULL AND recurring != ""', one=True)['count']
-    
-    execute_db('DELETE FROM events WHERE recurring IS NOT NULL AND recurring != ""')
-    
-    flash(f'Deleted all {count} recurring events', 'success')
-    
-    if current_app.config['DEBUG']:
-        current_app.logger.debug(f"Deleted all {count} recurring events")
-    
-    return redirect(url_for('main.recurring_events'))
 
 @main_bp.route('/calendar/day/<date_str>')
 @login_required
@@ -317,8 +136,8 @@ def day_view(date_str):
         ORDER BY time
     ''', (view_date,))
     
-    # Get bin collections for this day
-    refuse_bins = check_bin_collections(view_date)
+    # Get refuse bins for this day
+    refuse_bins = check_refuse_collection(view_date)
     
     # Calculate prev/next dates
     prev_date = view_date - timedelta(days=1)
@@ -422,17 +241,6 @@ def add_event():
         recurring = request.form.get('recurring')
         description = request.form.get('description', '').strip()
         
-                        # Handle bin events - store bin type in description
-        if category == 'bin':
-            bin_type = request.form.get('bin_type', '')
-            if bin_type:
-                description = bin_type  # Store bin type in description for color coding
-                # Title should already be set correctly by JavaScript
-                if not title or title == 'Bin':
-                    # Fallback title generation using config
-                    bin_config = current_app.config['BIN_TYPES'].get(bin_type, {})
-                    title = bin_config.get('name', 'Bin')
-        
         if not title or not event_date:
             flash('Title and date are required', 'error')
             return redirect(url_for('main.add_event'))
@@ -441,9 +249,6 @@ def add_event():
             INSERT INTO events (title, date, time, category, recurring, description)
             VALUES (?, ?, ?, ?, ?, ?)
         ''', (title, event_date, event_time, category, recurring, description))
-        
-        if current_app.config['DEBUG']:
-            current_app.logger.debug(f"Added event: {title} on {event_date}, category: {category}, description: {description}")
         
         flash('Event added successfully', 'success')
         return redirect(url_for('main.calendar'))
@@ -468,15 +273,6 @@ def edit_event(event_id):
         recurring = request.form.get('recurring')
         description = request.form.get('description', '').strip()
         
-        # Handle bin events - store bin type in description
-        if category == 'bin':
-            bin_type = request.form.get('bin_type', '')
-            if bin_type:
-                description = bin_type  # Store bin type in description for color coding
-                # Update title to match bin type using config
-                bin_config = current_app.config['BIN_TYPES'].get(bin_type, {})
-                title = bin_config.get('name', 'Bin')
-        
         if not title or not event_date:
             flash('Title and date are required', 'error')
             return redirect(url_for('main.edit_event', event_id=event_id))
@@ -486,9 +282,6 @@ def edit_event(event_id):
             SET title = ?, date = ?, time = ?, category = ?, recurring = ?, description = ?
             WHERE id = ?
         ''', (title, event_date, event_time, category, recurring, description, event_id))
-        
-        if current_app.config['DEBUG']:
-            current_app.logger.debug(f"Updated event {event_id}: {title}, category: {category}, description: {description}")
         
         flash('Event updated successfully', 'success')
         return redirect(url_for('main.calendar'))
@@ -527,41 +320,86 @@ def move_event(event_id):
     
     return jsonify({'success': True, 'message': f'Moved {event["title"]} to {new_date}'})
 
-# Helper functions
-def check_bin_collections(check_date):
-    """Check bin collections for specific date"""
-    # Get bin collections for today and tomorrow
-    collections = query_db('''
-        SELECT date, bin_types
-        FROM bin_collections
-        WHERE date >= ? AND date <= ? AND completed = 0
-        ORDER BY date
-    ''', (check_date, check_date + timedelta(days=1)))
-    
+@main_bp.route('/bins')
+@login_required
+def bin_schedule():
+    """Bins button redirects directly to calendar for interaction"""
+    return redirect(url_for('main.calendar'))
+def check_refuse_collection(check_date):
+    """Check which bins need to go out"""
     bins = []
-    for collection in collections:
-        collection_date = collection['date']
-        bin_types = json.loads(collection['bin_types'])
-        
-        for bin_type in bin_types:
-            bin_info = current_app.config['BIN_TYPES'].get(bin_type, {})
-            if collection_date == check_date:
-                bins.append({
-                    'type': f"{bin_info.get('name', bin_type)} ({bin_info.get('description', '')})",
-                    'color': bin_type,
-                    'when': 'today'
-                })
-            elif collection_date == check_date + timedelta(days=1):
-                bins.append({
-                    'type': f"{bin_info.get('name', bin_type)} ({bin_info.get('description', '')})",
-                    'color': bin_type,
-                    'when': 'tomorrow'
-                })
+    day_name = check_date.strftime('%A').lower()
+    
+    settings = {
+        'refuse_blue_day': query_db("SELECT value FROM settings WHERE key = 'refuse_blue_day'", one=True),
+        'refuse_yellow_day': query_db("SELECT value FROM settings WHERE key = 'refuse_yellow_day'", one=True),
+        'refuse_brown_day': query_db("SELECT value FROM settings WHERE key = 'refuse_brown_day'", one=True)
+    }
+    
+    if settings['refuse_blue_day'] and settings['refuse_blue_day']['value'] == day_name:
+        bins.append({'type': 'Blue bin (Paper)', 'color': 'blue'})
+    if settings['refuse_yellow_day'] and settings['refuse_yellow_day']['value'] == day_name:
+        bins.append({'type': 'Yellow bin (Recycling)', 'color': 'yellow'})
+    if settings['refuse_brown_day'] and settings['refuse_brown_day']['value'] == day_name:
+        bins.append({'type': 'Brown bin (Bio)', 'color': 'brown'})
     
     return bins
 
+def build_calendar_data_weeks(start_date, end_date, events):
+    """Build calendar data for 4-week date range instead of calendar months"""
+    calendar_data = []
+    
+    # Convert events to dict by date
+    events_by_date = {}
+    for event in events:
+        # Handle both string and date object types
+        if isinstance(event['date'], str):
+            event_date = datetime.strptime(event['date'], '%Y-%m-%d').date()
+        else:
+            event_date = event['date']
+            
+        # Only include events in our 4-week range
+        if start_date <= event_date <= end_date:
+            if event_date not in events_by_date:
+                events_by_date[event_date] = []
+            events_by_date[event_date].append(event)
+    
+    # Build 4 weeks of data
+    current_date = start_date
+    current_week = []
+    
+    while current_date <= end_date:
+        day_events = events_by_date.get(current_date, [])
+        refuse_bins = check_refuse_collection(current_date)
+        
+        day_data = {
+            'day': current_date.day,
+            'date': current_date,
+            'events': day_events,
+            'refuse_bins': refuse_bins,
+            'is_today': current_date == date.today()
+        }
+        
+        current_week.append(day_data)
+        
+        # Every 7 days, start a new week
+        if len(current_week) == 7:
+            calendar_data.append(current_week)
+            current_week = []
+        
+        current_date += timedelta(days=1)
+    
+    # Add any remaining days
+    if current_week:
+        # Pad with empty days if needed
+        while len(current_week) < 7:
+            current_week.append({'day': None, 'date': None, 'events': [], 'refuse_bins': []})
+        calendar_data.append(current_week)
+    
+    return calendar_data
+
 def build_calendar_data(year, month, events):
-    """Build calendar grid with events"""
+    """Build calendar grid with events (legacy function - kept for compatibility)"""
     import calendar
     
     cal = calendar.monthcalendar(year, month)
@@ -589,7 +427,7 @@ def build_calendar_data(year, month, events):
             else:
                 day_date = date(year, month, day)
                 day_events = events_by_date.get(day_date, [])
-                refuse_bins = check_bin_collections(day_date)
+                refuse_bins = check_refuse_collection(day_date)
                 
                 week_data.append({
                     'day': day,
