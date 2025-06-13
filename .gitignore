@@ -6,16 +6,24 @@ __pycache__/
 venv/
 
 # Ignore SQLite database
-data/database/*.db
-
+# Ignore all .db and .backup files in data/
+data/*
+data/backups/*.tar.gz
+data/life.db
+!data/.keep
 # Ignore backups
 data/backups/
 data/documents/
 data/images/events
 
+
 # Ignore uploaded and imported files
 app/uploads/
 import/
+logs/
+docs/
+documents/
+
 
 # Ignore shell scripts (you can comment this out if some scripts should stay)
 *.sh
@@ -35,3 +43,4 @@ SETUP_README.md
 # echo "# Placeholder config file" > app/config.py
 # git add app/config.py
 # git update-index --assume-unchanged app/config.py
+.git-credentials
