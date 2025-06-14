@@ -12,6 +12,14 @@ Updated: 2025-06-13 - Added bin schedule link to navigation
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Life - Family Archive{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles-files.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles-shopping.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles-calendar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles-dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles-misc.css') }}">
+    {% if request.args.get('print') %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='print.css') }}">
+    {% endif %}
     {% if request.args.get('print') %}
     <link rel="stylesheet" href="{{ url_for('static', filename='print.css') }}">
     {% endif %}
@@ -60,7 +68,7 @@ Updated: 2025-06-13 - Added bin schedule link to navigation
 
     <footer>
         <div class="footer-container">
-            <p>&copy; 2025 Life Family Archive System</p>
+            <p>&copy; 2025 Family Information System</p>
             {% if config.FOOTER_INFO %}
                 <div class="debug-footer">
                     Template: {% block template_info %}base.html v1.2.1 - Added bin schedule navigation{% endblock %}

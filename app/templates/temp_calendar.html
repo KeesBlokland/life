@@ -29,18 +29,16 @@ Updated: 2025-06-13 - Fixed navigation buttons to work with 4-week system instea
         <div class="calendar-actions">
             <a href="{{ url_for('main.add_event') }}" class="button">Add Event</a>
             <a href="{{ url_for('main.calendar') }}" class="button button-secondary">Current Period</a>
+            <!--
+            <a href="{{ url_for('main.calendar') }}" class="button button-small">This Period</a>
+            <a href="{{ url_for('main.calendar', year=year, month=month+1 if month<12 else 1) }}" class="button button-small">Next Period</a>
+            <a href="{{ url_for('main.calendar', year=year+1, month=month) }}" class="button button-small">Next Year</a>
+            -->
         </div>
     </div>
     
-    <!-- Quick navigation -->
-    <div class="quick-nav">
-        <h3>Jump to:</h3>
-        <div class="quick-nav-buttons">
-            <a href="{{ url_for('main.calendar') }}" class="button button-small">This Period</a>
-            <a href="{{ url_for('main.calendar', year=year, month=month+1 if month < 12 else 1) }}" class="button button-small">Next Period</a>
-            <a href="{{ url_for('main.calendar', year=year+1, month=month) }}" class="button button-small">Next Year</a>
-        </div>
-    </div>
+    
+    
     
     <!-- Debug: Show what data we have -->
     {% if config.DEBUG %}

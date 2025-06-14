@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 dir_bp_main.py - Main routes - homepage, calendar, shopping lists, reminders
-Version: 1.0.5
+Version: 1.0.6
 Purpose: Main routes with 4-week rolling calendar instead of rigid monthly boundaries
 Created: 2025-06-11
 Updated: 2025-06-13 - Modified calendar to show 4-week rolling periods for better planning
@@ -11,6 +11,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from datetime import datetime, date, timedelta
 from routes.bp_auth import login_required, admin_required
 from utils.util_db import get_db, query_db, execute_db
+from flask import make_response
 
 main_bp = Blueprint('main', __name__)
 
@@ -150,26 +151,7 @@ def day_view(date_str):
                          prev_date=prev_date,
                          next_date=next_date)
 
-@main_bp.route('/lists')
-@login_required
-def lists():
-    """Shopping list and common items"""
-    shopping_items = query_db('''
-        SELECT id, item, quantity, completed
-        FROM shopping_items
-        ORDER BY completed, item
-    ''')
-    
-    common_items = query_db('''
-        SELECT DISTINCT item
-        FROM shopping_items
-        WHERE common_item = 1
-        ORDER BY item
-    ''')
-    
-    return render_template('temp_lists.html',
-                         shopping_items=shopping_items,
-                         common_items=common_items)
+
 
 @main_bp.route('/reminder/toggle/<int:reminder_id>', methods=['POST'])
 @login_required
@@ -194,40 +176,7 @@ def toggle_reminder(reminder_id):
     
     return jsonify({'completed': new_status})
 
-@main_bp.route('/shopping/add', methods=['POST'])
-@login_required
-def add_shopping_item():
-    """Add item to shopping list"""
-    item = request.form.get('item', '').strip()
-    quantity = request.form.get('quantity', '').strip()
-    
-    if not item:
-        flash('Please enter an item', 'error')
-        return redirect(url_for('main.lists'))
-    
-    execute_db('''
-        INSERT INTO shopping_items (item, quantity, completed)
-        VALUES (?, ?, 0)
-    ''', (item, quantity))
-    
-    flash(f'Added {item} to shopping list', 'success')
-    return redirect(url_for('main.lists'))
 
-@main_bp.route('/shopping/toggle/<int:item_id>', methods=['POST'])
-@login_required
-def toggle_shopping_item(item_id):
-    """Toggle shopping item completion"""
-    current = query_db('SELECT completed FROM shopping_items WHERE id = ?', 
-                      (item_id,), one=True)
-    
-    if not current:
-        return jsonify({'error': 'Item not found'}), 404
-    
-    new_status = 0 if current['completed'] else 1
-    execute_db('UPDATE shopping_items SET completed = ? WHERE id = ?',
-              (new_status, item_id))
-    
-    return jsonify({'completed': new_status})
 
 @main_bp.route('/event/add', methods=['GET', 'POST'])
 @login_required
@@ -439,3 +388,236 @@ def build_calendar_data(year, month, events):
         calendar_data.append(week_data)
     
     return calendar_data
+
+ 
+@main_bp.route('/lists')
+@main_bp.route('/lists/<list_name>')
+@login_required
+def lists(list_name='food'):
+    """Shopping list memory support system"""
+    # Get configured lists
+    available_lists = current_app.config.get('SHOPPING_LISTS', [])
+    
+    # Non-admin users can only access food list
+    if not session.get('is_admin') and list_name != 'food':
+        return redirect(url_for('main.lists', list_name='food'))
+    
+    # Validate list name
+    valid_names = [l['name'] for l in available_lists]
+    if list_name not in valid_names:
+        list_name = 'food'
+    
+    # Get master list - all items ever bought, ordered by frequency
+    master_items = query_db('''
+        SELECT item, MAX(quantity) as usual_quantity, COUNT(*) as times_bought,
+               MAX(created_date) as last_bought
+        FROM shopping_items
+        WHERE list_name = ? AND master_list = 1
+        GROUP BY item
+        ORDER BY times_bought DESC, item
+    ''', (list_name,))
+    
+    # Get today's list - items selected for shopping
+    today_items = query_db('''
+        SELECT id, item, quantity, added_date
+        FROM shopping_items
+        WHERE list_name = ? AND today_list = 1
+        ORDER BY item
+    ''', (list_name,))
+    
+    # Get current list info
+    current_list = next((l for l in available_lists if l['name'] == list_name), {'name': 'food', 'title': 'Food Shopping'})
+    
+    return render_template('temp_lists.html',
+                         available_lists=available_lists,
+                         current_list=current_list,
+                         master_items=master_items,
+                         today_items=today_items)
+
+@main_bp.route('/shopping/add_to_today', methods=['POST'])
+@login_required
+def add_to_today():
+    """Add item from master list to today's shopping"""
+    item = request.form.get('item', '').strip()
+    quantity = request.form.get('quantity', '').strip()
+    list_name = request.form.get('list_name', 'food')
+    
+    if not item:
+        flash('No item specified', 'error')
+        return redirect(url_for('main.lists', list_name=list_name))
+    
+    # Check if already on today's list
+    existing = query_db('''
+        SELECT id FROM shopping_items 
+        WHERE list_name = ? AND item = ? AND today_list = 1
+    ''', (list_name, item), one=True)
+    
+    if existing:
+        flash(f'{item} already on today\'s list', 'info')
+    else:
+        # Add to today's list
+        execute_db('''
+            INSERT INTO shopping_items (item, quantity, list_name, today_list, master_list, added_date)
+            VALUES (?, ?, ?, 1, 0, CURRENT_TIMESTAMP)
+        ''', (item, quantity, list_name))
+        flash(f'Added {item} to today\'s list', 'success')
+    
+    return redirect(url_for('main.lists', list_name=list_name))
+
+@main_bp.route('/shopping/add_new', methods=['POST'])
+@login_required  
+def add_new_item():
+    """Add completely new item to master list"""
+    item = request.form.get('item', '').strip()
+    quantity = request.form.get('quantity', '').strip()
+    list_name = request.form.get('list_name', 'food')
+    add_to_today = request.form.get('add_to_today') == 'yes'
+    
+    if not item:
+        flash('Please enter an item', 'error')
+        return redirect(url_for('main.lists', list_name=list_name))
+    
+    # Add to master list
+    execute_db('''
+        INSERT INTO shopping_items (item, quantity, list_name, master_list, today_list, created_date)
+        VALUES (?, ?, ?, 1, ?, CURRENT_TIMESTAMP)
+    ''', (item, quantity, list_name, 1 if add_to_today else 0))
+    
+    flash(f'Added {item} to master list', 'success')
+    return redirect(url_for('main.lists', list_name=list_name))
+
+@main_bp.route('/shopping/update_today/<int:item_id>', methods=['POST'])
+@login_required
+def update_today_item(item_id):
+    """Update quantity on today's list"""
+    quantity = request.form.get('quantity', '').strip()
+    list_name = request.form.get('list_name', 'food')
+    
+    execute_db('UPDATE shopping_items SET quantity = ? WHERE id = ? AND today_list = 1',
+              (quantity, item_id))
+    
+    return redirect(url_for('main.lists', list_name=list_name))
+
+@main_bp.route('/shopping/remove_from_today/<int:item_id>', methods=['POST'])
+@login_required
+def remove_from_today(item_id):
+    """Remove item from today's list"""
+    list_name = request.form.get('list_name', 'food')
+    
+    # Don't delete, just remove from today's list
+    execute_db('UPDATE shopping_items SET today_list = 0 WHERE id = ?', (item_id,))
+    
+    return redirect(url_for('main.lists', list_name=list_name))
+
+@main_bp.route('/shopping/bought_today/<int:item_id>', methods=['POST'])
+@login_required
+def bought_today(item_id):
+    """Mark item as bought - moves to history"""
+    list_name = request.form.get('list_name', 'food')
+    
+    # Get item details
+    item = query_db('SELECT item, quantity FROM shopping_items WHERE id = ?', (item_id,), one=True)
+    
+    if item:
+        # Add to history (master list)
+        execute_db('''
+            INSERT INTO shopping_items (item, quantity, list_name, master_list, today_list, created_date)
+            VALUES (?, ?, ?, 1, 0, CURRENT_TIMESTAMP)
+        ''', (item['item'], item['quantity'], list_name))
+        
+        # Remove from today's list
+        execute_db('DELETE FROM shopping_items WHERE id = ?', (item_id,))
+        
+        flash(f'Marked {item["item"]} as bought', 'success')
+    
+    return redirect(url_for('main.lists', list_name=list_name))
+
+@main_bp.route('/shopping/clear_today', methods=['POST'])
+@login_required
+def clear_today_list():
+    """Clear all items from today's list"""
+    list_name = request.form.get('list_name', 'food')
+    
+    # ONLY delete items marked as today_list = 1
+    execute_db('DELETE FROM shopping_items WHERE list_name = ? AND today_list = 1', (list_name,))
+    
+    flash('Cleared today\'s list', 'success')
+    return redirect(url_for('main.lists', list_name=list_name))
+
+@main_bp.route('/lists/export/<list_name>')
+@login_required
+def export_list(list_name='food'):
+    """Export today's list as text"""
+    items = query_db('''
+        SELECT item, quantity
+        FROM shopping_items
+        WHERE list_name = ? AND today_list = 1
+        ORDER BY item
+    ''', (list_name,))
+    
+    # Create text export
+    lists = current_app.config.get('SHOPPING_LISTS', [])
+    current_list = next((l for l in lists if l['name'] == list_name), {'title': 'Shopping'})
+    
+    text = f"{current_list['title']} - {datetime.now().strftime('%B %d, %Y')}\n"
+    text += "=" * 40 + "\n\n"
+    
+    for item in items:
+        if item['quantity']:
+            text += f"[ ] {item['item']} ({item['quantity']})\n"
+        else:
+            text += f"[ ] {item['item']}\n"
+    
+    response = make_response(text)
+    response.headers['Content-Type'] = 'text/plain; charset=utf-8'
+    response.headers['Content-Disposition'] = f'attachment; filename=shopping_{list_name}_{datetime.now().strftime("%Y%m%d")}.txt'
+    
+    return response
+
+@main_bp.route('/lists/print/<list_name>')
+@login_required
+def print_list(list_name='food'):
+    """Print-friendly view for mobile"""
+    items = query_db('''
+        SELECT item, quantity
+        FROM shopping_items
+        WHERE list_name = ? AND today_list = 1
+        ORDER BY item
+    ''', (list_name,))
+    
+    lists = current_app.config.get('SHOPPING_LISTS', [])
+    current_list = next((l for l in lists if l['name'] == list_name), {'title': 'Shopping List'})
+    
+    return render_template('temp_print_list.html',
+                         items=items,
+                         list_title=current_list['title'],
+                         date=datetime.now().strftime('%B %d, %Y'))   
+
+@main_bp.route('/shopping/delete_master_item', methods=['POST'])
+@admin_required
+def delete_master_item():
+    """Delete item from master list history"""
+    item = request.form.get('item', '').strip()
+    list_name = request.form.get('list_name', 'food')
+    
+    if item:
+        # Delete ALL occurrences of this item from master list
+        execute_db('''
+            DELETE FROM shopping_items 
+            WHERE item = ? AND list_name = ? AND master_list = 1
+        ''', (item, list_name))
+        
+        flash(f'Removed {item} from master list', 'success')
+    
+    return redirect(url_for('main.lists', list_name=list_name))
+
+@main_bp.route('/shopping/edit_master_item', methods=['GET', 'POST'])
+@admin_required
+def edit_master_item():
+    """Edit master list item - for now, just redirect with message"""
+    item = request.form.get('item', '').strip()
+    list_name = request.form.get('list_name', 'food')
+    
+    # TODO: Implement edit form
+    flash('Edit functionality coming soon', 'info')
+    return redirect(url_for('main.lists', list_name=list_name))

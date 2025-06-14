@@ -1,0 +1,194 @@
+/*
+styles-shopping.css - Shopping list styles for Life app
+Version: 1.0.0
+Purpose: Shopping list specific styles
+Created: 2025-06-14
+*/
+
+/* Shopping Lists Container */
+.shopping-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 10px;
+}
+
+.shopping-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 0.8rem;
+    background-color: var(--bg-accent);
+    border-radius: 6px;
+}
+
+.list-tabs {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.list-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Add Item Card */
+.add-item-card {
+    background-color: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.add-item-form {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.add-item-form input[name="item"] {
+    flex: 1;
+    padding: 0.5rem;
+}
+
+.add-item-form input[name="quantity"] {
+    width: 100px;
+    padding: 0.5rem;
+}
+
+.add-today-check {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.9rem;
+    margin: 0 0.5rem;  /* was 0.5 */
+}
+
+/* Two Column Layout */
+.shopping-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.master-column, .today-column {
+    background-color: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.column-header {
+    padding: 0.5rem 0.8rem;
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+/* Shopping items - matching document rows exactly */
+.master-item, .today-item {
+    display: flex;
+    align-items: center;
+    padding: 0.1rem;  /* Same as .file-line. REDUCED TO 0.2 FROM 1 TO REDCUE HEIGHT */
+    gap: 1rem;        /* Same as .file-line */
+    border-bottom: 1px solid var(--border);
+    height: 36px; 
+    transition: background-color 0.2s;
+    
+}
+
+.master-item > *,
+.today-item > * {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.master-item:hover, .today-item:hover {
+    background-color: var(--bg-accent);
+}
+
+.master-item:last-child, .today-item:last-child {
+    border-bottom: none;
+}
+
+/* Master list specific */
+.item-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.item-name {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.item-meta {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.master-item-actions {
+    display: flex;
+    gap: 0.3rem;
+    align-items: center;
+    margin-left: auto;
+}
+
+/* Clickable items for non-admin */
+.item-clickable {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.item-clickable:hover .item-name {
+    text-decoration: underline;
+}
+
+/* Today list specific */
+.today-item-name {
+    flex: 1;
+    font-weight: 500;
+}
+
+.today-item-actions {
+    display: flex;
+    gap: 0.3rem;
+    align-items: center;
+}
+
+.qty-update {
+    display: flex;
+    gap: 0.3rem;
+    align-items: center;
+}
+
+.qty-update input {
+    width: 50px;
+    padding: 0.1rem;
+    font-size: 0.85rem;
+}
+
+.today-footer {
+    padding: 0.8rem;
+    background-color: var(--bg-accent);
+    border-top: 1px solid var(--border);
+    text-align: center;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .shopping-columns {
+        grid-template-columns: 1fr;
+    }
+    
+    .add-item-form {
+        flex-wrap: wrap;
+    }
+}

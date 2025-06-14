@@ -1,0 +1,169 @@
+/*
+styles-dashboard.css - Dashboard and miscellaneous styles for Life app
+Version: 1.0.0
+Purpose: Homepage dashboard, bins, reminders, quick actions
+Created: 2025-06-14
+*/
+
+/* Daily Dashboard - Compact */
+.dashboard-section {
+    margin-bottom: 1rem;
+    padding: 0.8rem;
+    background-color: var(--bg-accent);
+    border-radius: 6px;
+}
+
+.dashboard-section h2 {
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.homepage-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.left-column,
+.right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+/* Reminders and Appointments */
+.reminder-list,
+.appointment-list {
+    list-style: none;
+}
+
+.reminder-item,
+.appointment-item {
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+}
+
+.reminder-item:last-child,
+.appointment-item:last-child {
+    border-bottom: none;
+}
+
+.reminder-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.reminder-item.completed {
+    opacity: 0.6;
+    text-decoration: line-through;
+}
+
+.recurring {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
+.appt-date {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.appt-title {
+    font-weight: 500;
+}
+
+/* Refuse/Bin Alerts */
+.refuse-alert {
+    margin-top: 0.7rem;
+    padding: 0.7rem;
+    background-color: var(--warning);
+    color: white;
+    border-radius: 3px;
+}
+
+.refuse-alert h3 {
+    margin: 0 0 0.3rem 0;
+    color: white;
+}
+
+.bin-badge {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    margin-right: 0.3rem;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.bin-blue { background-color: #4A90E2; color: white; }
+.bin-yellow { background-color: #F5A623; color: white; }
+.bin-brown { background-color: #8B6914; color: white; }
+.bin-green { background-color: #228B22; color: white; }
+.bin-grey,
+.bin-gray { background-color: #666666; color: white; }
+.bin-glass { background-color: #20B2AA; color: white; }
+
+/* Quick Actions Grid */
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.7rem;
+    margin-top: 0.7rem;
+}
+
+/* Login Form */
+.login-form {
+    max-width: 350px;
+    margin: 1rem auto;
+    padding: 1rem;
+    background-color: var(--bg-accent);
+    border-radius: 6px;
+}
+
+.form-help {
+    display: block;
+    margin-top: 0.3rem;
+    font-size: 0.8rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 0.7rem;
+    margin-top: 1rem;
+}
+
+.login-help-section {
+    max-width: 350px;
+    margin: 1rem auto;
+    padding: 1rem;
+    background-color: var(--bg-secondary);
+    border-radius: 6px;
+}
+
+.login-help-section ul {
+    list-style-position: inside;
+    margin-top: 0.3rem;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .homepage-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* iPad specific */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .quick-actions {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}

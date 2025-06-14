@@ -1,0 +1,174 @@
+/*
+styles-files.css - File browser styles for Life app
+Version: 1.0.0
+Purpose: Document browser specific styles
+Created: 2025-06-14
+*/
+
+/* File browser - compact controls */
+.file-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 0.8rem;
+    background-color: var(--bg-accent);
+    border-radius: 6px;
+}
+
+.category-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.category-buttons .button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Single-line File List - Clean design */
+.file-list {
+    background-color: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.file-row {
+    border-bottom: 2px solid var(--border);
+    transition: background-color 0.2s;
+}
+
+.file-row:last-child {
+    border-bottom: none;
+}
+
+.file-row:hover {
+    background-color: var(--bg-accent);
+}
+
+.file-line {
+    display: flex;
+    align-items: center;
+    padding: 0.8rem;
+    gap: 1rem;
+}
+
+.file-title {
+    font-weight: 500;
+    color: var(--text-primary);
+    flex: 1;
+    font-size: 1rem;
+}
+
+.file-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.file-actions form {
+    margin: 0;
+    display: inline;
+}
+
+.file-details {
+    padding: 0.8rem;
+    background-color: var(--bg-accent);
+    border-top: 1px solid var(--border);
+}
+
+.detail-item {
+    margin-bottom: 0.4rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.detail-item:last-child {
+    margin-bottom: 0;
+}
+
+.detail-item strong {
+    color: var(--text-primary);
+    margin-right: 0.5rem;
+}
+
+.button-edit-small,
+.button-save-small,
+.button-cancel-small {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.button-edit-small {
+    background-color: var(--accent);
+    color: white;
+}
+
+.button-save-small {
+    background-color: var(--success);
+    color: white;
+}
+
+.button-cancel-small {
+    background-color: var(--text-secondary);
+    color: white;
+}
+
+#title-form input {
+    width: 300px;
+    padding: 0.3rem;
+    margin-right: 0.5rem;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.page-info {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.no-files {
+    text-align: center;
+    padding: 2rem;
+    background-color: var(--bg-accent);
+    border-radius: 6px;
+}
+
+.no-files h3 {
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.no-files p {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.file-item {
+    padding: 0.3rem 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.file-item small {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}

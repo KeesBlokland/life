@@ -1,59 +1,156 @@
 {% extends "base.html" %}
+<!--
+/home/life/app/templates/temp_lists.html
+Version: 1.0.3
+Purpose: Memory support shopping list with compact layout
+Created: 2025-06-11
+Updated: 2025-06-14 - Compact layout matching documents page
+-->
 
-{% block title %}Shopping List - Life{% endblock %}
+{% block title %}Shopping Lists - Life{% endblock %}
+
+{% block page_name %}: Shopping{% endblock %}
+
+{% block template_info %}temp_lists.html v1.0.3 -Shopping{% endblock %}
 
 {% block content %}
 <div class="container">
-    <h1>Shopping List</h1>
+    <!-- Top Controls Bar -->
+    <div class="shopping-controls">
+        <div class="list-tabs">
+            {% for list in available_lists %}
+                {% if session.get('is_admin') or list.name == 'food' %}
+                <a href="{{ url_for('main.lists', list_name=list.name) }}" 
+                   class="button {% if current_list.name == list.name %}button-active{% endif %}">
+                    {{ list.title }}
+                </a>
+                {% endif %}
+            {% endfor %}
+        </div>
+        
+        <div class="list-actions">
+            <a href="{{ url_for('main.print_list', list_name=current_list.name) }}" 
+               target="_blank" class="button button-secondary">Print</a>
+            <a href="{{ url_for('main.export_list', list_name=current_list.name) }}" 
+               class="button button-secondary">Export</a>
+        </div>
+    </div>
     
-    <div class="add-item-section">
-        <h2>Add Item</h2>
-        <form method="post" action="{{ url_for('main.add_shopping_item') }}" class="add-item-form">
-            <div class="form-row">
-                <input type="text" name="item" placeholder="Item name" required>
-                <input type="text" name="quantity" placeholder="Quantity (optional)">
-                <button type="submit" class="button">Add</button>
-            </div>
+    <!-- Add New Item Card - Full Width -->
+    <div class="add-item-card">
+        <form method="post" action="{{ url_for('main.add_new_item') }}" class="add-item-form">
+            <input type="hidden" name="list_name" value="{{ current_list.name }}">
+            <input type="text" name="item" placeholder="Add new item to master list" required autofocus>
+            <input type="text" name="quantity" placeholder="Quantity">
+            <label class="add-today-check">
+                <input type="checkbox" name="add_to_today" value="yes">
+                Add to today's list
+            </label>
+            <button type="submit" class="button">Add Item</button>
         </form>
     </div>
     
-    <div class="shopping-list">
-        {% if shopping_items %}
-            {% for item in shopping_items %}
-            <div class="shopping-item {% if item.completed %}completed{% endif %}" data-id="{{ item.id }}">
-                <input type="checkbox" {% if item.completed %}checked{% endif %} onchange="toggleItem({{ item.id }})">
-                <span class="item-name">{{ item.item }}</span>
-                {% if item.quantity %}
-                <span class="item-quantity">{{ item.quantity }}</span>
-                {% endif %}
+    <!-- Two Column Layout -->
+    <div class="shopping-columns">
+        
+        <!-- Left: Master List -->
+        <div class="master-column">
+            <div class="column-header">
+                Items You Usually Buy
             </div>
-            {% endfor %}
-        {% else %}
-            <p class="no-items">No items in shopping list</p>
-        {% endif %}
+            
+            {% if master_items %}
+            <div class="master-items">
+                {% for item in master_items %}
+                <div class="master-item">
+                    <div class="item-info">
+                        <span class="item-name">{{ item.item }}</span>
+                        <span class="item-meta">
+                            {% if item.usual_quantity %}({{ item.usual_quantity }}){% endif %}
+                            • {{ item.times_bought }}x
+                        </span>
+                    </div>
+                    
+                    <div class="master-item-actions">
+                        <!-- Admin CRUD buttons -->
+                        {% if session.get('is_admin') %}
+                            <form method="post" action="{{ url_for('main.delete_master_item') }}" 
+                                style="display: inline;"
+                                onsubmit="return confirm('Delete {{ item.item }} from history?')">
+                                <input type="hidden" name="list_name" value="{{ current_list.name }}">
+                                <input type="hidden" name="item" value="{{ item.item }}">
+                                <button type="submit" class="button button-small button-danger">Delete</button>
+                            </form>
+                        {% endif %}
+                        
+                        <!-- Add to today button for everyone -->
+                        <form method="post" action="{{ url_for('main.add_to_today') }}" style="display: inline;">
+                            <input type="hidden" name="list_name" value="{{ current_list.name }}">
+                            <input type="hidden" name="item" value="{{ item.item }}">
+                            <input type="hidden" name="quantity" value="{{ item.usual_quantity or '' }}">
+                            <button type="submit" class="button button-small">Add →</button>
+                        </form>
+                    </div>
+                </div>
+    {% endfor %}
+</div>
+{% else %}
+                <div class="empty-message">
+                    No items in history yet. Add items above to build your master list.
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Right: Today's List -->
+        <div class="today-column">
+            <div class="column-header">
+                Today's Shopping List
+            </div>
+            
+            {% if today_items %}
+                <div class="today-items">
+                    {% for item in today_items %}
+                    <div class="today-item">
+                        <span class="today-item-name">{{ item.item }}</span>
+                        
+                        <div class="today-item-actions">
+                            <form method="post" action="{{ url_for('main.update_today_item', item_id=item.id) }}" 
+                                  class="qty-update">
+                                <input type="hidden" name="list_name" value="{{ current_list.name }}">
+                                <input type="text" name="quantity" value="{{ item.quantity or '' }}" 
+                                       placeholder="Qty">
+                                <button type="submit" class="button button-small">Set</button>
+                            </form>
+                            
+                            <form method="post" action="{{ url_for('main.bought_today', item_id=item.id) }}">
+                                <input type="hidden" name="list_name" value="{{ current_list.name }}">
+                                <button type="submit" class="button button-small button-success">✓</button>
+                            </form>
+                            
+                            <form method="post" action="{{ url_for('main.remove_from_today', item_id=item.id) }}">
+                                <input type="hidden" name="list_name" value="{{ current_list.name }}">
+                                <button type="submit" class="button button-small button-danger">×</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="today-footer">
+                    <form method="post" action="{{ url_for('main.clear_today_list') }}" 
+                          onsubmit="return confirm('Clear all items from today\'s list?')">
+                        <input type="hidden" name="list_name" value="{{ current_list.name }}">
+                        <button type="submit" class="button button-secondary">Clear Today's List</button>
+                    </form>
+                </div>
+            {% else %}
+                <div class="empty-message">
+                    No items selected for today.
+                    <br>
+                    Click "Add →" on items from the left to build your shopping list.
+                </div>
+            {% endif %}
+        </div>
     </div>
 </div>
-
-<script>
-function toggleItem(itemId) {
-    fetch(`/shopping/toggle/${itemId}`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'}
-    })
-    .then(response => response.json())
-    .then(data => {
-        const item = document.querySelector(`[data-id="${itemId}"]`);
-        if (data.completed) {
-            item.classList.add('completed');
-        } else {
-            item.classList.remove('completed');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        const checkbox = document.querySelector(`[data-id="${itemId}"] input`);
-        checkbox.checked = !checkbox.checked;
-    });
-}
-</script>
 {% endblock %}

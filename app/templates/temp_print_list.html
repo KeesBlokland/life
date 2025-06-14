@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<!--
+/home/life/app/templates/temp_print_list.html
+Version: 1.0.0
+Purpose: Clean mobile-friendly print view
+Created: 2025-06-13
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ list_title }} - {{ date }}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+            margin: 15px;
+            max-width: 400px;
+            color: #2C3E50;
+        }
+        
+        h1 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+        
+        .date {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .item {
+            padding: 10px 0;
+            border-bottom: 1px solid #E0E0E0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .item:last-child {
+            border-bottom: none;
+        }
+        
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #666;
+            border-radius: 3px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        
+        .item-text {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+        
+        .quantity {
+            color: #666;
+            margin-left: 10px;
+            font-weight: 500;
+        }
+        
+        @media print {
+            body {
+                margin: 0;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>{{ list_title }}</h1>
+    <div class="date">{{ date }}</div>
+    
+    {% if items %}
+        {% for item in items %}
+        <div class="item">
+            <div class="item-text">
+                <div class="checkbox"></div>
+                <span>{{ item.item }}</span>
+            </div>
+            {% if item.quantity %}
+            <span class="quantity">{{ item.quantity }}</span>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>No items on today's list</p>
+    {% endif %}
+</body>
+</html>
