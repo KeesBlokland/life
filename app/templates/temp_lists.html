@@ -1,47 +1,37 @@
 {% extends "base.html" %}
 <!--
 /home/life/app/templates/temp_lists.html
-Version: 1.0.3
-Purpose: Memory support shopping list with compact layout
+Version: 1.1.0
+Purpose: Improved shopping list with better alignment and UX
 Created: 2025-06-11
-Updated: 2025-06-14 - Compact layout matching documents page
+Updated: 2025-06-14 - Better alignment, removed redundant text, moved actions
 -->
 
 {% block title %}Shopping Lists - Life{% endblock %}
 
 {% block page_name %}: Shopping{% endblock %}
 
-{% block template_info %}temp_lists.html v1.0.3 -Shopping{% endblock %}
+{% block template_info %}temp_lists.html v1.1.0 - Improved alignment and UX{% endblock %}
 
 {% block content %}
 <div class="container">
-    <!-- Top Controls Bar -->
-    <div class="shopping-controls">
-        <div class="list-tabs">
-            {% for list in available_lists %}
-                {% if session.get('is_admin') or list.name == 'food' %}
-                <a href="{{ url_for('main.lists', list_name=list.name) }}" 
-                   class="button {% if current_list.name == list.name %}button-active{% endif %}">
-                    {{ list.title }}
-                </a>
-                {% endif %}
-            {% endfor %}
-        </div>
-        
-        <div class="list-actions">
-            <a href="{{ url_for('main.print_list', list_name=current_list.name) }}" 
-               target="_blank" class="button button-secondary">Print</a>
-            <a href="{{ url_for('main.export_list', list_name=current_list.name) }}" 
-               class="button button-secondary">Export</a>
-        </div>
+    <!-- List Tabs Only -->
+    <div class="list-tabs-container">
+        {% for list in available_lists %}
+            {% if session.get('is_admin') or list.name == 'food' %}
+            <a href="{{ url_for('main.lists', list_name=list.name) }}" 
+               class="button {% if current_list.name == list.name %}button-active{% endif %}">
+                {{ list.title }}
+            </a>
+            {% endif %}
+        {% endfor %}
     </div>
     
-    <!-- Add New Item Card - Full Width -->
+    <!-- Add New Item Card - Compact -->
     <div class="add-item-card">
         <form method="post" action="{{ url_for('main.add_new_item') }}" class="add-item-form">
             <input type="hidden" name="list_name" value="{{ current_list.name }}">
             <input type="text" name="item" placeholder="Add new item to master list" required autofocus>
-            <input type="text" name="quantity" placeholder="Quantity">
             <label class="add-today-check">
                 <input type="checkbox" name="add_to_today" value="yes">
                 Add to today's list
@@ -62,39 +52,28 @@ Updated: 2025-06-14 - Compact layout matching documents page
             {% if master_items %}
             <div class="master-items">
                 {% for item in master_items %}
-                <div class="master-item">
-                    <div class="item-info">
+                <div class="master-item clickable-item" onclick="addToToday('{{ item.item }}', '{{ current_list.name }}')">
+                    <div class="item-content">
                         <span class="item-name">{{ item.item }}</span>
-                        <span class="item-meta">
-                            {% if item.usual_quantity %}({{ item.usual_quantity }}){% endif %}
-                            • {{ item.times_bought }}x
-                        </span>
+                        <span class="item-meta">{{ item.times_bought }}x bought</span>
                     </div>
                     
-                    <div class="master-item-actions">
-                        <!-- Admin CRUD buttons -->
+                    <div class="item-actions">
                         {% if session.get('is_admin') %}
-                            <form method="post" action="{{ url_for('main.delete_master_item') }}" 
-                                style="display: inline;"
-                                onsubmit="return confirm('Delete {{ item.item }} from history?')">
-                                <input type="hidden" name="list_name" value="{{ current_list.name }}">
-                                <input type="hidden" name="item" value="{{ item.item }}">
-                                <button type="submit" class="button button-small button-danger">Delete</button>
-                            </form>
+                        <button type="button" 
+                                class="button-sm button-danger admin-delete"
+                                onclick="event.stopPropagation(); deleteItem('{{ item.item }}', '{{ current_list.name }}')"
+                                title="Delete from history">
+                            Del
+                        </button>
                         {% endif %}
                         
-                        <!-- Add to today button for everyone -->
-                        <form method="post" action="{{ url_for('main.add_to_today') }}" style="display: inline;">
-                            <input type="hidden" name="list_name" value="{{ current_list.name }}">
-                            <input type="hidden" name="item" value="{{ item.item }}">
-                            <input type="hidden" name="quantity" value="{{ item.usual_quantity or '' }}">
-                            <button type="submit" class="button button-small">Add →</button>
-                        </form>
+                        <span class="add-hint">Click to add</span>
                     </div>
                 </div>
-    {% endfor %}
-</div>
-{% else %}
+                {% endfor %}
+            </div>
+            {% else %}
                 <div class="empty-message">
                     No items in history yet. Add items above to build your master list.
                 </div>
@@ -103,8 +82,14 @@ Updated: 2025-06-14 - Compact layout matching documents page
         
         <!-- Right: Today's List -->
         <div class="today-column">
-            <div class="column-header">
-                Today's Shopping List
+            <div class="column-header-with-actions">
+                <span>Today's Shopping List</span>
+                <div class="header-actions">
+                    <a href="{{ url_for('main.print_list', list_name=current_list.name) }}" 
+                       target="_blank" class="button-sm button-secondary">Print</a>
+                    <a href="{{ url_for('main.export_list', list_name=current_list.name) }}" 
+                       class="button-sm button-secondary">Export</a>
+                </div>
             </div>
             
             {% if today_items %}
@@ -114,34 +99,24 @@ Updated: 2025-06-14 - Compact layout matching documents page
                         <span class="today-item-name">{{ item.item }}</span>
                         
                         <div class="today-item-actions">
-                            <form method="post" action="{{ url_for('main.update_today_item', item_id=item.id) }}" 
-                                  class="qty-update">
-                                <input type="hidden" name="list_name" value="{{ current_list.name }}">
-                                <input type="text" name="quantity" value="{{ item.quantity or '' }}" 
-                                       placeholder="Qty">
-                                <button type="submit" class="button button-small">Set</button>
-                            </form>
-                            
-                            <form method="post" action="{{ url_for('main.bought_today', item_id=item.id) }}">
-                                <input type="hidden" name="list_name" value="{{ current_list.name }}">
-                                <button type="submit" class="button button-small button-success">✓</button>
-                            </form>
-                            
-                            <form method="post" action="{{ url_for('main.remove_from_today', item_id=item.id) }}">
-                                <input type="hidden" name="list_name" value="{{ current_list.name }}">
-                                <button type="submit" class="button button-small button-danger">×</button>
-                            </form>
+                            <button type="button" 
+                                    class="button-sm button-danger"
+                                    onclick="removeFromToday({{ item.id }}, '{{ current_list.name }}')"
+                                    title="Remove from list">
+                                Remove
+                            </button>
                         </div>
                     </div>
                     {% endfor %}
                 </div>
                 
                 <div class="today-footer">
-                    <form method="post" action="{{ url_for('main.clear_today_list') }}" 
-                          onsubmit="return confirm('Clear all items from today\'s list?')">
-                        <input type="hidden" name="list_name" value="{{ current_list.name }}">
-                        <button type="submit" class="button button-secondary">Clear Today's List</button>
-                    </form>
+                    <button type="button" 
+                            class="button-sm button-danger"
+                            onclick="clearTodayList('{{ current_list.name }}')"
+                            title="Clear all items">
+                        Clear Today's List
+                    </button>
                 </div>
             {% else %}
                 <div class="empty-message">
@@ -153,4 +128,347 @@ Updated: 2025-06-14 - Compact layout matching documents page
         </div>
     </div>
 </div>
+
+<style>
+/* Global button consistency - all buttons same height and alignment */
+.button-sm,
+.button-small {
+    height: 32px;
+    padding: 0 12px;
+    font-size: 0.85rem;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-weight: 500;
+    line-height: 1;
+    vertical-align: middle;
+    white-space: nowrap;
+    min-width: 48px;
+}
+
+.button-sm {
+    background-color: var(--accent);
+    color: white;
+}
+
+.button-sm.button-secondary {
+    background-color: var(--text-secondary);
+    color: white;
+}
+
+.button-sm.button-danger {
+    background-color: var(--error);
+    color: white;
+}
+
+.button-sm.button-success {
+    background-color: var(--success);
+    color: white;
+}
+
+.button-sm:hover {
+    opacity: 0.9;
+}
+
+/* Input consistency */
+.qty-input,
+.qty-input-sm {
+    height: 32px;
+    padding: 0 8px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+.qty-input {
+    width: 80px;
+}
+
+.qty-input-sm {
+    width: 50px;
+}
+
+/* Layout improvements */
+.list-tabs-container {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding: 0.8rem;
+    background-color: var(--bg-accent);
+    border-radius: 6px;
+}
+
+.add-item-card {
+    background-color: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.add-item-form {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.add-item-form input[name="item"] {
+    flex: 1;
+    min-width: 200px;
+    height: 32px;
+    padding: 0 8px;
+}
+
+.add-today-check {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+/* Two Column Layout */
+.shopping-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.master-column, 
+.today-column {
+    background-color: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.column-header {
+    padding: 0.8rem;
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.column-header-with-actions {
+    padding: 0.8rem;
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+    font-size: 0.95rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Perfect alignment system for item rows */
+.master-item,
+.today-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 0.8rem;
+    border-bottom: 1px solid var(--border);
+    min-height: 44px; /* Consistent row height */
+}
+
+.master-item.clickable-item {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.master-item.clickable-item:hover {
+    background-color: rgba(125, 154, 150, 0.1);
+    border-left: 3px solid var(--accent);
+}
+
+.today-item:hover {
+    background-color: var(--bg-accent);
+}
+
+.master-item:last-child, 
+.today-item:last-child {
+    border-bottom: none;
+}
+
+/* Left side content */
+.item-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 32px; /* Match button height */
+}
+
+.item-name,
+.today-item-name {
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.item-meta {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    line-height: 1.1;
+    margin-top: 2px;
+}
+
+/* Right side actions */
+.item-actions,
+.today-item-actions {
+    display: flex;
+    gap: 0.3rem;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.add-hint {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-style: italic;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.clickable-item:hover .add-hint {
+    opacity: 1;
+    color: var(--accent);
+}
+
+.admin-delete {
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.clickable-item:hover .admin-delete {
+    opacity: 1;
+}
+
+.today-footer {
+    padding: 0.8rem;
+    background-color: var(--bg-accent);
+    border-top: 1px solid var(--border);
+    text-align: center;
+}
+
+.empty-message {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: var(--text-secondary);
+    font-style: italic;
+    line-height: 1.4;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .shopping-columns {
+        grid-template-columns: 1fr;
+    }
+    
+    .add-item-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .add-item-form input[name="item"] {
+        min-width: unset;
+    }
+    
+    .column-header-with-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: stretch;
+    }
+    
+    .header-actions {
+        justify-content: center;
+    }
+    
+    .item-actions,
+    .today-item-actions {
+        flex-wrap: wrap;
+    }
+}
+</style>
+
+<script>
+// Simple click-to-add functionality
+function addToToday(item, listName) {
+    const form = new FormData();
+    form.append('item', item);
+    form.append('list_name', listName);
+    
+    fetch('/shopping/add_to_today', {
+        method: 'POST',
+        body: form
+    }).then(() => {
+        location.reload();
+    });
+}
+
+function removeFromToday(itemId, listName) {
+    const form = new FormData();
+    form.append('list_name', listName);
+    
+    fetch(`/shopping/remove_from_today/${itemId}`, {
+        method: 'POST',
+        body: form
+    }).then(() => {
+        location.reload();
+    });
+}
+
+function clearTodayList(listName) {
+    if (confirm('Clear all items from today\'s list?')) {
+        const form = new FormData();
+        form.append('list_name', listName);
+        
+        fetch('/shopping/clear_today', {
+            method: 'POST',
+            body: form
+        }).then(() => {
+            location.reload();
+        });
+    }
+}
+
+function deleteItem(item, listName) {
+    if (confirm(`Delete ${item} from history?`)) {
+        const form = new FormData();
+        form.append('item', item);
+        form.append('list_name', listName);
+        
+        fetch('/shopping/delete_master_item', {
+            method: 'POST',
+            body: form
+        }).then(() => {
+            location.reload();
+        });
+    }
+}
+
+// Hide flash messages immediately to prevent screen jumping
+document.addEventListener('DOMContentLoaded', function() {
+    const messages = document.querySelectorAll('.message');
+    messages.forEach(function(message) {
+        if (message.textContent.includes('Added') || 
+            message.textContent.includes('removed') || 
+            message.textContent.includes('updated')) {
+            message.style.display = 'none';
+        }
+    });
+});
+</script>
 {% endblock %}

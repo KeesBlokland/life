@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <!--
-base.html - Base template for Life app
-Version: 1.2.1
-Purpose: Common layout with bin schedule navigation
+dir_base.html - Base template for Life app
+Version: 1.2.02
+Purpose: Common layout with all CSS files included
 Created: 2024-12-XX
-Updated: 2025-06-13 - Added bin schedule link to navigation
+Updated: 2025-06-15 - Added admin CSS file
 -->
 <html lang="en">
 <head>
@@ -17,9 +17,7 @@ Updated: 2025-06-13 - Added bin schedule link to navigation
     <link rel="stylesheet" href="{{ url_for('static', filename='styles-calendar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles-dashboard.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles-misc.css') }}">
-    {% if request.args.get('print') %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='print.css') }}">
-    {% endif %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles-admin.css') }}">
     {% if request.args.get('print') %}
     <link rel="stylesheet" href="{{ url_for('static', filename='print.css') }}">
     {% endif %}
@@ -71,7 +69,7 @@ Updated: 2025-06-13 - Added bin schedule link to navigation
             <p>&copy; 2025 Family Information System</p>
             {% if config.FOOTER_INFO %}
                 <div class="debug-footer">
-                    Template: {% block template_info %}base.html v1.2.1 - Added bin schedule navigation{% endblock %}
+                    Template: {% block template_info %}dir_base.html v1.2.02 - Added admin CSS{% endblock %}
                 </div>
             {% endif %}
         </div>

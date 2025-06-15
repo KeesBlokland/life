@@ -437,9 +437,8 @@ def lists(list_name='food'):
 @main_bp.route('/shopping/add_to_today', methods=['POST'])
 @login_required
 def add_to_today():
-    """Add item from master list to today's shopping"""
+    """Add item from master list to today's shopping - SILENT"""
     item = request.form.get('item', '').strip()
-    quantity = request.form.get('quantity', '').strip()
     list_name = request.form.get('list_name', 'food')
     
     if not item:
@@ -452,15 +451,12 @@ def add_to_today():
         WHERE list_name = ? AND item = ? AND today_list = 1
     ''', (list_name, item), one=True)
     
-    if existing:
-        flash(f'{item} already on today\'s list', 'info')
-    else:
-        # Add to today's list
+    if not existing:
+        # Add to today's list - NO FLASH MESSAGE
         execute_db('''
-            INSERT INTO shopping_items (item, quantity, list_name, today_list, master_list, added_date)
-            VALUES (?, ?, ?, 1, 0, CURRENT_TIMESTAMP)
-        ''', (item, quantity, list_name))
-        flash(f'Added {item} to today\'s list', 'success')
+            INSERT INTO shopping_items (item, list_name, today_list, master_list, added_date)
+            VALUES (?, ?, 1, 0, CURRENT_TIMESTAMP)
+        ''', (item, list_name))
     
     return redirect(url_for('main.lists', list_name=list_name))
 
@@ -469,7 +465,6 @@ def add_to_today():
 def add_new_item():
     """Add completely new item to master list"""
     item = request.form.get('item', '').strip()
-    quantity = request.form.get('quantity', '').strip()
     list_name = request.form.get('list_name', 'food')
     add_to_today = request.form.get('add_to_today') == 'yes'
     
@@ -479,17 +474,19 @@ def add_new_item():
     
     # Add to master list
     execute_db('''
-        INSERT INTO shopping_items (item, quantity, list_name, master_list, today_list, created_date)
-        VALUES (?, ?, ?, 1, ?, CURRENT_TIMESTAMP)
-    ''', (item, quantity, list_name, 1 if add_to_today else 0))
+        INSERT INTO shopping_items (item, list_name, master_list, today_list, created_date)
+        VALUES (?, ?, 1, ?, CURRENT_TIMESTAMP)
+    ''', (item, list_name, 1 if add_to_today else 0))
     
+    # Only flash for this major operation
     flash(f'Added {item} to master list', 'success')
     return redirect(url_for('main.lists', list_name=list_name))
+
 
 @main_bp.route('/shopping/update_today/<int:item_id>', methods=['POST'])
 @login_required
 def update_today_item(item_id):
-    """Update quantity on today's list"""
+    """Update quantity on today's list - SILENT"""
     quantity = request.form.get('quantity', '').strip()
     list_name = request.form.get('list_name', 'food')
     
@@ -498,21 +495,22 @@ def update_today_item(item_id):
     
     return redirect(url_for('main.lists', list_name=list_name))
 
+
 @main_bp.route('/shopping/remove_from_today/<int:item_id>', methods=['POST'])
 @login_required
 def remove_from_today(item_id):
-    """Remove item from today's list"""
+    """Remove item from today's list - SILENT"""
     list_name = request.form.get('list_name', 'food')
     
-    # Don't delete, just remove from today's list
-    execute_db('UPDATE shopping_items SET today_list = 0 WHERE id = ?', (item_id,))
+    # Simply delete the item from today's list
+    execute_db('DELETE FROM shopping_items WHERE id = ? AND today_list = 1', (item_id,))
     
     return redirect(url_for('main.lists', list_name=list_name))
 
 @main_bp.route('/shopping/bought_today/<int:item_id>', methods=['POST'])
 @login_required
 def bought_today(item_id):
-    """Mark item as bought - moves to history"""
+    """Mark item as bought - moves to history - SILENT"""
     list_name = request.form.get('list_name', 'food')
     
     # Get item details
@@ -527,10 +525,9 @@ def bought_today(item_id):
         
         # Remove from today's list
         execute_db('DELETE FROM shopping_items WHERE id = ?', (item_id,))
-        
-        flash(f'Marked {item["item"]} as bought', 'success')
     
     return redirect(url_for('main.lists', list_name=list_name))
+
 
 @main_bp.route('/shopping/clear_today', methods=['POST'])
 @login_required
@@ -541,6 +538,7 @@ def clear_today_list():
     # ONLY delete items marked as today_list = 1
     execute_db('DELETE FROM shopping_items WHERE list_name = ? AND today_list = 1', (list_name,))
     
+    # Only flash for this major operation
     flash('Cleared today\'s list', 'success')
     return redirect(url_for('main.lists', list_name=list_name))
 

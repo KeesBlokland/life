@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+<!--
+temp_admin_orphans.html
+Version: 1.0.02
+Purpose: Display orphaned files with management actions
+Created: 2025-06-15
+Updated: 2025-06-15 - Fixed template naming
+-->
+
+{% block title %}Orphaned Files - Life{% endblock %}
+
+{% block template_info %}dir_temp_admin_orphans.html v1.0.01 - Orphaned files management{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Orphaned Files Management</h1>
+    
+    <div class="orphan-help-section">
+        <p><strong>Orphaned files</strong> are files on disk that are not tracked in the database.</p>
+        <p>This usually happens when database entries are deleted but files remain on disk.</p>
+    </div>
+    
+    {% if orphaned_files %}
+        <div class="orphans-section">
+            <h2>Found {{ orphaned_files|length }} Orphaned Files</h2>
+            
+            <div class="orphan-bulk-actions">
+                <form method="post" action="{{ url_for('admin.delete_all_orphans') }}" 
+                      onsubmit="return confirm('DELETE ALL {{ orphaned_files|length }} orphaned files? This cannot be undone!')">
+                    <button type="submit" class="button button-danger">Delete All Orphaned Files</button>
+                </form>
+                <a href="{{ url_for('admin.dashboard') }}" class="button button-secondary">Back to Dashboard</a>
+            </div>
+            
+            <div class="orphans-list">
+                {% for file_path in orphaned_files %}
+                <div class="orphan-row">
+                    <div class="orphan-file-info">
+                        <div class="orphan-file-path">{{ file_path }}</div>
+                        <div class="orphan-file-details">
+                            {% set file_stats = file_path | file_stats %}
+                            {% if file_stats %}
+                                Size: {{ "%.1f"|format(file_stats.size / 1024) }} KB
+                                • Modified: {{ file_stats.modified.strftime('%Y-%m-%d %H:%M') if file_stats.modified else 'Unknown' }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="orphan-file-actions">
+                        <form method="post" action="{{ url_for('admin.delete_single_orphan') }}" 
+                              style="display: inline;"
+                              onsubmit="return confirm('Delete this file?')">
+                            <input type="hidden" name="file_path" value="{{ file_path }}">
+                            <button type="submit" class="button button-small button-danger">Delete</button>
+                        </form>
+                        
+                        <form method="post" action="{{ url_for('admin.restore_orphan') }}" 
+                              style="display: inline;">
+                            <input type="hidden" name="file_path" value="{{ file_path }}">
+                            <button type="submit" class="button button-small">Restore to DB</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% else %}
+        <div class="orphan-no-files">
+            <h2>No Orphaned Files Found</h2>
+            <p>All files on disk are properly tracked in the database.</p>
+            <a href="{{ url_for('admin.dashboard') }}" class="button">Back to Dashboard</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

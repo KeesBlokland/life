@@ -1,15 +1,17 @@
 """
-/home/life/app/routes/bp_admin.py
-Version: 1.0.0
-Purpose: Admin routes - system management, user management, settings
+bp_admin.py - Admin routes with orphaned file management
+Version: 1.1.02
+Purpose: Admin routes - system management, user management, settings, orphaned files
 Created: 2025-06-11
+Updated: 2025-06-15 - Fixed template references
 """
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
+import os
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, session
 from datetime import datetime
 from routes.bp_auth import admin_required
 from utils.util_db import query_db, execute_db
-from utils.util_storage import cleanup_orphaned_files, create_backup_archive, get_file_size_formatted
+from utils.util_storage import cleanup_orphaned_files, create_backup_archive, get_file_size_formatted, calculate_checksum, get_file_type, get_file_category
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -26,9 +28,9 @@ def dashboard():
         'recent_uploads': query_db('SELECT COUNT(*) as count FROM files WHERE upload_date >= date("now", "-7 days") AND deleted = 0', one=True)['count']
     }
     
-    # Get recent activity
+    # Get recent activity - include file ID
     recent_files = query_db('''
-        SELECT f.filename, f.upload_date, f.size, m.auto_category
+        SELECT f.id, f.filename, f.upload_date, f.size, m.auto_category
         FROM files f
         LEFT JOIN metadata m ON f.id = m.file_id
         WHERE f.deleted = 0
@@ -41,7 +43,7 @@ def dashboard():
         SELECT m.auto_category, COUNT(*) as file_count, SUM(f.size) as total_size
         FROM files f
         LEFT JOIN metadata m ON f.id = m.file_id
-        WHERE f.deleted = 0
+        WHERE f.deleted = 0 AND auto_category IS NOT NULL
         GROUP BY m.auto_category
         ORDER BY total_size DESC
     ''')
@@ -54,6 +56,152 @@ def dashboard():
                          stats=stats,
                          recent_files=recent_files,
                          storage_by_category=storage_by_category)
+
+@admin_bp.route('/cleanup', methods=['POST'])
+@admin_required
+def cleanup_files():
+    """Find orphaned files and redirect to display them"""
+    try:
+        orphaned = cleanup_orphaned_files()
+        if orphaned:
+            # Store in session for display
+            session['orphaned_files'] = orphaned
+            if current_app.config['DEBUG']:
+                current_app.logger.debug(f"Found {len(orphaned)} orphaned files: {orphaned}")
+            flash(f'Found {len(orphaned)} orphaned files', 'warning')
+            return redirect(url_for('admin.show_orphans'))
+        else:
+            flash('No orphaned files found', 'success')
+            return redirect(url_for('admin.dashboard'))
+    except Exception as e:
+        current_app.logger.error(f"Cleanup failed: {str(e)}")
+        flash(f'Cleanup failed: {str(e)}', 'error')
+        return redirect(url_for('admin.dashboard'))
+
+@admin_bp.route('/orphans')
+@admin_required
+def show_orphans():
+    """Show list of orphaned files for management"""
+    orphaned_files = session.get('orphaned_files', [])
+    
+    if current_app.config['DEBUG']:
+        current_app.logger.debug(f"Displaying {len(orphaned_files)} orphaned files")
+    
+    return render_template('temp_admin_orphans.html', orphaned_files=orphaned_files)
+
+@admin_bp.route('/delete_all_orphans', methods=['POST'])
+@admin_required
+def delete_all_orphans():
+    """Delete all orphaned files"""
+    try:
+        orphaned_files = session.get('orphaned_files', [])
+        deleted_count = 0
+        
+        for file_path in orphaned_files:
+            try:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    deleted_count += 1
+                    current_app.logger.info(f"Deleted orphaned file: {file_path}")
+            except Exception as e:
+                current_app.logger.error(f"Failed to delete {file_path}: {str(e)}")
+        
+        # Clear from session
+        session.pop('orphaned_files', None)
+        
+        flash(f'Deleted {deleted_count} orphaned files', 'success')
+        
+    except Exception as e:
+        current_app.logger.error(f"Delete all orphans failed: {str(e)}")
+        flash(f'Delete failed: {str(e)}', 'error')
+    
+    return redirect(url_for('admin.dashboard'))
+
+@admin_bp.route('/delete_single_orphan', methods=['POST'])
+@admin_required
+def delete_single_orphan():
+    """Delete a single orphaned file"""
+    file_path = request.form.get('file_path')
+    
+    if not file_path:
+        flash('No file path provided', 'error')
+        return redirect(url_for('admin.show_orphans'))
+    
+    try:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            current_app.logger.info(f"Deleted orphaned file: {file_path}")
+            
+            # Remove from session list
+            orphaned_files = session.get('orphaned_files', [])
+            if file_path in orphaned_files:
+                orphaned_files.remove(file_path)
+                session['orphaned_files'] = orphaned_files
+            
+            flash(f'Deleted {os.path.basename(file_path)}', 'success')
+        else:
+            flash('File not found', 'error')
+            
+    except Exception as e:
+        current_app.logger.error(f"Failed to delete {file_path}: {str(e)}")
+        flash(f'Delete failed: {str(e)}', 'error')
+    
+    return redirect(url_for('admin.show_orphans'))
+
+@admin_bp.route('/restore_orphan', methods=['POST'])
+@admin_required
+def restore_orphan():
+    """Restore orphaned file back to database"""
+    file_path = request.form.get('file_path')
+    
+    if not file_path:
+        flash('No file path provided', 'error')
+        return redirect(url_for('admin.show_orphans'))
+    
+    try:
+        if not os.path.exists(file_path):
+            flash('File not found on disk', 'error')
+            return redirect(url_for('admin.show_orphans'))
+        
+        # Get file info
+        filename = os.path.basename(file_path)
+        size = os.path.getsize(file_path)
+        checksum = calculate_checksum(file_path)
+        filetype = get_file_type(file_path)
+        
+        # Check if already exists in database
+        existing = query_db('SELECT id FROM files WHERE checksum = ? AND deleted = 0', (checksum,), one=True)
+        if existing:
+            flash(f'File {filename} already exists in database', 'warning')
+            return redirect(url_for('admin.show_orphans'))
+        
+        # Add back to database
+        file_id = execute_db('''
+            INSERT INTO files (filename, filepath, filetype, size, checksum)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (filename, file_path, filetype, size, checksum))
+        
+        # Add basic metadata
+        category = get_file_category(filename, filetype)
+        execute_db('''
+            INSERT INTO metadata (file_id, title, auto_category)
+            VALUES (?, ?, ?)
+        ''', (file_id, filename, category))
+        
+        # Remove from session list
+        orphaned_files = session.get('orphaned_files', [])
+        if file_path in orphaned_files:
+            orphaned_files.remove(file_path)
+            session['orphaned_files'] = orphaned_files
+        
+        current_app.logger.info(f"Restored orphaned file to database: {file_path}")
+        flash(f'Restored {filename} to database', 'success')
+        
+    except Exception as e:
+        current_app.logger.error(f"Failed to restore {file_path}: {str(e)}")
+        flash(f'Restore failed: {str(e)}', 'error')
+    
+    return redirect(url_for('admin.show_orphans'))
 
 @admin_bp.route('/settings', methods=['GET', 'POST'])
 @admin_required
@@ -93,22 +241,6 @@ def create_backup():
     except Exception as e:
         current_app.logger.error(f"Backup failed: {str(e)}")
         flash(f'Backup failed: {str(e)}', 'error')
-    
-    return redirect(url_for('admin.dashboard'))
-
-@admin_bp.route('/cleanup', methods=['POST'])
-@admin_required
-def cleanup_files():
-    """Clean up orphaned files"""
-    try:
-        orphaned = cleanup_orphaned_files()
-        if orphaned:
-            flash(f'Found {len(orphaned)} orphaned files. Review them manually.', 'warning')
-        else:
-            flash('No orphaned files found', 'success')
-    except Exception as e:
-        current_app.logger.error(f"Cleanup failed: {str(e)}")
-        flash(f'Cleanup failed: {str(e)}', 'error')
     
     return redirect(url_for('admin.dashboard'))
 
