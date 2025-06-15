@@ -1,12 +1,13 @@
 """
 bp_admin.py - Admin routes with orphaned file management
-Version: 1.1.02
+Version: 1.1.04
 Purpose: Admin routes - system management, user management, settings, orphaned files
 Created: 2025-06-11
-Updated: 2025-06-15 - Fixed template references
+Updated: 2025-06-15 - Added complete settings management
 """
 
 import os
+import subprocess
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, session
 from datetime import datetime
 from routes.bp_auth import admin_required
@@ -27,6 +28,20 @@ def dashboard():
         'total_tags': query_db('SELECT COUNT(*) as count FROM tags', one=True)['count'],
         'recent_uploads': query_db('SELECT COUNT(*) as count FROM files WHERE upload_date >= date("now", "-7 days") AND deleted = 0', one=True)['count']
     }
+    
+    # Get disk space info
+    try:
+        df_result = subprocess.run(['/bin/df', '-h'], capture_output=True, text=True, timeout=10)
+        if df_result.returncode == 0:
+            disk_info = df_result.stdout
+        else:
+            disk_info = f"df command failed: {df_result.stderr}"
+        current_app.logger.debug(f"df command result: {df_result.returncode}")
+    except subprocess.TimeoutExpired:
+        disk_info = "df command timed out"
+    except Exception as e:
+        current_app.logger.error(f"Failed to get disk info: {str(e)}")
+        disk_info = f"Error getting disk info: {str(e)}"
     
     # Get recent activity - include file ID
     recent_files = query_db('''
@@ -54,6 +69,7 @@ def dashboard():
     
     return render_template('temp_admin_dashboard.html',
                          stats=stats,
+                         disk_info=disk_info,
                          recent_files=recent_files,
                          storage_by_category=storage_by_category)
 
@@ -208,14 +224,36 @@ def restore_orphan():
 def settings():
     """System settings management"""
     if request.method == 'POST':
-        # Update settings
-        for key in ['refuse_blue_day', 'refuse_yellow_day', 'refuse_brown_day', 'backup_enabled', 'backup_time']:
+        # Update settings - dynamic bin types
+        setting_keys = ['backup_enabled', 'backup_time', 'backup_location', 'debug_mode', 'log_level']
+        
+        # Add bin settings dynamically from config
+        for bin_type in current_app.config.get('BIN_TYPES', {}).keys():
+            setting_keys.extend([f'refuse_{bin_type}_day', f'refuse_{bin_type}_frequency'])
+        
+        for key in setting_keys:
             value = request.form.get(key, '')
             if value:
                 execute_db('''
                     INSERT OR REPLACE INTO settings (key, value, modified_date)
                     VALUES (?, ?, CURRENT_TIMESTAMP)
                 ''', (key, value))
+        
+        # Handle password changes
+        view_password = request.form.get('view_password')
+        admin_password = request.form.get('admin_password')
+        
+        if view_password:
+            execute_db('''
+                INSERT OR REPLACE INTO settings (key, value, modified_date)
+                VALUES (?, ?, CURRENT_TIMESTAMP)
+            ''', ('view_password', view_password))
+            
+        if admin_password:
+            execute_db('''
+                INSERT OR REPLACE INTO settings (key, value, modified_date)
+                VALUES (?, ?, CURRENT_TIMESTAMP)
+            ''', ('admin_password', admin_password))
         
         flash('Settings updated successfully', 'success')
         return redirect(url_for('admin.settings'))

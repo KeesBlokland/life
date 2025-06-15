@@ -1,47 +1,51 @@
 {% extends "base.html" %}
 <!--
 temp_admin_dashboard.html
-Version: 1.0.01
+Version: 1.0.05
 Purpose: Admin dashboard with system overview and management tools  
 Created: 2025-06-11
-Updated: 2025-06-15 - Reverted to original clean sectioned layout
+Updated: 2025-06-15 - Added disk space info with df -h
 -->
 
 {% block title %}Admin Dashboard - Life{% endblock %}
 
-{% block template_info %}temp_admin_dashboard.html v1.0.01 - Admin system overview{% endblock %}
+{% block page_name %}: Admin{% endblock %}
+
+{% block template_info %}temp_admin_dashboard.html v1.0.05 - Added disk space info{% endblock %}
 
 {% block content %}
 <div class="container">
-    <h1>Admin Dashboard</h1>
+    <h1>Life Admin</h1>
     
-    <!-- System Stats Cards -->
-    <div class="stats-grid">
-        <div class="stat-card">
-            <h3>Total Files</h3>
-            <div class="stat-number">{{ stats.total_files }}</div>
+    <!-- Essential System Info -->
+    <div class="admin-section">
+        <div class="status-grid">
+            <div class="status-item">
+                <strong>Files:</strong> {{ stats.total_files }}
+            </div>
+            <div class="status-item">
+                <strong>Storage:</strong> {{ (stats.total_size / 1024 / 1024)|round(1) }} MB
+            </div>
+            <div class="status-item">
+                <strong>Tags:</strong> {{ stats.total_tags }}
+            </div>
+            <div class="status-item">
+                <strong>Deleted:</strong> {{ stats.deleted_files }}
+            </div>
         </div>
         
-        <div class="stat-card">
-            <h3>Total Storage</h3>
-            <div class="stat-number">{{ (stats.total_size / 1024 / 1024)|round(1) }} MB</div>
+        <!-- Disk Space Info -->
+        {% if disk_info %}
+        <div class="disk-info">
+            <h3>Disk Space</h3>
+            <pre style="font-size: 0.8rem; overflow-x: auto;">{{ disk_info }}</pre>
         </div>
-        
-        <div class="stat-card">
-            <h3>Recent Uploads</h3>
-            <div class="stat-number">{{ stats.recent_uploads }}</div>
-            <small>Last 7 days</small>
+        {% else %}
+        <div class="disk-info">
+            <h3>Disk Space</h3>
+            <p>Disk info not available</p>
         </div>
-        
-        <div class="stat-card">
-            <h3>Total Tags</h3>
-            <div class="stat-number">{{ stats.total_tags }}</div>
-        </div>
-        
-        <div class="stat-card">
-            <h3>Deleted Files</h3>
-            <div class="stat-number">{{ stats.deleted_files }}</div>
-        </div>
+        {% endif %}
     </div>
     
     <!-- Quick Actions -->
@@ -53,14 +57,14 @@ Updated: 2025-06-15 - Reverted to original clean sectioned layout
             </form>
             
             <form method="post" action="{{ url_for('admin.cleanup_files') }}" style="display: inline;">
-                <button type="submit" class="button button-secondary">Find & List Orphans</button>
+                <button type="submit" class="button">Find & List Orphans</button>
             </form>
             
-            <a href="{{ url_for('admin.deleted_files') }}" class="button button-secondary">
+            <a href="{{ url_for('admin.deleted_files') }}" class="button">
                 View Deleted Files
             </a>
             
-            <a href="{{ url_for('admin.settings') }}" class="button button-secondary">
+            <a href="{{ url_for('admin.settings') }}" class="button">
                 System Settings
             </a>
         </div>
@@ -82,7 +86,7 @@ Updated: 2025-06-15 - Reverted to original clean sectioned layout
     </div>
     {% endif %}
     
-    <!-- Recent Activity -->
+    <!-- Recent Activity 
     {% if recent_files %}
     <div class="admin-section">
         <h2>Recent Uploads</h2>
@@ -101,6 +105,6 @@ Updated: 2025-06-15 - Reverted to original clean sectioned layout
             {% endfor %}
         </div>
     </div>
-    {% endif %}
+    {% endif %} -->
 </div>
 {% endblock %}

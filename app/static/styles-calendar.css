@@ -1,50 +1,47 @@
 /*
 styles-calendar.css - Calendar and event styles for Life app
-Version: 1.0.0
-Purpose: Calendar views, events, day views
+Version: 1.0.02
+Purpose: Calendar views, events, day views - fixed button alignment and sizes
 Created: 2025-06-14
+Updated: 2025-06-15 - Fixed button sizes and alignment
 */
 
-/* Calendar Navigation and Controls */
+/* Calendar Navigation and Controls - FIXED */
+.calendar-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.8rem;
+    background-color: var(--bg-accent);
+    border-radius: 6px;
+}
+
 .calendar-nav {
     display: flex;
-    justify-content: center;
+    align-items: center;
     gap: 0.7rem;
-    margin-bottom: 1rem;
-}
-
-.calendar-controls{
-    display: flex;
-    flex-wrap: wrap;          /* pushes overflow onto a new line on small screens */
-    align-items: center;      /* vertical alignment */
-    justify-content: center;  /* keep it centred */
-    gap: .7rem;               /* space between any two items */
-}
-
-.calendar-nav,
-.calendar-actions{
-    display: flex;
-    gap: .7rem;               /* equal spacing inside each group */
 }
 
 .calendar-period {
     font-weight: 500;
-    font-size: 0.8rem;
+    font-size: 0.95rem;
     color: var(--text-primary);
-    min-width: 180px;
+    min-width: 200px;
     text-align: center;
-}
-
-.calendar-period small {
-    display: block;
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    font-weight: normal;
+    white-space: nowrap;
 }
 
 .calendar-actions {
     display: flex;
     gap: 0.5rem;
+}
+
+/* Ensure buttons stay on same line */
+.calendar-controls .button {
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 /* Calendar Grid */
@@ -259,6 +256,12 @@ Created: 2025-06-14
     display: flex;
     gap: 0.5rem;
     margin-left: 1rem;
+    align-items: center;
+}
+
+.event-actions-large form {
+    margin: 0;
+    display: inline-flex;
 }
 
 .no-events {
@@ -297,6 +300,25 @@ Created: 2025-06-14
 
 /* Mobile adjustments */
 @media (max-width: 768px) {
+    .calendar-controls {
+        flex-wrap: wrap;
+    }
+    
+    .calendar-nav {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .calendar-actions {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .calendar-period {
+        min-width: auto;
+    }
+    
     .day-nav {
         grid-template-columns: 1fr;
         gap: 0.5rem;

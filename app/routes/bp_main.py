@@ -619,3 +619,8 @@ def edit_master_item():
     # TODO: Implement edit form
     flash('Edit functionality coming soon', 'info')
     return redirect(url_for('main.lists', list_name=list_name))
+
+@main_bp.route('/button-test')  # or @admin_bp.route('/button-test')
+@login_required
+def button_test():
+    return render_template('temp_button_test.html')

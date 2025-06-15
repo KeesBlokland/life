@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+<!--
+temp_admin_deleted.html
+Version: 1.0.01
+Purpose: Show deleted files for recovery from deleted_for_review folder
+Created: 2025-06-15
+Updated: 2025-06-15 - Complete deleted files management
+-->
+
+{% block title %}Deleted Files - Life{% endblock %}
+
+{% block template_info %}temp_admin_deleted.html v1.0.01 - Deleted files recovery{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Deleted Files</h1>
+    
+    <div class="help-section">
+        <p>Files moved to deleted_for_review folder. Restore or permanently delete.</p>
+    </div>
+    
+    {% if deleted_files %}
+        <div class="deleted-section">
+            <h2>{{ deleted_files|length }} Deleted Files</h2>
+            
+            <div class="deleted-list">
+                {% for file in deleted_files %}
+                <div class="deleted-row">
+                    <div class="deleted-file-info">
+                        <div class="deleted-file-name">{{ file.title or file.filename }}</div>
+                        <div class="deleted-file-details">
+                            Deleted: {{ file.deleted_date }} • Size: {{ (file.size / 1024)|round(1) }} KB
+                        </div>
+                    </div>
+                    
+                    <div class="deleted-file-actions">
+                        <form method="post" action="{{ url_for('admin.restore_file', file_id=file.id) }}" 
+                              style="display: inline;">
+                            <button type="submit" class="button button-small">Restore</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% else %}
+        <div class="no-deleted">
+            <h2>No Deleted Files</h2>
+            <p>No files in deleted_for_review folder.</p>
+            <a href="{{ url_for('admin.dashboard') }}" class="button">Back to Dashboard</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

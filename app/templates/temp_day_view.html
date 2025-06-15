@@ -1,14 +1,15 @@
 {% extends "base.html" %}
 <!--
-/home/life/app/templates/temp_day_view.html
-Version: 1.0.0
-Purpose: Single day view with large event blocks for elderly users with arthritis
+temp_day_view.html
+Version: 1.0.02
+Purpose: Single day view with large event blocks for elderly users
 Created: 2025-06-12
+Updated: 2025-06-15 - Removed redundant bin category display
 -->
 
 {% block title %}{{ view_date.strftime('%A %B %d') }} - Life{% endblock %}
 
-{% block template_info %}temp_day_view.html v1.0 - Elderly-friendly day view{% endblock %}
+{% block template_info %}temp_day_view.html v1.0.01 - Removed automatic bin reminders{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -27,16 +28,6 @@ Created: 2025-06-12
         </a>
     </div>
     
-    <!-- Refuse Bins Alert -->
-    {% if refuse_bins %}
-        <div class="refuse-alert-large">
-            <h2>Bins Out Tonight!</h2>
-            {% for bin in refuse_bins %}
-                <span class="bin-badge-large bin-{{ bin.color }}">{{ bin.type.split('(')[0].strip() }}</span>
-            {% endfor %}
-        </div>
-    {% endif %}
-    
     <!-- Events for this day -->
     <div class="day-events">
         {% if events %}
@@ -50,19 +41,21 @@ Created: 2025-06-12
                     {% if event.description %}
                         <div class="event-description">{{ event.description }}</div>
                     {% endif %}
-                    <div class="event-category">{{ event.category.title() }}</div>
+                    {% if event.category != 'bin' %}
+                        <div class="event-category">{{ event.category.title() }}</div>
+                    {% endif %}
                 </div>
                 
                 <div class="event-actions-large">
                     <a href="{{ url_for('main.edit_event', event_id=event.id) }}" 
-                       class="button-large button-edit">
+                       class="button">
                         Edit
                     </a>
                     
                     <form method="post" action="{{ url_for('main.delete_event', event_id=event.id) }}" 
                           style="display: inline;" 
                           onsubmit="return confirm('Delete {{ event.title }}?')">
-                        <button type="submit" class="button-large button-delete">
+                        <button type="submit" class="button button-danger">
                             Delete
                         </button>
                     </form>
@@ -80,11 +73,11 @@ Created: 2025-06-12
     <!-- Add Event Button -->
     <div class="day-actions">
         <a href="{{ url_for('main.add_event') }}?date={{ view_date.strftime('%Y-%m-%d') }}" 
-           class="button-large button-add">
+           class="button">
             Add Event
         </a>
         
-        <a href="{{ url_for('main.calendar') }}" class="button-large button-back">
+        <a href="{{ url_for('main.calendar') }}" class="button button-secondary">
             Back to Calendar
         </a>
     </div>

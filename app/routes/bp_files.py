@@ -389,53 +389,45 @@ def search():
 @files_bp.route('/delete/<int:file_id>', methods=['POST'])
 @admin_required
 def delete_file(file_id):
-    """Soft delete file (admin only)"""
+    """Soft delete file and move to deleted_for_review folder"""
     file_info = query_db('SELECT * FROM files WHERE id = ?', (file_id,), one=True)
     
     if not file_info:
         return jsonify({'error': 'File not found'}), 404
     
-    # Soft delete
-    execute_db('''
-        UPDATE files
-        SET deleted = 1, deleted_date = CURRENT_TIMESTAMP
-        WHERE id = ?
-    ''', (file_id,))
+    try:
+        # Create deleted_for_review directory if needed
+        deleted_dir = os.path.join(current_app.config['DATA_DIR'], 'deleted_for_review')
+        os.makedirs(deleted_dir, exist_ok=True)
+        
+        # Move file to deleted folder
+        old_path = file_info['filepath']
+        if os.path.exists(old_path):
+            filename = f"{file_id}_{os.path.basename(old_path)}"
+            new_path = os.path.join(deleted_dir, filename)
+            shutil.move(old_path, new_path)
+            
+            # Update database with new path
+            execute_db('''
+                UPDATE files
+                SET deleted = 1, deleted_date = CURRENT_TIMESTAMP, filepath = ?
+                WHERE id = ?
+            ''', (new_path, file_id))
+        else:
+            # File already missing, just mark as deleted
+            execute_db('''
+                UPDATE files
+                SET deleted = 1, deleted_date = CURRENT_TIMESTAMP
+                WHERE id = ?
+            ''', (file_id,))
     
-    if current_app.config['DEBUG']:
-        current_app.logger.debug(f"Soft deleted file: {file_info['filename']} (ID: {file_id})")
-    
-    flash('File deleted', 'success')
-    return redirect(url_for('files.browse'))
-
-def find_related_files(search_term, exclude_ids):
-    """Find files related to search term using semantic relationships"""
-    # Look for matching relationship terms
-    relationships = query_db('''
-        SELECT term, related_terms
-        FROM relationships
-        WHERE term LIKE ? OR related_terms LIKE ?
-    ''', (f'%{search_term}%', f'%{search_term}%'))
-    
-    related_keywords = set()
-    for rel in relationships:
-        if search_term.lower() in rel['term'].lower():
-            import json
-            related_keywords.update(json.loads(rel['related_terms']))
-    
-    if not related_keywords:
-        return []
-    
-    # Search for files with related keywords
-    placeholders = ','.join(['?'] * len(related_keywords))
-    query = f'''
-        SELECT DISTINCT f.id, f.filename, m.title, m.description
-        FROM files f
-        LEFT JOIN metadata m ON f.id = m.file_id
-        WHERE f.deleted = 0 AND f.id NOT IN ({','.join(['?'] * len(exclude_ids))})
-        AND (m.keywords IN ({placeholders}) OR m.title IN ({placeholders}))
-        LIMIT 5
-    '''
-    
-    args = exclude_ids + list(related_keywords) + list(related_keywords)
-    return query_db(query, args)
+        if current_app.config['DEBUG']:
+            current_app.logger.debug(f"Moved deleted file: {old_path} -> {new_path}")
+        
+        flash('File moved to deleted folder', 'success')
+        return redirect(url_for('files.browse'))
+        
+    except Exception as e:
+        current_app.logger.error(f"Error deleting file {file_id}: {str(e)}")
+        flash('Error deleting file', 'error')
+        return redirect(url_for('files.browse'))

@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 <!--
 temp_admin_orphans.html
-Version: 1.0.02
+Version: 1.0.03
 Purpose: Display orphaned files with management actions
 Created: 2025-06-15
-Updated: 2025-06-15 - Fixed template naming
+Updated: 2025-06-15 - Complete file with proper guidance text
 -->
 
 {% block title %}Orphaned Files - Life{% endblock %}
 
-{% block template_info %}dir_temp_admin_orphans.html v1.0.01 - Orphaned files management{% endblock %}
+{% block template_info %}temp_admin_orphans.html v1.0.03 - Complete orphaned files management{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -38,11 +38,7 @@ Updated: 2025-06-15 - Fixed template naming
                     <div class="orphan-file-info">
                         <div class="orphan-file-path">{{ file_path }}</div>
                         <div class="orphan-file-details">
-                            {% set file_stats = file_path | file_stats %}
-                            {% if file_stats %}
-                                Size: {{ "%.1f"|format(file_stats.size / 1024) }} KB
-                                • Modified: {{ file_stats.modified.strftime('%Y-%m-%d %H:%M') if file_stats.modified else 'Unknown' }}
-                            {% endif %}
+                            File exists on disk but not in database. Either delete or restore to database.
                         </div>
                     </div>
                     

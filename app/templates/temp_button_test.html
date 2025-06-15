@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+<!--
+temp_button_test.html - Button component testing page
+Version: 1.0.01
+Purpose: Test page to show all button variations from styles_components.css
+Created: 2025-06-15
+-->
+
+{% block title %}Button Test - Life{% endblock %}
+
+{% block template_info %}temp_button_test.html v1.0.01 - Button component showcase{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Button Component System Test</h1>
+    
+    <section>
+        <h2>New .btn System</h2>
+        
+        <h3>Basic Types</h3>
+        <p>
+            <button class="btn">Primary (.btn)</button>
+            <button class="btn-primary">Primary (.btn-primary)</button>
+            <button class="btn-secondary">Secondary</button>
+            <button class="btn-success">Success</button>
+            <button class="btn-warning">Warning</button>
+            <button class="btn-danger">Danger</button>
+        </p>
+        
+        <h3>Sizes</h3>
+        <p>
+            <button class="btn btn-xs">Extra Small (.btn-xs)</button>
+            <button class="btn btn-sm">Small (.btn-sm)</button>
+            <button class="btn">Regular (.btn)</button>
+            <button class="btn btn-lg">Large (.btn-lg)</button>
+            <button class="btn btn-xl">Extra Large (.btn-xl)</button>
+        </p>
+        
+        <h3>Size + Type Combinations</h3>
+        <p>
+            <button class="btn-danger btn-xs">Danger XS</button>
+            <button class="btn-success btn-sm">Success SM</button>
+            <button class="btn-warning btn-lg">Warning LG</button>
+            <button class="btn-secondary btn-xl">Secondary XL</button>
+        </p>
+        
+        <h3>Special States</h3>
+        <p>
+            <button class="btn-active">Active State</button>
+            <button class="btn" disabled>Disabled</button>
+        </p>
+        <p>
+            <button class="btn-block">Block Button (Full Width)</button>
+        </p>
+    </section>
+    
+    <section>
+        <h2>Legacy .button System (Backwards Compatibility)</h2>
+        
+        <h3>Basic Legacy</h3>
+        <p>
+            <button class="button">Basic (.button)</button>
+            <button class="button-secondary">Secondary</button>
+            <button class="button-success">Success</button>
+            <button class="button-danger">Danger</button>
+            <button class="button-active">Active</button>
+        </p>
+        
+        <h3>Legacy Sizes</h3>
+        <p>
+            <button class="button-small">Small (.button-small)</button>
+            <button class="button">Regular (.button)</button>
+            <button class="button-large">Large (.button-large)</button>
+        </p>
+        
+        <h3>As Links</h3>
+        <p>
+            <a href="#" class="button">Link as Button</a>
+            <a href="#" class="button-secondary">Secondary Link</a>
+            <a href="#" class="button-danger">Danger Link</a>
+        </p>
+    </section>
+    
+    <section>
+        <h2>Real-World Usage Examples</h2>
+        
+        <h3>File Actions (from files page)</h3>
+        <p>
+            <button class="btn btn-sm">View</button>
+            <button class="btn-secondary btn-sm">Info</button>
+            <button class="btn-danger btn-sm">Delete</button>
+        </p>
+        
+        <h3>Form Actions</h3>
+        <p>
+            <button class="btn-success">Save Changes</button>
+            <button class="btn-secondary">Cancel</button>
+        </p>
+        
+        <h3>Shopping List Actions</h3>
+        <p>
+            <button class="btn btn-xs">Add →</button>
+            <button class="btn-danger btn-xs">Remove</button>
+            <button class="btn-secondary btn-xs">Clear All</button>
+        </p>
+        
+        <h3>Admin Actions</h3>
+        <p>
+            <button class="btn btn-xs">Edit</button>
+            <button class="btn-success btn-xs">Save</button>
+            <button class="btn-secondary btn-xs">Cancel</button>
+        </p>
+        
+        <h3>Calendar Navigation</h3>
+        <p>
+            <button class="btn-secondary">← Previous</button>
+            <button class="btn">Today</button>
+            <button class="btn-secondary">Next →</button>
+        </p>
+    </section>
+</div>
+{% endblock %}

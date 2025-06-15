@@ -1,14 +1,15 @@
 {% extends "base.html" %}
 <!--
-/home/life/app/templates/temp_admin_settings.html
-Version: 1.0.0
-Purpose: Admin system settings management - bin days, backup settings
+temp_admin_settings.html
+Version: 1.0.05
+Purpose: Admin system settings management - bin days, backup settings, system config
 Created: 2025-06-13
+Updated: 2025-06-15 - Fixed checkbox and text input inline layout
 -->
 
 {% block title %}System Settings - Life{% endblock %}
 
-{% block template_info %}temp_admin_settings.html v1.0.0 - System settings management{% endblock %}
+{% block template_info %}temp_admin_settings.html v1.0.05 - Fixed inline backup layout{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -17,70 +18,96 @@ Created: 2025-06-13
     <form method="post" class="settings-form">
         <!-- Bin Collection Days -->
         <div class="settings-section">
-            <h2>Refuse Bin Collection Days</h2>
-            <p>Set which days bins go out (used for automatic reminders)</p>
+            <h2>Bin Collection Schedule</h2>
             
+            {% for bin_type, bin_info in config.BIN_TYPES.items() %}
             <div class="form-row">
                 <div class="form-group">
-                    <label for="refuse_blue_day">Blue Bin Day (Paper/Cardboard)</label>
-                    <select id="refuse_blue_day" name="refuse_blue_day">
+                    <label for="refuse_{{ bin_type }}_day">{{ bin_info.name }} ({{ bin_info.description }})</label>
+                    <select id="refuse_{{ bin_type }}_day" name="refuse_{{ bin_type }}_day">
                         <option value="">None</option>
-                        <option value="monday" {% if settings.refuse_blue_day == 'monday' %}selected{% endif %}>Monday</option>
-                        <option value="tuesday" {% if settings.refuse_blue_day == 'tuesday' %}selected{% endif %}>Tuesday</option>
-                        <option value="wednesday" {% if settings.refuse_blue_day == 'wednesday' %}selected{% endif %}>Wednesday</option>
-                        <option value="thursday" {% if settings.refuse_blue_day == 'thursday' %}selected{% endif %}>Thursday</option>
-                        <option value="friday" {% if settings.refuse_blue_day == 'friday' %}selected{% endif %}>Friday</option>
-                        <option value="saturday" {% if settings.refuse_blue_day == 'saturday' %}selected{% endif %}>Saturday</option>
-                        <option value="sunday" {% if settings.refuse_blue_day == 'sunday' %}selected{% endif %}>Sunday</option>
+                        {% for day in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] %}
+                        <option value="{{ day }}" {% if settings['refuse_' + bin_type + '_day'] == day %}selected{% endif %}>
+                            {{ day.title() }}{% if settings['refuse_' + bin_type + '_day'] == day %} (current){% endif %}
+                        </option>
+                        {% endfor %}
                     </select>
                 </div>
                 
                 <div class="form-group">
-                    <label for="refuse_yellow_day">Yellow Bin Day (Recycling)</label>
-                    <select id="refuse_yellow_day" name="refuse_yellow_day">
-                        <option value="">None</option>
-                        <option value="monday" {% if settings.refuse_yellow_day == 'monday' %}selected{% endif %}>Monday</option>
-                        <option value="tuesday" {% if settings.refuse_yellow_day == 'tuesday' %}selected{% endif %}>Tuesday</option>
-                        <option value="wednesday" {% if settings.refuse_yellow_day == 'wednesday' %}selected{% endif %}>Wednesday</option>
-                        <option value="thursday" {% if settings.refuse_yellow_day == 'thursday' %}selected{% endif %}>Thursday</option>
-                        <option value="friday" {% if settings.refuse_yellow_day == 'friday' %}selected{% endif %}>Friday</option>
-                        <option value="saturday" {% if settings.refuse_yellow_day == 'saturday' %}selected{% endif %}>Saturday</option>
-                        <option value="sunday" {% if settings.refuse_yellow_day == 'sunday' %}selected{% endif %}>Sunday</option>
+                    <label for="refuse_{{ bin_type }}_frequency">{{ bin_info.name }} Frequency</label>
+                    <select id="refuse_{{ bin_type }}_frequency" name="refuse_{{ bin_type }}_frequency">
+                        <option value="weekly" {% if settings['refuse_' + bin_type + '_frequency'] == 'weekly' %}selected{% endif %}>
+                            Weekly{% if settings['refuse_' + bin_type + '_frequency'] == 'weekly' %} (current){% endif %}
+                        </option>
+                        <option value="biweekly" {% if settings['refuse_' + bin_type + '_frequency'] == 'biweekly' %}selected{% endif %}>
+                            Every Other Week{% if settings['refuse_' + bin_type + '_frequency'] == 'biweekly' %} (current){% endif %}
+                        </option>
                     </select>
                 </div>
             </div>
-            
-            <div class="form-group">
-                <label for="refuse_brown_day">Brown Bin Day (Bio/Organic)</label>
-                <select id="refuse_brown_day" name="refuse_brown_day">
-                    <option value="">None</option>
-                    <option value="monday" {% if settings.refuse_brown_day == 'monday' %}selected{% endif %}>Monday</option>
-                    <option value="tuesday" {% if settings.refuse_brown_day == 'tuesday' %}selected{% endif %}>Tuesday</option>
-                    <option value="wednesday" {% if settings.refuse_brown_day == 'wednesday' %}selected{% endif %}>Wednesday</option>
-                    <option value="thursday" {% if settings.refuse_brown_day == 'thursday' %}selected{% endif %}>Thursday</option>
-                    <option value="friday" {% if settings.refuse_brown_day == 'friday' %}selected{% endif %}>Friday</option>
-                    <option value="saturday" {% if settings.refuse_brown_day == 'saturday' %}selected{% endif %}>Saturday</option>
-                    <option value="sunday" {% if settings.refuse_brown_day == 'sunday' %}selected{% endif %}>Sunday</option>
-                </select>
-            </div>
+            {% endfor %}
         </div>
         
         <!-- Backup Settings -->
         <div class="settings-section">
-            <h2>Backup Settings</h2>
+            <div class="backup-inline">
+                <input type="checkbox" id="backup_enabled" name="backup_enabled" value="true" 
+                       {% if settings.backup_enabled == 'true' %}checked{% endif %}>
+                <label for="backup_enabled">Backup Settings</label>
+                <input type="text" id="backup_location" name="backup_location" 
+                       value="{{ settings.backup_location or '/home/life/data/backups' }}"
+                       placeholder="Backup directory path">
+            </div>
             
             <div class="form-row">
                 <div class="form-group">
-                    <label for="backup_enabled">Automatic Backups</label>
-                    <select id="backup_enabled" name="backup_enabled">
-                        <option value="true" {% if settings.backup_enabled == 'true' %}selected{% endif %}>Enabled</option>
-                        <option value="false" {% if settings.backup_enabled == 'false' %}selected{% endif %}>Disabled</option>
+                    <label for="backup_time">Backup Time</label>
+                    <input type="time" id="backup_time" name="backup_time" value="{{ settings.backup_time or '02:00' }}">
+                </div>
+            </div>
+        </div>
+        
+        <!-- System Settings -->
+        <div class="settings-section">
+           
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="debug_mode">Debug Mode</label>
+                    <select id="debug_mode" name="debug_mode">
+                        <option value="false" {% if settings.debug_mode == 'false' %}selected{% endif %}>Disabled</option>
+                        <option value="true" {% if settings.debug_mode == 'true' %}selected{% endif %}>Enabled</option>
                     </select>
                 </div>
                 
                 <div class="form-group">
-                    <label for="backup_time">Backup Time (24h format)</label>
-                    <input type="time" id="backup_time" name="backup_time" value="{{ settings.backup_time or '02:00' }}">
+                    <label for="log_level">Log Level</label>
+                    <select id="log_level" name="log_level">
+                        <option value="ERROR" {% if settings.log_level == 'ERROR' %}selected{% endif %}>Error</option>
+                        <option value="WARNING" {% if settings.log_level == 'WARNING' %}selected{% endif %}>Warning</option>
+                        <option value="INFO" {% if settings.log_level == 'INFO' %}selected{% endif %}>Info</option>
+                        <option value="DEBUG" {% if settings.log_level == 'DEBUG' %}selected{% endif %}>Debug</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Password Management -->
+        <div class="settings-section">
+            <h2>Password Settings</h2>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="view_password">View Password</label>
+                    <input type="password" id="view_password" name="view_password" 
+                           placeholder="Leave blank to keep current">
+                </div>
+                
+                <div class="form-group">
+                    <label for="admin_password">Admin Password</label>
+                    <input type="password" id="admin_password" name="admin_password" 
+                           placeholder="Leave blank to keep current">
                 </div>
             </div>
         </div>
@@ -90,169 +117,5 @@ Created: 2025-06-13
             <a href="{{ url_for('admin.dashboard') }}" class="button button-secondary">Cancel</a>
         </div>
     </form>
-    
-    <!-- Current Settings Summary -->
-    <div class="current-settings">
-        <h3>Current Settings Summary</h3>
-        <div class="settings-grid">
-            <div class="setting-item">
-                <strong>Blue Bin:</strong> {{ settings.refuse_blue_day or 'Not set' }}
-            </div>
-            <div class="setting-item">
-                <strong>Yellow Bin:</strong> {{ settings.refuse_yellow_day or 'Not set' }}
-            </div>
-            <div class="setting-item">
-                <strong>Brown Bin:</strong> {{ settings.refuse_brown_day or 'Not set' }}
-            </div>
-            <div class="setting-item">
-                <strong>Backups:</strong> {{ settings.backup_enabled or 'Not set' }}
-            </div>
-        </div>
-    </div>
-    
-    <!-- Help Section -->
-    <div class="help-section">
-        <h3>About Bin Reminders</h3>
-        <ul>
-            <li><strong>Settings-based reminders:</strong> Show "Bins Out Tonight!" on homepage based on these day settings</li>
-            <li><strong>Calendar events:</strong> Individual bin events you create manually in calendar</li>
-            <li><strong>Problem:</strong> If you have both, you'll see duplicate reminders</li>
-            <li><strong>Solution:</strong> Use settings for regular weekly bins, calendar events for special collections</li>
-        </ul>
-        
-        <div class="help-actions">
-            <a href="{{ url_for('main.recurring_events') }}" class="button button-secondary">
-                Manage Calendar Bin Events
-            </a>
-        </div>
-    </div>
 </div>
-
-<style>
-.settings-form {
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-.settings-section {
-    margin-bottom: 3rem;
-    padding: 2rem;
-    background-color: var(--bg-accent);
-    border-radius: 8px;
-    border-left: 4px solid var(--accent);
-}
-
-.settings-section h2 {
-    margin-bottom: 1rem;
-    color: var(--text-primary);
-}
-
-.settings-section p {
-    margin-bottom: 1.5rem;
-    color: var(--text-secondary);
-}
-
-.form-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-}
-
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: var(--text-primary);
-}
-
-.form-group select,
-.form-group input {
-    width: 100%;
-    padding: 0.75rem;
-    font-size: 1rem;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    background-color: white;
-}
-
-.form-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    margin-top: 3rem;
-}
-
-.current-settings {
-    margin-top: 3rem;
-    padding: 2rem;
-    background-color: white;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-}
-
-.current-settings h3 {
-    margin-bottom: 1.5rem;
-    color: var(--text-primary);
-}
-
-.settings-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-}
-
-.setting-item {
-    padding: 1rem;
-    background-color: var(--bg-accent);
-    border-radius: 4px;
-    border-left: 3px solid var(--accent);
-}
-
-.help-section {
-    margin-top: 3rem;
-    padding: 2rem;
-    background-color: var(--bg-secondary);
-    border-radius: 8px;
-    border: 1px solid var(--border);
-}
-
-.help-section h3 {
-    margin-bottom: 1rem;
-    color: var(--text-primary);
-}
-
-.help-section ul {
-    margin-bottom: 1.5rem;
-    padding-left: 1.5rem;
-}
-
-.help-section li {
-    margin-bottom: 0.5rem;
-    line-height: 1.5;
-}
-
-.help-actions {
-    text-align: center;
-}
-
-/* Mobile adjustments */
-@media (max-width: 768px) {
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-    
-    .settings-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .form-actions {
-        flex-direction: column;
-        align-items: center;
-    }
-}
-</style>
 {% endblock %}

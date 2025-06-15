@@ -221,49 +221,7 @@ textarea {
     resize: vertical;
 }
 
-/* Buttons - Compact */
-button,
-.button {
-    display: inline-block;
-    padding: 0.5rem 0.5rem;
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: white;
-    background-color: var(--accent);
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-    text-decoration: none;
-    transition: opacity 0.2s;
-}
-
-button:hover,
-.button:hover {
-    opacity: 0.9;
-    text-decoration: none;
-}
-
-.button-secondary {
-    background-color: var(--text-secondary);
-}
-
-.button-danger {
-    background-color: var(--error);
-}
-
-.button-small {
-    padding: 0.3rem 0.7rem;
-    font-size: 0.8rem;
-}
-
-.button-success {
-    background-color: var(--success);
-}
-
-.button-active {
-    background-color: var(--accent) !important;
-    color: white !important;
-}
+/* Button styles moved to styles_components.css */
 
 /* Messages - Compact */
 .messages {

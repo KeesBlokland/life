@@ -162,26 +162,39 @@ def verify_file_integrity(filepath, expected_checksum):
         return False
 
 def cleanup_orphaned_files():
-    """Find and clean up files not in database"""
+    """Find and clean up files not in database - exclude system files and deleted files"""
     try:
         from utils.util_db import query_db
         
-        # Get all file paths from database
-        db_files = query_db('SELECT filepath FROM files WHERE deleted = 0')
+        # Get all file paths from database (including deleted files)
+        db_files = query_db('SELECT filepath FROM files')
         db_paths = set(f['filepath'] for f in db_files)
         
-        # Walk through storage directories
+        # Walk through storage directories - EXCLUDE system and deleted directories
         storage_base = current_app.config['DATA_DIR']
         orphaned = []
         
-        for root, dirs, files in os.walk(storage_base):
-            # Skip hidden directories
-            dirs[:] = [d for d in dirs if not d.startswith('.')]
-            
-            for filename in files:
-                filepath = os.path.join(root, filename)
-                if filepath not in db_paths and not filename.startswith('.'):
-                    orphaned.append(filepath)
+        # Only check document storage directories, exclude deleted_for_review
+        check_dirs = ['documents', 'images', 'videos']
+        
+        for check_dir in check_dirs:
+            check_path = os.path.join(storage_base, check_dir)
+            if not os.path.exists(check_path):
+                continue
+                
+            for root, dirs, files in os.walk(check_path):
+                # Skip hidden directories and deleted_for_review
+                dirs[:] = [d for d in dirs if not d.startswith('.') and d != 'deleted_for_review']
+                
+                for filename in files:
+                    filepath = os.path.join(root, filename)
+                    # Skip hidden files and system files
+                    if (filepath not in db_paths and 
+                        not filename.startswith('.') and
+                        not filename.endswith('.db') and
+                        not filename.endswith('.backup') and
+                        not filename.endswith('.tar.gz')):
+                        orphaned.append(filepath)
         
         if current_app.config['DEBUG'] and orphaned:
             current_app.logger.info(f"Found {len(orphaned)} orphaned files")
