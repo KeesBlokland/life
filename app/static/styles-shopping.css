@@ -1,9 +1,20 @@
 /*
 styles-shopping.css - Shopping list styles for Life app
-Version: 1.0.0
+Version: 1.0.01
 Purpose: Shopping list specific styles
 Created: 2025-06-14
+Updated: 2025-06-15 - Moved all inline styles from temp_lists.html
 */
+
+/* List tabs container */
+.list-tabs-container {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding: 0.8rem;
+    background-color: var(--bg-accent);
+    border-radius: 6px;
+}
 
 /* Shopping Lists Container */
 .shopping-container {
@@ -45,11 +56,14 @@ Created: 2025-06-14
     display: flex;
     gap: 0.5rem;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .add-item-form input[name="item"] {
     flex: 1;
-    padding: 0.5rem;
+    min-width: 200px;
+    height: 32px;
+    padding: 0 8px;
 }
 
 .add-item-form input[name="quantity"] {
@@ -61,8 +75,27 @@ Created: 2025-06-14
     display: flex;
     align-items: center;
     gap: 0.3rem;
-    font-size: 0.9rem;
-    margin: 0 0.5rem;  /* was 0.5 */
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+/* Quantity inputs */
+.qty-input,
+.qty-input-sm {
+    height: 32px;
+    padding: 0 8px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+.qty-input {
+    width: 80px;
+}
+
+.qty-input-sm {
+    width: 50px;
 }
 
 /* Two Column Layout */
@@ -80,37 +113,111 @@ Created: 2025-06-14
 }
 
 .column-header {
-    padding: 0.5rem 0.8rem;
+    padding: 0.8rem;
     background-color: var(--bg-secondary);
     border-bottom: 1px solid var(--border);
     font-weight: 500;
     font-size: 0.95rem;
 }
 
-/* Shopping items - matching document rows exactly */
-.master-item, .today-item {
+.column-header-with-actions {
+    padding: 0.8rem;
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+    font-size: 0.95rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Perfect alignment system for item rows */
+.master-item,
+.today-item {
     display: flex;
     align-items: center;
-    padding: 0.1rem;  /* Same as .file-line. REDUCED TO 0.2 FROM 1 TO REDCUE HEIGHT */
-    gap: 1rem;        /* Same as .file-line */
+    justify-content: space-between;
+    padding: 0.6rem 0.8rem;
     border-bottom: 1px solid var(--border);
-    height: 36px; 
-    transition: background-color 0.2s;
-    
+    min-height: 44px; /* Consistent row height */
 }
 
-.master-item > *,
-.today-item > * {
-    margin-top: 0;
-    margin-bottom: 0;
+.master-item.clickable-item {
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-.master-item:hover, .today-item:hover {
+.master-item.clickable-item:hover {
+    background-color: rgba(125, 154, 150, 0.1);
+    border-left: 3px solid var(--accent);
+}
+
+.today-item:hover {
     background-color: var(--bg-accent);
 }
 
-.master-item:last-child, .today-item:last-child {
+.master-item:last-child, 
+.today-item:last-child {
     border-bottom: none;
+}
+
+/* Left side content */
+.item-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 32px; /* Match button height */
+}
+
+.item-name,
+.today-item-name {
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.item-meta {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    line-height: 1.1;
+    margin-top: 2px;
+}
+
+/* Right side actions */
+.item-actions,
+.today-item-actions {
+    display: flex;
+    gap: 0.3rem;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.add-hint {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-style: italic;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.clickable-item:hover .add-hint {
+    opacity: 1;
+    color: var(--accent);
+}
+
+.admin-delete {
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.clickable-item:hover .admin-delete {
+    opacity: 1;
 }
 
 /* Master list specific */
@@ -119,16 +226,6 @@ Created: 2025-06-14
     display: flex;
     align-items: center;
     gap: 0.5rem;
-}
-
-.item-name {
-    font-weight: 500;
-    color: var(--text-primary);
-}
-
-.item-meta {
-    color: var(--text-secondary);
-    font-size: 0.85rem;
 }
 
 .master-item-actions {
@@ -182,6 +279,14 @@ Created: 2025-06-14
     text-align: center;
 }
 
+.empty-message {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: var(--text-secondary);
+    font-style: italic;
+    line-height: 1.4;
+}
+
 /* Mobile adjustments */
 @media (max-width: 768px) {
     .shopping-columns {
@@ -189,6 +294,26 @@ Created: 2025-06-14
     }
     
     .add-item-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .add-item-form input[name="item"] {
+        min-width: unset;
+    }
+    
+    .column-header-with-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: stretch;
+    }
+    
+    .header-actions {
+        justify-content: center;
+    }
+    
+    .item-actions,
+    .today-item-actions {
         flex-wrap: wrap;
     }
 }

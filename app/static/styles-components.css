@@ -1,117 +1,12 @@
 /*
-styles_components.css - Unified component system for Life app
-Version: 1.0.01
-Purpose: Single source of truth for all UI components - buttons, forms, etc.
+styles-components.css - Component styles for Life app
+Version: 1.0.03
+Purpose: Button styles and future component styles
 Created: 2025-06-15
+Updated: 2025-06-15 - Cleaned up to use only legacy button system
 */
 
 /* ===== BUTTON SYSTEM ===== */
-
-/* Base button - all buttons inherit from this */
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-    font-weight: 500;
-    font-family: inherit;
-    line-height: 1;
-    text-align: center;
-    text-decoration: none;
-    white-space: nowrap;
-    vertical-align: middle;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    user-select: none;
-    min-height: 36px;
-    box-sizing: border-box;
-    background-color: var(--accent);
-    color: white;
-}
-
-.btn:hover {
-    opacity: 0.9;
-    text-decoration: none;
-    transform: translateY(-1px);
-}
-
-.btn:active {
-    transform: translateY(0);
-}
-
-.btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-}
-
-/* Button variants */
-.btn-primary {
-    background-color: var(--accent);
-    color: white;
-}
-
-.btn-secondary {
-    background-color: var(--text-secondary);
-    color: white;
-}
-
-.btn-success {
-    background-color: var(--success);
-    color: white;
-}
-
-.btn-warning {
-    background-color: var(--warning);
-    color: white;
-}
-
-.btn-danger {
-    background-color: var(--error);
-    color: white;
-}
-
-/* Button sizes */
-.btn-xs {
-    padding: 0.2rem 0.5rem;
-    font-size: 0.75rem;
-    min-height: 24px;
-}
-
-.btn-sm {
-    padding: 0.3rem 0.7rem;
-    font-size: 0.85rem;
-    min-height: 32px;
-}
-
-.btn-lg {
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
-    min-height: 44px;
-}
-
-.btn-xl {
-    padding: 1rem 2rem;
-    font-size: 1.1rem;
-    min-height: 52px;
-}
-
-/* Special states */
-.btn-active {
-    background-color: var(--accent) !important;
-    color: white !important;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
-}
-
-.btn-block {
-    display: flex;
-    width: 100%;
-}
-
-/* Legacy compatibility - keep old .button classes working */
 .button {
     display: inline-flex;
     align-items: center;
@@ -275,13 +170,11 @@ Created: 2025-06-15
 
 /* Mobile responsive */
 @media (max-width: 768px) {
-    .btn,
     .button {
         min-height: 44px; /* Touch-friendly on mobile */
         padding: 0.75rem 1rem;
     }
     
-    .btn-sm,
     .button-small {
         min-height: 36px;
         padding: 0.5rem 0.75rem;
