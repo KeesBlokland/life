@@ -1,13 +1,17 @@
 {% extends "base.html" %}
 <!--
 /home/life/app/templates/temp_files.html
-Version: 1.3.3
-Purpose: File browser with compact controls  
+Version: 1.4.1
+Purpose: File browser - Info button on left, syntax fixed
 Created: 2025-06-11
-Updated: 2025-06-12 - Clean single-line layout with proper separation
+Updated: 2025-06-16 - Fixed Jinja2 syntax error
 -->
 
 {% block title %}Documents - Life{% endblock %}
+
+{% block page_name %}: Documents{% endblock %}
+
+{% block template_info %}temp_files.html v1.4.1 - Fixed syntax error{% endblock %}
 
 {% block scripts %}
 <script>
@@ -44,10 +48,6 @@ function cancelTagsEdit(fileId) {
 </script>
 {% endblock %}
 
-{% block page_name %}: Documents{% endblock %}
-
-{% block template_info %}temp_files.html v1.3.3 - Added admin CRUD for tags{% endblock %}
-
 {% block content %}
 <div class="container">
     <!-- Compact category filter and actions -->
@@ -79,18 +79,16 @@ function cancelTagsEdit(fileId) {
                 <div class="file-line">
                     <a href="{{ url_for('files.download', file_id=file.id) }}" 
                        class="button button-small">View</a>
+                    <button type="button" class="button button-small button-secondary" 
+                            onclick="toggleDetails({{ file.id }})">Info</button>
+                    {% if session.get('is_admin') %}
+                    <form method="post" action="{{ url_for('files.delete_file', file_id=file.id) }}" 
+                          style="display: inline;" 
+                          onsubmit="return confirm('Delete this file?')">
+                        <button type="submit" class="button button-small button-danger">Delete</button>
+                    </form>
+                    {% endif %}
                     <span class="file-title">{{ file.title or file.filename }}</span>
-                    <div class="file-actions">
-                        <button type="button" class="button button-small button-secondary" 
-                                onclick="toggleDetails({{ file.id }})">Info</button>
-                        {% if session.get('is_admin') %}
-                        <form method="post" action="{{ url_for('files.delete_file', file_id=file.id) }}" 
-                              style="display: inline;" 
-                              onsubmit="return confirm('Delete this file?')">
-                            <button type="submit" class="button button-small button-danger">Delete</button>
-                        </form>
-                        {% endif %}
-                    </div>
                 </div>
                 
                 <!-- Hidden details -->

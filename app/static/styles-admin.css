@@ -1,9 +1,9 @@
 /*
 styles-admin.css - Admin interface styles for Life app
-Version: 1.0.03
+Version: 1.0.04
 Purpose: Admin dashboard, orphaned files, system management styles
 Created: 2025-06-15
-Updated: 2025-06-15 - Added settings form styles
+Updated: 2025-06-16 - Fixed button alignment to match file browser
 */
 
 /* Admin Dashboard Sections */
@@ -71,14 +71,30 @@ Updated: 2025-06-15 - Added settings form styles
     line-height: 1.2;
 }
 
-/* Action buttons consistent sizing */
+/* DO NOT TOUCH - WORKS - Management buttons alignment */
 .action-buttons {
     display: flex;
     gap: 0.5rem;
-    flex-shrink: 0;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
-/* Button styles moved to styles_components.css */
+.action-buttons .button,
+.action-buttons form {
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+}
+
+.action-buttons .button {
+    min-height: 36px;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: top;
+}
 
 /* Storage and File Lists */
 .storage-list,

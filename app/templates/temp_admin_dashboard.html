@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 <!--
 temp_admin_dashboard.html
-Version: 1.0.05
+Version: 1.0.06
 Purpose: Admin dashboard with system overview and management tools  
 Created: 2025-06-11
-Updated: 2025-06-15 - Added disk space info with df -h
+Updated: 2025-06-16 - Fixed backup button routes
 -->
 
 {% block title %}Admin Dashboard - Life{% endblock %}
 
 {% block page_name %}: Admin{% endblock %}
 
-{% block template_info %}temp_admin_dashboard.html v1.0.05 - Added disk space info{% endblock %}
+{% block template_info %}temp_admin_dashboard.html v1.0.06 - Fixed backup routes{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -52,8 +52,12 @@ Updated: 2025-06-15 - Added disk space info with df -h
     <div class="admin-section">
         <h2>Quick Actions</h2>
         <div class="action-buttons">
-            <form method="post" action="{{ url_for('admin.create_backup') }}" style="display: inline;">
-                <button type="submit" class="button">Create Backup</button>
+            <form method="post" action="{{ url_for('admin.data_backup') }}" style="display: inline;">
+                <button type="submit" class="button">Data Backup</button>
+            </form>
+            
+            <form method="post" action="{{ url_for('admin.system_backup') }}" style="display: inline;">
+                <button type="submit" class="button button-secondary">System Backup</button>
             </form>
             
             <form method="post" action="{{ url_for('admin.cleanup_files') }}" style="display: inline;">
@@ -85,26 +89,5 @@ Updated: 2025-06-15 - Added disk space info with df -h
         </div>
     </div>
     {% endif %}
-    
-    <!-- Recent Activity 
-    {% if recent_files %}
-    <div class="admin-section">
-        <h2>Recent Uploads</h2>
-        <div class="recent-files">
-            {% for file in recent_files %}
-            <div class="file-row">
-                <div class="file-info">
-                    <strong>{{ file.filename }}</strong>
-                    <span class="file-category">{{ file.auto_category or 'Uncategorized' }}</span>
-                </div>
-                <div class="file-meta">
-                    <span>{{ file.upload_date }}</span>
-                    <span>{{ (file.size / 1024)|round(1) }} KB</span>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %} -->
 </div>
 {% endblock %}

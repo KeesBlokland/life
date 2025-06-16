@@ -1,9 +1,9 @@
 """
 bp_admin.py - Admin routes with orphaned file management
-Version: 1.1.04
+Version: 1.1.05
 Purpose: Admin routes - system management, user management, settings, orphaned files
 Created: 2025-06-11
-Updated: 2025-06-15 - Added complete settings management
+Updated: 2025-06-16 - Added system backup functionality with fixed naming
 """
 
 import os
@@ -12,7 +12,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from datetime import datetime
 from routes.bp_auth import admin_required
 from utils.util_db import query_db, execute_db
-from utils.util_storage import cleanup_orphaned_files, create_backup_archive, get_file_size_formatted, calculate_checksum, get_file_type, get_file_category
+from utils.util_storage import cleanup_orphaned_files, create_backup_archive, create_system_backup, get_file_size_formatted, calculate_checksum, get_file_type, get_file_category
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -266,19 +266,35 @@ def settings():
     
     return render_template('temp_admin_settings.html', settings=settings_data)
 
-@admin_bp.route('/backup', methods=['POST'])
+@admin_bp.route('/data-backup', methods=['POST'])
 @admin_required
-def create_backup():
-    """Create system backup"""
+def data_backup():
+    """Create data backup (files + database only)"""
     try:
         backup_path = create_backup_archive()
         if backup_path:
-            flash(f'Backup created successfully: {backup_path}', 'success')
+            flash(f'Data backup created successfully: {backup_path}', 'success')
         else:
-            flash('Failed to create backup', 'error')
+            flash('Failed to create data backup', 'error')
     except Exception as e:
-        current_app.logger.error(f"Backup failed: {str(e)}")
-        flash(f'Backup failed: {str(e)}', 'error')
+        current_app.logger.error(f"Data backup failed: {str(e)}")
+        flash(f'Data backup failed: {str(e)}', 'error')
+    
+    return redirect(url_for('admin.dashboard'))
+
+@admin_bp.route('/system-backup', methods=['POST'])
+@admin_required
+def system_backup():
+    """Create complete system backup"""
+    try:
+        backup_path = create_system_backup()
+        if backup_path:
+            flash(f'System backup created successfully: {backup_path}', 'success')
+        else:
+            flash('Failed to create system backup', 'error')
+    except Exception as e:
+        current_app.logger.error(f"System backup failed: {str(e)}")
+        flash(f'System backup failed: {str(e)}', 'error')
     
     return redirect(url_for('admin.dashboard'))
 

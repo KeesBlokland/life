@@ -1,10 +1,29 @@
 /*
 styles-components.css - Component styles for Life app
-Version: 1.0.03
-Purpose: Button styles and future component styles
+Version: 1.0.04
+Purpose: Button styles and component foundation
 Created: 2025-06-15
-Updated: 2025-06-15 - Cleaned up to use only legacy button system
+Updated: 2025-06-16 - Added protected color scheme
 */
+
+/* DO NOT TOUCH - WORKS - Established color scheme */
+:root {
+    --bg-primary: #F5F4F0;       
+    --bg-secondary: #DDDAD2;     
+    --bg-accent: #E6E2DC;        
+
+    --text-primary: #1F2D3A;     
+    --text-secondary: #4A5A68;   
+
+    --accent: #5F827C;           
+    --border: #BFBFBF;          
+    
+    --success: #5A7F5A;          
+    --warning: #C08452;          
+    --error: #A25E5E;            
+
+    --shadow: rgba(0, 0, 0, 0.15); 
+}
 
 /* ===== BUTTON SYSTEM ===== */
 .button {
@@ -136,6 +155,19 @@ Updated: 2025-06-15 - Cleaned up to use only legacy button system
     box-sizing: border-box;
     background-color: var(--accent);
     color: white;
+}
+
+/* Color variants override for small buttons */
+.button-small.button-secondary {
+    background-color: var(--text-secondary);
+}
+
+.button-small.button-danger {
+    background-color: var(--error);
+}
+
+.button-small.button-success {
+    background-color: var(--success);
 }
 
 .button-large {

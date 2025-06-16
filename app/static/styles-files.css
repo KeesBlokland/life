@@ -1,11 +1,12 @@
 /*
 styles-files.css - File browser styles for Life app
-Version: 1.0.0
-Purpose: Document browser specific styles
+Version: 1.0.9
+Purpose: Document browser specific styles - RESTORED WORKING ALIGNMENT
 Created: 2025-06-14
+Updated: 2025-06-16 - RESTORED compact iPad-friendly layout that worked
 */
 
-/* File browser - compact controls */
+/* DO NOT TOUCH - WORKS - File browser controls */
 .file-controls {
     display: flex;
     justify-content: space-between;
@@ -32,7 +33,7 @@ Created: 2025-06-14
     gap: 0.5rem;
 }
 
-/* Single-line File List - Clean design */
+/* DO NOT TOUCH - WORKS - Compact file list for iPad */
 .file-list {
     background-color: white;
     border: 1px solid var(--border);
@@ -53,18 +54,45 @@ Created: 2025-06-14
     background-color: var(--bg-accent);
 }
 
+/* DO NOT TOUCH - WORKS - Perfect vertical alignment achieved after full day of work */
 .file-line {
     display: flex;
     align-items: center;
-    padding: 0.8rem;
-    gap: 1rem;
+    justify-content: flex-start;
+    padding: 0.6rem 0.8rem;
+    gap: 0.5rem;
+    min-height: 36px;
 }
 
+/* DO NOT TOUCH - WORKS - Compact spacing between buttons */
+.file-line > * {
+    margin: 0;
+    flex-shrink: 0;
+}
+
+/* DO NOT TOUCH - WORKS - Title takes remaining space */
 .file-title {
     font-weight: 500;
     color: var(--text-primary);
-    flex: 1;
     font-size: 1rem;
+    margin-left: 0.5rem;
+}
+
+/* DO NOT TOUCH - WORKS - Button sizing and alignment */
+.button-small {
+    min-height: 32px;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* DO NOT TOUCH - WORKS - Form button alignment */
+.file-line form {
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
 }
 
 .file-actions {

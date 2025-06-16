@@ -241,3 +241,53 @@ def create_backup_archive(backup_name=None):
     except Exception as e:
         current_app.logger.error(f"Failed to create backup: {str(e)}")
         return None
+
+def create_system_backup(backup_name=None):
+    """Create complete system backup including code, venv, and data"""
+    try:
+        import tarfile
+        import subprocess
+        
+        if not backup_name:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            backup_name = f"life_system_backup_{timestamp}.tar.gz"
+        
+        backup_dir = os.path.join(current_app.config['DATA_DIR'], 'backups')
+        os.makedirs(backup_dir, exist_ok=True)
+        
+        backup_path = os.path.join(backup_dir, backup_name)
+        
+        with tarfile.open(backup_path, 'w:gz') as tar:
+            # Add entire /home/life directory
+            life_home = '/home/life'
+            if os.path.exists(life_home):
+                tar.add(life_home, arcname='life_home')
+            
+            # Add systemd service files
+            try:
+                service_files = subprocess.run(
+                    ['find', '/etc/systemd/system/', '-name', '*life*'],
+                    capture_output=True, text=True, timeout=10
+                )
+                if service_files.returncode == 0:
+                    for service_file in service_files.stdout.strip().split('\n'):
+                        if service_file and os.path.exists(service_file):
+                            tar.add(service_file, arcname=f"systemd/{os.path.basename(service_file)}")
+            except Exception as e:
+                current_app.logger.warning(f"Could not backup systemd files: {str(e)}")
+            
+            # Add nginx/apache configs if they exist
+            for config_path in ['/etc/nginx/sites-available/life', '/etc/apache2/sites-available/life']:
+                if os.path.exists(config_path):
+                    tar.add(config_path, arcname=f"webserver/{os.path.basename(config_path)}")
+        
+        size = os.path.getsize(backup_path)
+        
+        if current_app.config['DEBUG']:
+            current_app.logger.info(f"Created system backup: {backup_path} ({get_file_size_formatted(size)})")
+        
+        return backup_path
+        
+    except Exception as e:
+        current_app.logger.error(f"Failed to create system backup: {str(e)}")
+        return None
