@@ -25,7 +25,7 @@ Updated: 2025-06-15 - Cleaned up to use only legacy button system
     cursor: pointer;
     transition: all 0.2s ease;
     user-select: none;
-    min-height: 36px;
+    min-height: 30px;  /* was 36 */
     box-sizing: border-box;
     background-color: var(--accent);
     color: white;

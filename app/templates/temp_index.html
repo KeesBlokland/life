@@ -13,73 +13,13 @@ Updated: 2025-06-13 - Updated for new bin collection schedule system
 
 {% block content %}
 <div class="container">
-    <h1>Today - {{ today.strftime('%a %b %d') }}</h1>
+    <h1>Today is {{ today.strftime('%a %b %d') }}</h1>
     
     <!-- Compact two-column layout for main sections -->
     <div class="homepage-grid">
         
         <!-- Left Column -->
         <div class="left-column">
-            
-            <!-- Today's Reminders -->
-            <div class="dashboard-section">
-                <h2>Reminders</h2>
-                {% if reminders %}
-                    <ul class="reminder-list">
-                        {% for reminder in reminders[:3] %}  <!-- Limit to 3 items -->
-                        <li class="reminder-item {% if reminder.completed %}completed{% endif %}" 
-                            data-id="{{ reminder.id }}">
-                            <input type="checkbox" 
-                                   {% if reminder.completed %}checked{% endif %}
-                                   onchange="toggleReminder({{ reminder.id }})">
-                            <span>{{ reminder.title }}</span>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p class="no-items">No reminders today</p>
-                {% endif %}
-                
-                <!-- Refuse Bins Alert -->
-                {% if refuse_bins %}
-                    <div class="refuse-alert">
-                        <strong>
-                            {% if refuse_bins|selectattr('when', 'equalto', 'today')|list %}
-                                Bins Out Today!
-                            {% elif refuse_bins|selectattr('when', 'equalto', 'tomorrow')|list %}
-                                Bins Out Tomorrow!
-                            {% endif %}
-                        </strong>
-                        {% for bin in refuse_bins %}
-                            <span class="bin-badge bin-{{ bin.color }}">{{ bin.type.split('(')[0].strip() }}</span>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-            
-            <!-- Quick Actions -->
-            <div class="dashboard-section">
-                <h2>Quick Actions</h2>
-                <div class="quick-actions">
-                    <a href="{{ url_for('files.upload') }}" class="button">
-                        Upload
-                    </a>
-                    <a href="{{ url_for('main.lists') }}" class="button">
-                        Shopping {% if shopping_count > 0 %}({{ shopping_count }}){% endif %}
-                    </a>
-                    
-                    <a href="{{ url_for('main.add_event') }}" class="button">
-                        Add Event
-                    </a>
-                    <a href="{{ url_for('files.search') }}" class="button">
-                        Search
-                    </a>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Right Column -->
-        <div class="right-column">
             
             <!-- Appointments -->
             <div class="dashboard-section">
@@ -108,28 +48,56 @@ Updated: 2025-06-13 - Updated for new bin collection schedule system
                     <a href="{{ url_for('main.add_event') }}" class="button button-secondary">Add Event</a>
                 {% endif %}
             </div>
-            
-            <!-- Recent Files -->
+
             <div class="dashboard-section">
-                <h2>Recent Documents</h2>
-                {% if recent_files %}
-                    <div class="file-list">
-                        {% for file in recent_files[:3] %}  <!-- Limit to 3 items -->
-                        <div class="file-item">
-                            <a href="{{ url_for('files.download', file_id=file.id) }}">
-                                {{ (file.title or file.filename)[:25] }}{% if (file.title or file.filename)|length > 25 %}...{% endif %}
-                            </a>
-                            <small>{{ file.upload_date.strftime('%m/%d') if file.upload_date else 'N/A' }}</small>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    <a href="{{ url_for('files.browse') }}" class="button button-secondary">Browse All</a>
-                {% else %}
-                    <p class="no-items">No documents yet</p>
-                    <a href="{{ url_for('files.upload') }}" class="button button-secondary">Upload First File</a>
-                {% endif %}
+
+                <h2>Reminders</h2>
+                    {% if reminders %}
+                        <ul class="reminder-list">
+                            {% for reminder in reminders[:3] %}  <!-- Limit to 3 items -->
+                            <li class="reminder-item {% if reminder.completed %}completed{% endif %}" 
+                                data-id="{{ reminder.id }}">
+                                <input type="checkbox" 
+                                    {% if reminder.completed %}checked{% endif %}
+                                    onchange="toggleReminder({{ reminder.id }})">
+                                <span>{{ reminder.title }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="no-items">No reminders today</p>
+                    {% endif %}
+                </div>
+
+  
+        </div>
+
+        <!-- Right Column -->
+        <div class="right-column">
+
+            
+            <!-- Quick Actions -->
+            <div class="dashboard-section">
+                <h2>Quick Actions</h2>
+                <div class="quick-actions">
+                    <a href="{{ url_for('files.upload') }}" class="button">
+                        Upload
+                    </a>
+                    <a href="{{ url_for('main.lists') }}" class="button">
+                        Shopping {% if shopping_count > 0 %}({{ shopping_count }}){% endif %}
+                    </a>
+                    
+                    <a href="{{ url_for('main.add_event') }}" class="button">
+                        Add Event
+                    </a>
+                    <a href="{{ url_for('files.search') }}" class="button">
+                        Search
+                    </a>
+                </div>
             </div>
         </div>
+        
+       
     </div>
 </div>
 
