@@ -18,11 +18,11 @@ Updated: 2025-06-15 - Removed event count numbers from display
     <!-- Simple, practical controls -->
     <div class="calendar-controls">
         <div class="calendar-nav">
-            <a href="{{ url_for('main.calendar', date_str=prev_start.strftime('%Y-%m-%d')) }}" class="button">← Previous 4 Weeks</a>
+            <a href="{{ url_for('main.calendar', date_str=prev_start.strftime('%Y-%m-%d')) }}" class="button">← Past Weeks</a>
             <span class="calendar-period">
                 {{ start_date.strftime('%b %d') }} - {{ end_date.strftime('%b %d, %Y') }}
             </span>
-            <a href="{{ url_for('main.calendar', date_str=next_start.strftime('%Y-%m-%d')) }}" class="button">Next 4 Weeks →</a>
+            <a href="{{ url_for('main.calendar', date_str=next_start.strftime('%Y-%m-%d')) }}" class="button">Next Weeks →</a>
         </div>
         
         <div class="calendar-actions">
