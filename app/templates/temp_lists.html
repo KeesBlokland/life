@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 <!--
 /home/life/app/templates/temp_lists.html
-Version: 1.2.0
-Purpose: Shopping list with all CSS moved to styles-shopping.css
+Version: 1.3.1
+Purpose: Shopping list with smart search - dropdown positioned right
 Created: 2025-06-11
-Updated: 2025-06-16 - Moved all inline CSS to separate CSS file
+Updated: 2025-06-16 - Moved dropdown to right of input field
 -->
 
 {% block title %}Shopping Lists - Life{% endblock %}
 
 {% block page_name %}: Shopping {% endblock %}
 
-{% block template_info %}temp_lists.html v1.2.0 - CSS moved to separate file{% endblock %}
+{% block template_info %}temp_lists.html v1.3.0 - Smart search with fuzzy matching{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -27,17 +27,15 @@ Updated: 2025-06-16 - Moved all inline CSS to separate CSS file
         {% endfor %}
     </div>
     
-    <!-- Add New Item Card - Compact -->
+    <!-- Smart Search Add Item -->
     <div class="add-item-card">
-        <form method="post" action="{{ url_for('main.add_new_item') }}" class="add-item-form">
-            <input type="hidden" name="list_name" value="{{ current_list.name }}">
-            <input type="text" name="item" placeholder="Add new item to master list" required autofocus>
-            <label class="add-today-check">
-                <input type="checkbox" name="add_to_today" value="yes">
-                Add to today's list
-            </label>
-            <button type="submit" class="button">Add Item</button>
-        </form>
+        <div class="smart-search-container">
+            <input type="text" 
+                   id="smartSearch" 
+                   placeholder="Start typing to find or add items..." 
+                   autocomplete="off">
+            <div class="search-dropdown" id="searchDropdown" style="display: none;"></div>
+        </div>
     </div>
     
     <!-- Two Column Layout -->
@@ -55,7 +53,6 @@ Updated: 2025-06-16 - Moved all inline CSS to separate CSS file
                 <div class="master-item clickable-item" onclick="addToToday('{{ item.item }}', '{{ current_list.name }}')">
                     <div class="item-content">
                         <span class="item-name">{{ item.item }}</span>
-                        
                     </div>
                     
                     <div class="item-actions">
@@ -122,7 +119,7 @@ Updated: 2025-06-16 - Moved all inline CSS to separate CSS file
                 <div class="empty-message">
                     No items selected for today.
                     <br>
-                    Click "Add →" on items from the left to build your shopping list.
+                    Click items from the left or use smart search above.
                 </div>
             {% endif %}
         </div>
@@ -130,7 +127,141 @@ Updated: 2025-06-16 - Moved all inline CSS to separate CSS file
 </div>
 
 <script>
-// Simple click-to-add functionality
+// Store master items for search
+const masterItems = [
+    {% for item in master_items %}
+    '{{ item.item }}',
+    {% endfor %}
+];
+
+const listName = '{{ current_list.name }}';
+
+// Smart search functionality
+const searchInput = document.getElementById('smartSearch');
+const searchDropdown = document.getElementById('searchDropdown');
+
+searchInput.addEventListener('input', handleSearch);
+searchInput.addEventListener('keydown', handleKeyDown);
+document.addEventListener('click', hideDropdown);
+
+function handleSearch(e) {
+    const query = e.target.value.trim().toLowerCase();
+    
+    if (query.length < 2) {
+        hideDropdown();
+        return;
+    }
+    
+    const matches = findMatches(query);
+    showDropdown(matches, query);
+}
+
+function findMatches(query) {
+    const exactMatches = [];
+    const fuzzyMatches = [];
+    
+    masterItems.forEach(item => {
+        const itemLower = item.toLowerCase();
+        
+        // Exact substring match
+        if (itemLower.includes(query)) {
+            exactMatches.push(item);
+        }
+        // Fuzzy match for typos
+        else if (fuzzyMatch(itemLower, query)) {
+            fuzzyMatches.push(item);
+        }
+    });
+    
+    return exactMatches.concat(fuzzyMatches).slice(0, 5); // Limit to 5 results
+}
+
+function fuzzyMatch(str, query) {
+    // Simple fuzzy matching - checks if most characters match
+    let matchCount = 0;
+    let queryIndex = 0;
+    
+    for (let i = 0; i < str.length && queryIndex < query.length; i++) {
+        if (str[i] === query[queryIndex]) {
+            matchCount++;
+            queryIndex++;
+        }
+    }
+    
+    // Must match at least 80% of the query
+    return matchCount >= Math.ceil(query.length * 0.8);
+}
+
+function showDropdown(matches, query) {
+    const dropdown = searchDropdown;
+    dropdown.innerHTML = '';
+    
+    if (matches.length > 0) {
+        matches.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'search-result';
+            div.innerHTML = `<span class="result-text">${item}</span><span class="result-action">Add to list</span>`;
+            div.onclick = () => {
+                addToToday(item, listName);
+                searchInput.value = '';
+                hideDropdown();
+            };
+            dropdown.appendChild(div);
+        });
+        
+        dropdown.style.display = 'block';
+    } else {
+        // Only show "create new" if no matches AND query is 4+ characters
+        if (query.length >= 4) {
+            const div = document.createElement('div');
+            div.className = 'search-result new-item';
+            div.innerHTML = `<span class="result-text">Add "${searchInput.value}" as new item</span>`;
+            div.onclick = () => {
+                addNewItem(searchInput.value);
+                searchInput.value = '';
+                hideDropdown();
+            };
+            dropdown.appendChild(div);
+            dropdown.style.display = 'block';
+        } else {
+            hideDropdown();
+        }
+    }
+}
+
+function hideDropdown() {
+    searchDropdown.style.display = 'none';
+}
+
+function handleKeyDown(e) {
+    const results = searchDropdown.querySelectorAll('.search-result');
+    
+    if (e.key === 'Escape') {
+        hideDropdown();
+        return;
+    }
+    
+    if (e.key === 'Enter' && results.length > 0) {
+        e.preventDefault();
+        results[0].click(); // Select first result
+    }
+}
+
+function addNewItem(itemName) {
+    const form = new FormData();
+    form.append('item', itemName);
+    form.append('list_name', listName);
+    form.append('add_to_today', 'yes');
+    
+    fetch('/shopping/add_new_item', {
+        method: 'POST',
+        body: form
+    }).then(() => {
+        location.reload();
+    });
+}
+
+// Existing functions
 function addToToday(item, listName) {
     const form = new FormData();
     form.append('item', item);
@@ -185,7 +316,7 @@ function deleteItem(item, listName) {
     }
 }
 
-// Hide flash messages immediately to prevent screen jumping
+// Hide flash messages immediately
 document.addEventListener('DOMContentLoaded', function() {
     const messages = document.querySelectorAll('.message');
     messages.forEach(function(message) {

@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 <!--
-/home/life/app/templates/temp_index.html
-Version: 1.1.2
-Purpose: Compact homepage with new bin collection system
+temp_index.html - Homepage with weather card for Elten, DE
+Version: 1.1.3
+Purpose: Compact homepage with weather integration
 Created: 2025-06-11
-Updated: 2025-06-13 - Updated for new bin collection schedule system
+Updated: 2025-06-16 - Added weather card for Elten, DE
 -->
 
 {% block title %}Home - Life{% endblock %}
 
-{% block template_info %}temp_index.html v1.1.2 - New bin collection system{% endblock %}
+{% block template_info %}temp_index.html v1.1.3 - Weather integration for Elten, DE{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -50,7 +50,6 @@ Updated: 2025-06-13 - Updated for new bin collection schedule system
             </div>
 
             <div class="dashboard-section">
-
                 <h2>Reminders</h2>
                     {% if reminders %}
                         <ul class="reminder-list">
@@ -68,13 +67,41 @@ Updated: 2025-06-13 - Updated for new bin collection schedule system
                         <p class="no-items">No reminders today</p>
                     {% endif %}
                 </div>
-
-  
         </div>
 
         <!-- Right Column -->
         <div class="right-column">
-
+            
+            <!-- Weather Card -->
+            {% if weather %}
+            <div class="dashboard-section">
+                <h2>Weather - {{ weather.location }}</h2>
+                <div class="weather-current">
+                    <div class="current-temp">{{ weather.current.temp }}°C</div>
+                    <div class="current-desc">{{ weather.current.description }}</div>
+                    <div class="current-wind">
+                        Wind: {{ weather.current.wind_speed }} km/h {{ weather.current.wind_direction }}
+                    </div>
+                    <div class="current-rain">{{ weather.current.rain }}</div>
+                </div>
+                
+                {% if weather.forecast %}
+                <div class="weather-forecast">
+                    {% for hour in weather.forecast %}
+                    <div class="forecast-hour">
+                        <span class="hour-time">{{ hour.time }}</span>
+                        <span class="hour-temp">{{ hour.temp }}°</span>
+                        <span class="hour-rain">{{ hour.rain }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <div class="weather-updated">
+                    Updated: {{ weather.updated }}{% if weather.cache_note %} ({{ weather.cache_note }}){% endif %}
+                </div>
+            </div>
+            {% endif %}
             
             <!-- Quick Actions -->
             <div class="dashboard-section">
@@ -96,8 +123,6 @@ Updated: 2025-06-13 - Updated for new bin collection schedule system
                 </div>
             </div>
         </div>
-        
-       
     </div>
 </div>
 

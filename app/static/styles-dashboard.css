@@ -1,8 +1,9 @@
 /*
 styles-dashboard.css - Dashboard and miscellaneous styles for Life app
-Version: 1.0.0
-Purpose: Homepage dashboard, bins, reminders, quick actions
+Version: 1.0.1
+Purpose: Homepage dashboard, bins, reminders, quick actions, weather card
 Created: 2025-06-14
+Updated: 2025-06-16 - Added weather card styles for Elten, DE
 */
 
 /* Daily Dashboard - Compact */
@@ -75,6 +76,73 @@ Created: 2025-06-14
 
 .appt-title {
     font-weight: 500;
+}
+
+/* Weather Card */
+.weather-current {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.current-temp {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--accent);
+    margin-bottom: 0.3rem;
+}
+
+.current-desc {
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.current-wind,
+.current-rain {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.2rem;
+}
+
+.weather-forecast {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.8rem;
+    padding: 0.5rem;
+    background-color: var(--bg-secondary);
+    border-radius: 4px;
+}
+
+.forecast-hour {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    flex: 1;
+}
+
+.hour-time {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.hour-temp {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.hour-rain {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+.weather-updated {
+    text-align: center;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    font-style: italic;
 }
 
 /* Refuse/Bin Alerts */
@@ -159,11 +227,30 @@ Created: 2025-06-14
     .quick-actions {
         grid-template-columns: repeat(2, 1fr);
     }
+    
+    .weather-forecast {
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+    
+    .forecast-hour {
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 0.2rem 0;
+    }
+    
+    .current-temp {
+        font-size: 1.5rem;
+    }
 }
 
 /* iPad specific */
 @media (min-width: 768px) and (max-width: 1024px) {
     .quick-actions {
         grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .weather-forecast {
+        gap: 0.5rem;
     }
 }

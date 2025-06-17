@@ -1,12 +1,13 @@
 """
 /home/life/app/routes/bp_files.py
-Version: 1.2.0
+Version: 1.2.1
 Purpose: File handling routes - upload, download, browse, search, edit
 Created: 2025-06-11
-Updated: 2025-06-12 - Added file metadata edit functionality
+Updated: 2025-06-16 - Fixed missing shutil import for file deletion
 """
 
 import os
+import shutil
 from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, jsonify, current_app, session
 from werkzeug.utils import secure_filename
 from datetime import datetime
@@ -431,3 +432,8 @@ def delete_file(file_id):
         current_app.logger.error(f"Error deleting file {file_id}: {str(e)}")
         flash('Error deleting file', 'error')
         return redirect(url_for('files.browse'))
+
+def find_related_files(query, exclude_ids):
+    """Find related files based on semantic relationships"""
+    # Placeholder function - implement semantic search logic
+    return []

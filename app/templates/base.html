@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <!--
 dir_base.html - Base template for Life app
-Version: 1.2.02
+Version: 1.3.0
 Purpose: Common layout with all CSS files included
 Created: 2024-12-XX
-Updated: 2025-06-15 - Added admin CSS file
+Updated: 2025-06-17 - Added contacts CSS and navigation
 -->
 <html lang="en">
 <head>
@@ -19,6 +19,7 @@ Updated: 2025-06-15 - Added admin CSS file
     <link rel="stylesheet" href="{{ url_for('static', filename='styles-dashboard.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles-misc.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles-admin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles-contacts.css') }}">
     {% if request.args.get('print') %}
     <link rel="stylesheet" href="{{ url_for('static', filename='print.css') }}">
     {% endif %}
@@ -34,6 +35,7 @@ Updated: 2025-06-15 - Added admin CSS file
                         <a href="{{ url_for('main.index') }}">Home</a>
                         
                         <a href="{{ url_for('files.browse') }}">Documents</a>
+                        <a href="{{ url_for('contacts.browse') }}">Contacts</a>
                         <a href="{{ url_for('main.calendar') }}">Calendar</a>
                         
                         <a href="{{ url_for('main.lists') }}">Lists</a>
@@ -70,7 +72,7 @@ Updated: 2025-06-15 - Added admin CSS file
             <p>&copy; 2025 Family Information System</p>
             {% if config.FOOTER_INFO %}
                 <div class="debug-footer">
-                    Template: {% block template_info %}dir_base.html v1.2.02 - Added admin CSS{% endblock %}
+                    Template: {% block template_info %}dir_base.html v1.3.0 - Added contacts CSS and navigation{% endblock %}
                 </div>
             {% endif %}
         </div>

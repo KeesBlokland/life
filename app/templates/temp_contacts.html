@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+<!--
+temp_contacts.html - Main contacts listing with search and filtering
+Version: 1.0.02
+Purpose: Browse contacts for family and institutions with fuzzy search - standardized button sizes
+Created: 2025-06-17
+Updated: 2025-06-17 - Fixed inconsistent button sizes, all buttons now button-small
+-->
+
+{% block title %}Contacts - Life{% endblock %}
+
+{% block page_name %}: Contacts{% endblock %}
+
+{% block template_info %}temp_contacts.html v1.0.01 - Main contacts listing{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Search and Controls -->
+    <div class="contacts-controls">
+        <div class="search-section">
+            <form method="get" class="search-form">
+                <div class="search-input-group">
+                    <input type="text" 
+                           name="q" 
+                           value="{{ search_query }}" 
+                           placeholder="Search contacts, phone numbers, emails..."
+                           class="search-input"
+                           autofocus>
+                    <button type="submit" class="button">Search</button>
+                </div>
+                
+                <div class="filter-buttons">
+                    <select name="type" onchange="this.form.submit()">
+                        <option value="">All Types</option>
+                        {% for type in contact_types %}
+                        <option value="{{ type }}" {% if selected_type == type %}selected{% endif %}>
+                            {{ type }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    
+                    <select name="category" onchange="this.form.submit()">
+                        <option value="">All Categories</option>
+                        {% for category in categories %}
+                        <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>
+                            {{ category }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    
+                    {% if search_query or selected_type or selected_category %}
+                    <a href="{{ url_for('contacts.browse') }}" class="button button-secondary">Clear Filters</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+        
+        <div class="action-buttons">
+            {% if session.get('is_admin') %}
+            <a href="{{ url_for('contacts.add_contact') }}" class="button">Add Contact</a>
+            <a href="{{ url_for('contacts.admin_change_requests') }}" class="button button-secondary">
+                Change Requests
+            </a>
+            {% else %}
+            <a href="{{ url_for('contacts.request_new_contact') }}" class="button">Request New Contact</a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Contacts List -->
+    {% if contacts %}
+        <div class="contacts-list">
+            {% for contact in contacts %}
+            <div class="contact-row">
+                <div class="contact-line">
+                    <a href="{{ url_for('contacts.view_contact', contact_id=contact.id) }}" 
+                       class="button button-small">View</a>
+                    
+                    {% if session.get('is_admin') %}
+                    <a href="{{ url_for('contacts.edit_contact', contact_id=contact.id) }}" 
+                       class="button button-small">Edit</a>
+                    {% else %}
+                    <a href="{{ url_for('contacts.request_change', contact_id=contact.id) }}" 
+                       class="button button-small">Request Change</a>
+                    {% endif %}
+                    
+                    <div class="contact-info">
+                        <div class="contact-name">{{ contact.name }}</div>
+                        <div class="contact-meta">
+                            <span class="contact-type">{{ contact.contact_type }}</span>
+                            {% if contact.category %}
+                            <span class="contact-category">{{ contact.category }}</span>
+                            {% endif %}
+                            {% if contact.detail_count > 0 %}
+                            <span class="detail-count">{{ contact.detail_count }} details</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if session.get('is_admin') %}
+                    <form method="post" action="{{ url_for('contacts.delete_contact', contact_id=contact.id) }}" 
+                          style="margin-left: auto;"
+                          onsubmit="return confirm('Delete {{ contact.name }}?')">
+                        <button type="submit" class="button button-small button-danger">Delete</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="contacts-summary">
+            <p>Found {{ contacts|length }} contact{% if contacts|length != 1 %}s{% endif %}
+            {% if search_query %}for "{{ search_query }}"{% endif %}</p>
+        </div>
+    {% else %}
+        <div class="no-contacts">
+            <h2>No Contacts Found</h2>
+            {% if search_query %}
+                <p>No contacts match your search for "{{ search_query }}".</p>
+                <p>Try:</p>
+                <ul>
+                    <li>Different search terms</li>
+                    <li>Checking spelling</li>
+                    <li>Using broader keywords</li>
+                </ul>
+                <a href="{{ url_for('contacts.browse') }}" class="button">View All Contacts</a>
+            {% else %}
+                <p>No contacts have been added yet.</p>
+                {% if session.get('is_admin') %}
+                    <a href="{{ url_for('contacts.add_contact') }}" class="button">Add Your First Contact</a>
+                {% else %}
+                    <a href="{{ url_for('contacts.request_new_contact') }}" class="button">Request New Contact</a>
+                {% endif %}
+            {% endif %}
+        </div>
+    {% endif %}
+    
+    <!-- Quick Help -->
+    <div class="contacts-help">
+        <h3>Contact Types</h3>
+        <div class="help-grid">
+            <div class="help-item">
+                <strong>Family:</strong> Family members, relatives, close friends
+            </div>
+            <div class="help-item">
+                <strong>Medical:</strong> Doctors, specialists, hospitals, pharmacies
+            </div>
+            <div class="help-item">
+                <strong>Financial:</strong> Banks, insurance companies, pension providers
+            </div>
+            <div class="help-item">
+                <strong>Utilities:</strong> Gas, electric, water, internet, phone companies
+            </div>
+            <div class="help-item">
+                <strong>Services:</strong> Repair services, contractors, gardeners
+            </div>
+            <div class="help-item">
+                <strong>Government:</strong> Tax office, municipality, passport office
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-submit search on input (with delay)
+let searchTimeout;
+const searchInput = document.querySelector('.search-input');
+
+if (searchInput) {
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            if (this.value.length >= 2 || this.value.length === 0) {
+                this.form.submit();
+            }
+        }, 800);
+    });
+}
+
+// Clear search when escape is pressed
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && searchInput) {
+        searchInput.value = '';
+        searchInput.form.submit();
+    }
+});
+</script>
+{% endblock %}

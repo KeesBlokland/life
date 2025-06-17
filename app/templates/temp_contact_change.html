@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+<!--
+temp_contact_change_request.html - User form to request changes to existing contacts
+Version: 1.0.01
+Purpose: Allow non-admin users to request changes to contact information
+Created: 2025-06-17
+Updated: 2025-06-17 - Initial implementation with simple change request form
+-->
+
+{% block title %}Request Changes for {{ contact.name }} - Life{% endblock %}
+
+{% block template_info %}temp_contact_change_request.html v1.0.01 - Change request form{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="change-request-header">
+        <h1>Request Changes for {{ contact.name }}</h1>
+        <div class="contact-summary">
+            <div class="contact-type-badge contact-type-{{ contact.contact_type|lower|replace(' ', '-') }}">
+                {{ contact.contact_type }}
+            </div>
+            {% if contact.category %}
+            <div class="contact-category-badge">{{ contact.category }}</div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="help-section">
+        <h2>How to Request Changes</h2>
+        <p>Describe what needs to be updated for this contact. Be as specific as possible.</p>
+        <div class="examples">
+            <h3>Examples:</h3>
+            <ul>
+                <li>"New phone number: 555-123-4567 (old number disconnected)"</li>
+                <li>"Address changed to: 123 New Street, City, ZIP"</li>
+                <li>"Email updated to: newemail@example.com"</li>
+                <li>"Account number changed, new number is: ACC-98765"</li>
+                <li>"Add emergency contact: Jane Doe - 555-987-6543"</li>
+            </ul>
+        </div>
+    </div>
+    
+    <form method="post" class="change-request-form">
+        <div class="form-section">
+            <h2>Change Request Details</h2>
+            
+            <div class="form-group">
+                <label for="change_description">What needs to be changed? *</label>
+                <textarea id="change_description" name="change_description" 
+                          rows="8" required autofocus
+                          placeholder="Please describe the changes needed. Include old and new information when possible.
+
+Examples:
+- Phone number changed from 555-111-2222 to 555-333-4444
+- New email address: john@newcompany.com
+- Address updated to: 456 Oak Street, Springfield, 12345
+- Add account password: SecurePass123
+- Remove old fax number"></textarea>
+            </div>
+            
+            <div class="form-help">
+                <h3>Tips for Good Change Requests:</h3>
+                <ul>
+                    <li><strong>Be specific:</strong> Include exact information to add, change, or remove</li>
+                    <li><strong>Include context:</strong> Explain why the change is needed if helpful</li>
+                    <li><strong>Multiple changes:</strong> List each change on a separate line</li>
+                    <li><strong>Sensitive info:</strong> It's okay to include passwords and account numbers - admins handle these securely</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="button">Submit Change Request</button>
+            <a href="{{ url_for('contacts.view_contact', contact_id=contact.id) }}" 
+               class="button button-secondary">Cancel</a>
+        </div>
+    </form>
+    
+    <!-- Current Contact Info for Reference -->
+    <div class="current-info-section">
+        <h2>Current Contact Information <small>(for reference)</small></h2>
+        <div class="current-info">
+            <div class="info-item">
+                <strong>Name:</strong> {{ contact.name }}
+            </div>
+            <div class="info-item">
+                <strong>Type:</strong> {{ contact.contact_type }}
+            </div>
+            {% if contact.category %}
+            <div class="info-item">
+                <strong>Category:</strong> {{ contact.category }}
+            </div>
+            {% endif %}
+            {% if contact.notes %}
+            <div class="info-item">
+                <strong>Notes:</strong> {{ contact.notes }}
+            </div>
+            {% endif %}
+            
+            <div class="view-full-contact">
+                <a href="{{ url_for('contacts.view_contact', contact_id=contact.id) }}" 
+                   class="button button-small">View Full Contact Details</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Previous Requests (if any) -->
+    {% set previous_requests = query_db('SELECT * FROM contact_change_requests WHERE contact_id = ? ORDER BY created_date DESC LIMIT 3', (contact.id,)) %}
+    {% if previous_requests %}
+    <div class="previous-requests-section">
+        <h2>Recent Change Requests</h2>
+        <div class="requests-list">
+            {% for request in previous_requests %}
+            <div class="request-item request-{{ request.status }}">
+                <div class="request-header">
+                    <span class="request-date">{{ request.created_date }}</span>
+                    <span class="request-status status-{{ request.status }}">{{ request.status|title }}</span>
+                </div>
+                <div class="request-description">
+                    {{ request.change_description }}
+                </div>
+                {% if request.admin_notes %}
+                <div class="admin-notes">
+                    <strong>Admin Notes:</strong> {{ request.admin_notes }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// Auto-save draft in browser storage
+const textarea = document.getElementById('change_description');
+const storageKey = 'change_request_draft_{{ contact.id }}';
+
+// Load saved draft
+const savedDraft = localStorage.getItem(storageKey);
+if (savedDraft && !textarea.value) {
+    textarea.value = savedDraft;
+}
+
+// Save draft as user types
+textarea.addEventListener('input', function() {
+    localStorage.setItem(storageKey, this.value);
+});
+
+// Clear draft when form is submitted
+document.querySelector('.change-request-form').addEventListener('submit', function() {
+    localStorage.removeItem(storageKey);
+});
+
+// Warn about unsaved changes
+window.addEventListener('beforeunload', function(e) {
+    const currentText = textarea.value.trim();
+    const savedText = (localStorage.getItem(storageKey) || '').trim();
+    
+    if (currentText && currentText !== savedText) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
+
+// Character counter
+const maxLength = 2000;
+textarea.addEventListener('input', function() {
+    const remaining = maxLength - this.value.length;
+    let counter = document.getElementById('charCounter');
+    
+    if (!counter) {
+        counter = document.createElement('div');
+        counter.id = 'charCounter';
+        counter.className = 'char-counter';
+        this.parentNode.appendChild(counter);
+    }
+    
+    counter.textContent = `${remaining} characters remaining`;
+    counter.className = 'char-counter ' + (remaining < 100 ? 'warning' : '');
+});
+</script>
+{% endblock %}

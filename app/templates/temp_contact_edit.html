@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+<!--
+temp_contact_edit.html - Contact add/edit form with dynamic fields
+Version: 1.0.03
+Purpose: Admin form for adding/editing contacts with flexible contact details - standardized language
+Created: 2025-06-17
+Updated: 2025-06-17 - Changed "Remove" to "Delete" for consistency across all screens
+-->
+
+{% block title %}{% if contact %}Edit {{ contact.name }}{% else %}Add Contact{% endif %} - Life{% endblock %}
+
+{% block template_info %}temp_contact_edit.html v1.0.01 - Contact edit form{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>{% if contact %}Edit Contact{% else %}Add New Contact{% endif %}</h1>
+    
+    <form method="post" class="contact-form">
+        <!-- Basic Contact Information -->
+        <div class="form-section">
+            <h2>Basic Information</h2>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="name">Contact Name *</label>
+                    <input type="text" id="name" name="name" 
+                           value="{{ contact.name if contact else '' }}" 
+                           required autofocus>
+                </div>
+                
+                <div class="form-group">
+                    <label for="contact_type">Contact Type *</label>
+                    <select id="contact_type" name="contact_type" required>
+                        <option value="">Select Type</option>
+                        <option value="Family" {% if contact and contact.contact_type == 'Family' %}selected{% endif %}>Family</option>
+                        <option value="Medical" {% if contact and contact.contact_type == 'Medical' %}selected{% endif %}>Medical</option>
+                        <option value="Financial" {% if contact and contact.contact_type == 'Financial' %}selected{% endif %}>Financial</option>
+                        <option value="Utilities" {% if contact and contact.contact_type == 'Utilities' %}selected{% endif %}>Utilities</option>
+                        <option value="Services" {% if contact and contact.contact_type == 'Services' %}selected{% endif %}>Services</option>
+                        <option value="Government" {% if contact and contact.contact_type == 'Government' %}selected{% endif %}>Government</option>
+                        <option value="Business" {% if contact and contact.contact_type == 'Business' %}selected{% endif %}>Business</option>
+                        <option value="Other" {% if contact and contact.contact_type == 'Other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="category">Category (optional)</label>
+                <input type="text" id="category" name="category" 
+                       value="{{ contact.category if contact else '' }}" 
+                       placeholder="e.g., Bank, Doctor, Plumber">
+            </div>
+            
+            <div class="form-group">
+                <label for="notes">Notes</label>
+                <textarea id="notes" name="notes" rows="3" 
+                          placeholder="General notes about this contact">{{ contact.notes if contact else '' }}</textarea>
+            </div>
+        </div>
+        
+        <!-- Contact Details -->
+        <div class="form-section">
+            <h2>Contact Details</h2>
+            <div class="form-help">
+                <p>Add phone numbers, emails, addresses, account information, etc.</p>
+            </div>
+            
+            <div id="contactDetails">
+                {% if details %}
+                    {% for detail in details %}
+                    <div class="detail-row">
+                        <div class="detail-inputs">
+                            <input type="text" name="detail_name" 
+                                   value="{{ detail.field_name }}" 
+                                   placeholder="Field name (e.g., Telefon, E-Mail, Kontonummer)">
+                            <input type="text" name="detail_value" 
+                                   value="{{ detail.field_value }}" 
+                                   placeholder="Value">
+                            <label class="sensitive-checkbox">
+                                <input type="checkbox" name="detail_sensitive" value="{{ loop.index0 }}"
+                                       {% if detail.is_sensitive %}checked{% endif %}>
+                                Sensitive
+                            </label>
+                            <button type="button" class="button button-small button-danger" onclick="removeDetail(this)">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <!-- Default empty rows -->
+                    <div class="detail-row">
+                        <div class="detail-inputs">
+                            <input type="text" name="detail_name" placeholder="Field name (e.g., Telefon, E-Mail)">
+                            <input type="text" name="detail_value" placeholder="Value">
+                            <label class="sensitive-checkbox">
+                                <input type="checkbox" name="detail_sensitive" value="0">
+                                Sensitive
+                            </label>
+                            <button type="button" class="button button-small button-danger" onclick="removeDetail(this)">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="detail-actions">
+                <button type="button" class="button" onclick="addDetail()">
+                    Add Detail Field
+                </button>
+                <button type="button" class="button button-secondary" onclick="addCommonFields()">
+                    Add Common Fields
+                </button>
+            </div>
+        </div>
+        
+        <!-- Common Field Templates (hidden) -->
+        <div class="common-fields" style="display: none;">
+            <div class="common-field-sets">
+                <div class="field-set" data-type="basic">
+                    <div data-name="Telefon" data-value="" data-sensitive="false"></div>
+                    <div data-name="Handy" data-value="" data-sensitive="false"></div>
+                    <div data-name="E-Mail" data-value="" data-sensitive="false"></div>
+                    <div data-name="Adresse" data-value="" data-sensitive="false"></div>
+                </div>
+                
+                <div class="field-set" data-type="financial">
+                    <div data-name="Kontonummer" data-value="" data-sensitive="true"></div>
+                    <div data-name="IBAN" data-value="" data-sensitive="true"></div>
+                    <div data-name="Kundennummer" data-value="" data-sensitive="true"></div>
+                    <div data-name="PIN" data-value="" data-sensitive="true"></div>
+                    <div data-name="Online-Banking Login" data-value="" data-sensitive="true"></div>
+                    <div data-name="Passwort" data-value="" data-sensitive="true"></div>
+                    <div data-name="Website" data-value="" data-sensitive="false"></div>
+                </div>
+                
+                <div class="field-set" data-type="medical">
+                    <div data-name="Patientennummer" data-value="" data-sensitive="true"></div>
+                    <div data-name="Versicherungsnummer" data-value="" data-sensitive="true"></div>
+                    <div data-name="Krankenkasse" data-value="" data-sensitive="false"></div>
+                    <div data-name="Notfallkontakt" data-value="" data-sensitive="false"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <button type="submit" class="button">
+                {% if contact %}Update Contact{% else %}Add Contact{% endif %}
+            </button>
+            <a href="{% if contact %}{{ url_for('contacts.view_contact', contact_id=contact.id) }}{% else %}{{ url_for('contacts.browse') }}{% endif %}" 
+               class="button button-secondary">Cancel</a>
+            {% if contact %}
+            <form method="post" action="{{ url_for('contacts.delete_contact', contact_id=contact.id) }}" 
+                  style="display: inline; margin-left: auto;"
+                  onsubmit="return confirm('Are you sure you want to delete {{ contact.name }}? This cannot be undone.')">
+                <button type="submit" class="button button-danger">Delete Contact</button>
+            </form>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<script>
+let detailCounter = {{ details|length if details else 1 }};
+
+function addDetail() {
+    const container = document.getElementById('contactDetails');
+    const row = document.createElement('div');
+    row.className = 'detail-row';
+    
+    row.innerHTML = `
+        <div class="detail-inputs">
+            <input type="text" name="detail_name" placeholder="Field name (e.g., Phone, Email)">
+            <input type="text" name="detail_value" placeholder="Value">
+            <label class="sensitive-checkbox">
+                <input type="checkbox" name="detail_sensitive" value="${detailCounter}">
+                Sensitive
+            </label>
+            <button type="button" class="button button-small button-danger" onclick="removeDetail(this)">
+                Delete
+            </button>
+        </div>
+    `;
+    
+    container.appendChild(row);
+    detailCounter++;
+    
+    // Focus on the field name input
+    row.querySelector('input[name="detail_name"]').focus();
+}
+
+function removeDetail(button) {
+    const row = button.closest('.detail-row');
+    const container = document.getElementById('contactDetails');
+    
+    // Keep at least one row
+    if (container.children.length > 1) {
+        row.remove();
+    } else {
+        // Clear the inputs instead of removing
+        row.querySelectorAll('input[type="text"]').forEach(input => input.value = '');
+        row.querySelector('input[type="checkbox"]').checked = false;
+    }
+}
+
+function addCommonFields() {
+    const contactType = document.getElementById('contact_type').value.toLowerCase();
+    let fieldsToAdd = [];
+    
+    // Determine which fields to add based on contact type
+    if (contactType === 'financial') {
+        fieldsToAdd = [
+            {name: 'Kontonummer', value: '', sensitive: true},
+            {name: 'IBAN', value: '', sensitive: true},
+            {name: 'Telefon', value: '', sensitive: false},
+            {name: 'Website', value: '', sensitive: false}
+        ];
+    } else if (contactType === 'medical') {
+        fieldsToAdd = [
+            {name: 'Telefon', value: '', sensitive: false},
+            {name: 'Adresse', value: '', sensitive: false},
+            {name: 'Patientennummer', value: '', sensitive: true},
+            {name: 'Krankenkasse', value: '', sensitive: false}
+        ];
+    } else if (contactType === 'utilities' || contactType === 'services') {
+        fieldsToAdd = [
+            {name: 'Telefon', value: '', sensitive: false},
+            {name: 'Kundennummer', value: '', sensitive: true},
+            {name: 'Website', value: '', sensitive: false},
+            {name: 'E-Mail', value: '', sensitive: false}
+        ];
+    } else {
+        // Default/Family
+        fieldsToAdd = [
+            {name: 'Telefon', value: '', sensitive: false},
+            {name: 'Handy', value: '', sensitive: false},
+            {name: 'E-Mail', value: '', sensitive: false},
+            {name: 'Adresse', value: '', sensitive: false}
+        ];
+    }
+    
+    // Add the fields
+    const container = document.getElementById('contactDetails');
+    fieldsToAdd.forEach(field => {
+        const row = document.createElement('div');
+        row.className = 'detail-row';
+        
+        row.innerHTML = `
+            <div class="detail-inputs">
+                <input type="text" name="detail_name" value="${field.name}" placeholder="Field name">
+                <input type="text" name="detail_value" value="${field.value}" placeholder="Value">
+                <label class="sensitive-checkbox">
+                    <input type="checkbox" name="detail_sensitive" value="${detailCounter}" ${field.sensitive ? 'checked' : ''}>
+                    Sensitive
+                </label>
+                <button type="button" class="button button-small button-danger" onclick="removeDetail(this)">
+                    Delete
+                </button>
+            </div>
+        `;
+        
+        container.appendChild(row);
+        detailCounter++;
+    });
+    
+    // Focus on first added field value
+    if (fieldsToAdd.length > 0) {
+        const firstField = container.children[container.children.length - fieldsToAdd.length];
+        firstField.querySelector('input[name="detail_value"]').focus();
+    }
+}
+
+// Auto-suggest common field names
+document.addEventListener('input', function(e) {
+    if (e.target.name === 'detail_name') {
+        const value = e.target.value.toLowerCase();
+        const sensitiveWords = ['password', 'passwort', 'pin', 'account', 'konto', 'iban', 'nummer', 'login', 'code'];
+        const checkbox = e.target.parentElement.querySelector('input[type="checkbox"]');
+        
+        // Auto-check sensitive if field name contains sensitive words
+        const isSensitive = sensitiveWords.some(word => value.includes(word));
+        checkbox.checked = isSensitive;
+    }
+});
+
+// Validate form before submit
+document.querySelector('.contact-form').addEventListener('submit', function(e) {
+    const name = document.getElementById('name').value.trim();
+    const type = document.getElementById('contact_type').value;
+    
+    if (!name) {
+        alert('Contact name is required');
+        e.preventDefault();
+        return;
+    }
+    
+    if (!type) {
+        alert('Contact type is required');
+        e.preventDefault();
+        return;
+    }
+});
+</script>
+{% endblock %}

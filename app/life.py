@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
 life.py - Main Flask application for Life family archive
-Version: 1.0.0
+Version: 1.1.0
 Purpose: Application initialization and blueprint registration
 Created: 2025-06-11
+Updated: 2025-06-17 - Added contacts blueprint registration
 """
 
 import os
@@ -37,10 +38,12 @@ def create_app(config_name=None):
     from routes.bp_auth import auth_bp
     from routes.bp_main import main_bp
     from routes.bp_files import files_bp
+    from routes.bp_contacts import contacts_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(files_bp, url_prefix='/files')
+    app.register_blueprint(contacts_bp, url_prefix='/contacts')
     
     # Register admin and api blueprints when they exist
     try:
@@ -86,4 +89,3 @@ if __name__ == '__main__':
         port=5555,
         debug=app.config['DEBUG']
     )
-

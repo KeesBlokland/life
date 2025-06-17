@@ -1,9 +1,9 @@
 """
 /home/life/app/utils/util_db.py
-Version: 1.1.0
-Purpose: Database operations with bin collection table
+Version: 1.2.0
+Purpose: Database operations with contacts and change request tables
 Created: 2025-06-11
-Updated: 2025-06-13 - Added bin_collections table
+Updated: 2025-06-17 - Added contacts, contact_details, and contact_change_requests tables
 """
 
 import sqlite3
@@ -185,8 +185,11 @@ def create_tables(db):
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             item TEXT NOT NULL,
             quantity TEXT,
+            list_name TEXT DEFAULT 'food',
             completed BOOLEAN DEFAULT 0,
-            common_item BOOLEAN DEFAULT 0,
+            master_list BOOLEAN DEFAULT 0,
+            today_list BOOLEAN DEFAULT 0,
+            added_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -213,12 +216,59 @@ def create_tables(db):
         )
     ''')
     
+    # Contacts - Main contact information
+    db.execute('''
+        CREATE TABLE IF NOT EXISTS contacts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            contact_type TEXT NOT NULL,
+            category TEXT,
+            notes TEXT,
+            created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            modified_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # Contact Details - Flexible key-value pairs for all contact information
+    db.execute('''
+        CREATE TABLE IF NOT EXISTS contact_details (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            contact_id INTEGER NOT NULL,
+            field_name TEXT NOT NULL,
+            field_value TEXT,
+            is_sensitive BOOLEAN DEFAULT 0,
+            field_order INTEGER DEFAULT 0,
+            FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE
+        )
+    ''')
+    
+    # Contact Change Requests - User suggestions for admin review
+    db.execute('''
+        CREATE TABLE IF NOT EXISTS contact_change_requests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            contact_id INTEGER,
+            contact_name TEXT,
+            change_description TEXT NOT NULL,
+            requested_by TEXT,
+            status TEXT DEFAULT 'pending',
+            admin_notes TEXT,
+            created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            processed_date TIMESTAMP,
+            FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE SET NULL
+        )
+    ''')
+    
     # Create indexes for performance
     db.execute('CREATE INDEX IF NOT EXISTS idx_files_checksum ON files(checksum)')
     db.execute('CREATE INDEX IF NOT EXISTS idx_files_deleted ON files(deleted)')
     db.execute('CREATE INDEX IF NOT EXISTS idx_metadata_keywords ON metadata(keywords)')
     db.execute('CREATE INDEX IF NOT EXISTS idx_events_date ON events(date)')
     db.execute('CREATE INDEX IF NOT EXISTS idx_bin_collections_date ON bin_collections(date)')
+    db.execute('CREATE INDEX IF NOT EXISTS idx_contacts_type ON contacts(contact_type)')
+    db.execute('CREATE INDEX IF NOT EXISTS idx_contacts_name ON contacts(name)')
+    db.execute('CREATE INDEX IF NOT EXISTS idx_contact_details_contact_id ON contact_details(contact_id)')
+    db.execute('CREATE INDEX IF NOT EXISTS idx_contact_details_field_name ON contact_details(field_name)')
+    db.execute('CREATE INDEX IF NOT EXISTS idx_contact_change_requests_status ON contact_change_requests(status)')
 
 def insert_defaults(db):
     """Insert default data"""

@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 <!--
 /home/life/app/templates/temp_upload.html
-Version: 1.2.0
-Purpose: Multiple file upload interface with drag-drop and camera capture
+Version: 1.2.2
+Purpose: Multiple file upload interface with fixed custom titles
 Created: 2025-06-11
-Updated: 2025-06-12 - Added multiple file upload support
+Updated: 2025-06-16 - Fixed custom title submission and file management
 -->
 
 {% block title %}Upload - Life{% endblock %}
 
 {% block page_name %}: Upload{% endblock %}
 
-{% block template_info %}temp_upload.html v1.1.0 - Multiple file upload interface{% endblock %}
+{% block template_info %}temp_upload.html v1.2.2 - Fixed custom title submission{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -62,123 +62,6 @@ Updated: 2025-06-12 - Added multiple file upload support
     </form>
 </div>
 
-<style>
-.upload-area {
-    border: 2px dashed var(--border);
-    border-radius: 8px;
-    padding: 3rem;
-    text-align: center;
-    margin-bottom: 2rem;
-    background-color: var(--bg-accent);
-    transition: all 0.3s ease;
-}
-
-.upload-area.dragover {
-    border-color: var(--accent);
-    background-color: rgba(125, 154, 150, 0.1);
-}
-
-.upload-prompt p {
-    margin: 0.5rem 0;
-    color: var(--text-secondary);
-}
-
-.file-preview {
-    text-align: left;
-}
-
-.file-item {
-    padding: 0.5rem;
-    background-color: white;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    margin-bottom: 0.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-}
-
-.file-info {
-    flex: 1;
-}
-
-.file-name {
-    font-weight: 500;
-    margin-bottom: 0.3rem;
-}
-
-.file-size {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
-}
-
-.title-edit {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-}
-
-.title-edit label {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    margin: 0;
-}
-
-.title-input {
-    padding: 0.4rem;
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    font-size: 0.9rem;
-    width: 100%;
-    max-width: 400px;
-}
-
-.common-tags {
-    margin-bottom: 2rem;
-}
-
-.common-tags p {
-    margin-bottom: 0.5rem;
-    color: var(--text-secondary);
-}
-
-.tag-button {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    margin: 0.25rem;
-    background-color: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.tag-button:hover {
-    background-color: var(--accent);
-    color: white;
-    border-color: var(--accent);
-}
-
-.form-actions {
-    display: flex;
-    gap: 1rem;
-    margin-top: 2rem;
-}
-
-/* Mobile adjustments */
-@media (max-width: 768px) {
-    .upload-area {
-        padding: 2rem 1rem;
-    }
-    
-    .common-tags {
-        text-align: center;
-    }
-}
-</style>
-
 <script>
 let selectedFiles = [];
 
@@ -219,6 +102,20 @@ function handleCameraCapture(e) {
 function addFiles(files) {
     selectedFiles = selectedFiles.concat(files);
     updateFilePreview();
+    updateFormFiles();
+}
+
+function updateFormFiles() {
+    // Clear existing file inputs
+    const existingInputs = document.querySelectorAll('input[name="files"]:not(#fileInput):not(#cameraInput)');
+    existingInputs.forEach(input => input.remove());
+    
+    // Create DataTransfer to update file inputs
+    const dt = new DataTransfer();
+    selectedFiles.forEach(file => dt.items.add(file));
+    
+    // Update main file input
+    document.getElementById('fileInput').files = dt.files;
 }
 
 function updateFilePreview() {
@@ -226,6 +123,13 @@ function updateFilePreview() {
     fileList.innerHTML = '';
     
     selectedFiles.forEach((file, index) => {
+        // Better default name for camera captures
+        let defaultName = file.name;
+        if (file.name === 'image.jpg' || file.name.startsWith('IMG_') || file.name.startsWith('image')) {
+            const now = new Date();
+            defaultName = `Photo_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}`;
+        }
+        
         const fileItem = document.createElement('div');
         fileItem.className = 'file-item';
         fileItem.innerHTML = `
@@ -234,7 +138,7 @@ function updateFilePreview() {
                 <div class="file-size">${formatFileSize(file.size)}</div>
                 <div class="title-edit">
                     <label>Display as:</label>
-                    <input type="text" name="titles" value="${file.name}" class="title-input" data-index="${index}">
+                    <input type="text" name="titles" value="${defaultName}" class="title-input" data-index="${index}" required>
                 </div>
             </div>
             <button type="button" onclick="removeFile(${index})" class="button button-small button-danger">Remove</button>
@@ -259,6 +163,7 @@ function updateFilePreview() {
 function removeFile(index) {
     selectedFiles.splice(index, 1);
     updateFilePreview();
+    updateFormFiles();
 }
 
 function clearFiles() {
@@ -283,5 +188,14 @@ function addTag(tag) {
         tagsInput.value = currentTags.join(', ');
     }
 }
+
+// Form submission handler to ensure titles are included
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    // Ensure all title inputs are properly named and sequenced
+    const titleInputs = document.querySelectorAll('.title-input');
+    titleInputs.forEach((input, index) => {
+        input.name = 'titles';
+    });
+});
 </script>
 {% endblock %}

@@ -1,9 +1,9 @@
-//*
+/*
 styles-shopping.css - Shopping list styles for Life app
-Version: 1.0.02
-Purpose: Shopping list specific styles - moved inline CSS from temp_lists.html
+Version: 1.0.06
+Purpose: Shopping list specific styles - dropdown positioned right
 Created: 2025-06-14
-Updated: 2025-06-16 - Moved all inline CSS from temp_lists.html
+Updated: 2025-06-16 - Moved dropdown to right of input field
 */
 
 /* List tabs container */
@@ -43,12 +43,85 @@ Updated: 2025-06-16 - Moved all inline CSS from temp_lists.html
     gap: 0.5rem;
 }
 
-/* Add Item Card */
+/* Smart Search Styles */
+.smart-search-container {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+}
+
+.smart-search-container input {
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background-color: white;
+}
+
+.smart-search-container input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(95, 130, 124, 0.2);
+}
+
+.search-dropdown {
+    position: absolute;
+    top: 0;
+    left: 100%;
+    margin-left: 0.5rem;
+    width: 300px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-shadow: 0 4px 8px var(--shadow);
+    z-index: 1000;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.search-result {
+    padding: 0.5rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+}
+
+.search-result:last-child {
+    border-bottom: none;
+}
+
+.search-result:hover {
+    background-color: var(--bg-accent);
+}
+
+.search-result.new-item {
+    background-color: rgba(95, 130, 124, 0.1);
+    font-style: italic;
+}
+
+.search-result.new-item:hover {
+    background-color: rgba(95, 130, 124, 0.2);
+}
+
+.result-text {
+    flex: 1;
+    font-weight: 500;
+}
+
+.result-action {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* Add Item Card - More compact with vertical centering */
 .add-item-card {
     background-color: white;
     border: 1px solid var(--border);
     border-radius: 6px;
-    padding: 0.8rem;
+    padding: 0.5rem 0.5rem;
     margin-bottom: 1rem;
 }
 
@@ -56,6 +129,7 @@ Updated: 2025-06-16 - Moved all inline CSS from temp_lists.html
     display: flex;
     gap: 0.5rem;
     align-items: center;
+    justify-content: center;
     flex-wrap: wrap;
 }
 
@@ -180,15 +254,15 @@ Updated: 2025-06-16 - Moved all inline CSS from temp_lists.html
     gap: 0.5rem;
 }
 
-/* Perfect alignment system for item rows */
+/* COMPACT alignment system for shopping items - reduced from 44px to 32px */
 .master-item,
 .today-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.6rem 0.8rem;
+    padding: 0.4rem 0.8rem; /* Reduced from 0.6rem */
     border-bottom: 1px solid var(--border);
-    min-height: 44px; /* Consistent row height */
+    min-height: 32px; /* Reduced from 44px for more items on iPad */
 }
 
 .master-item.clickable-item {
@@ -210,27 +284,27 @@ Updated: 2025-06-16 - Moved all inline CSS from temp_lists.html
     border-bottom: none;
 }
 
-/* Left side content */
+/* Left side content - more compact */
 .item-content {
     flex: 1;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    min-height: 32px; /* Match button height */
+    min-height: 24px; /* Reduced from 32px */
 }
 
 .item-name,
 .today-item-name {
     font-weight: 500;
     color: var(--text-primary);
-    line-height: 1.2;
+    line-height: 1.1; /* Tighter line height */
 }
 
 .item-meta {
     color: var(--text-secondary);
-    font-size: 0.8rem;
-    line-height: 1.1;
-    margin-top: 2px;
+    font-size: 0.75rem; /* Slightly smaller */
+    line-height: 1.0;
+    margin-top: 1px; /* Reduced from 2px */
 }
 
 /* Right side actions */
@@ -244,7 +318,7 @@ Updated: 2025-06-16 - Moved all inline CSS from temp_lists.html
 
 .add-hint {
     color: var(--text-secondary);
-    font-size: 0.8rem;
+    font-size: 0.75rem; /* Smaller hint text */
     font-style: italic;
     opacity: 0.7;
     transition: opacity 0.2s;

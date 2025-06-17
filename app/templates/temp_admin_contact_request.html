@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+<!--
+temp_admin_contact_requests.html - Admin interface for reviewing contact change requests
+Version: 1.0.01
+Purpose: Admin tool to review, approve, or reject user-submitted contact change requests
+Created: 2025-06-17
+Updated: 2025-06-17 - Initial implementation with request management interface
+-->
+
+{% block title %}Contact Change Requests - Admin - Life{% endblock %}
+
+{% block template_info %}temp_admin_contact_requests.html v1.0.01 - Admin change request management{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="admin-header">
+        <h1>Contact Change Requests</h1>
+        <div class="admin-nav">
+            <a href="{{ url_for('admin.dashboard') }}" class="button button-secondary">Admin Dashboard</a>
+            <a href="{{ url_for('contacts.browse') }}" class="button button-secondary">View Contacts</a>
+        </div>
+    </div>
+    
+    {% if requests %}
+        <div class="requests-summary">
+            <p>{{ requests|length }} pending change request{% if requests|length != 1 %}s{% endif %} require review</p>
+        </div>
+        
+        <div class="requests-list">
+            {% for request in requests %}
+            <div class="request-card">
+                <div class="request-header">
+                    <div class="request-info">
+                        <h3>
+                            {% if request.contact_id %}
+                                Changes for: {{ request.existing_contact_name or request.contact_name }}
+                            {% else %}
+                                New Contact: {{ request.contact_name }}
+                            {% endif %}
+                        </h3>
+                        <div class="request-meta">
+                            <span class="request-date">Requested: {{ request.created_date }}</span>
+                            <span class="request-by">By: {{ request.requested_by }}</span>
+                            {% if request.contact_id %}
+                            <a href="{{ url_for('contacts.view_contact', contact_id=request.contact_id) }}" 
+                               class="button button-small">View Current Contact</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="request-content">
+                    <h4>Requested Changes:</h4>
+                    <div class="change-description">
+                        {{ request.change_description|nl2br }}
+                    </div>
+                </div>
+                
+                <div class="request-actions">
+                    <form method="post" action="{{ url_for('contacts.process_change_request', request_id=request.id) }}" 
+                          class="request-form">
+                        <div class="action-section">
+                            <div class="admin-notes-section">
+                                <label for="admin_notes_{{ request.id }}">Admin Notes (optional):</label>
+                                <textarea id="admin_notes_{{ request.id }}" name="admin_notes" 
+                                          rows="2" 
+                                          placeholder="Notes for user about this request..."></textarea>
+                            </div>
+                            
+                            <div class="action-buttons">
+                                <button type="submit" name="action" value="approve" 
+                                        class="button button-success"
+                                        onclick="return confirm('Approve this change request?')">
+                                    Approve Request
+                                </button>
+                                <button type="submit" name="action" value="reject" 
+                                        class="button button-danger"
+                                        onclick="return confirm('Reject this change request?')">
+                                    Reject Request
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                {% if request.contact_id %}
+                <div class="quick-actions">
+                    <h4>Quick Actions:</h4>
+                    <div class="quick-action-buttons">
+                        <a href="{{ url_for('contacts.edit_contact', contact_id=request.contact_id) }}" 
+                           class="button button-small">Edit Contact Directly</a>
+                        <button type="button" class="button button-small" 
+                                onclick="copyToClipboard('{{ request.change_description|escape }}')">
+                            Copy Request Text
+                        </button>
+                    </div>
+                </div>
+                {% else %}
+                <div class="quick-actions">
+                    <h4>Quick Actions:</h4>
+                    <div class="quick-action-buttons">
+                        <a href="{{ url_for('contacts.add_contact') }}" 
+                           class="button button-small">Add New Contact</a>
+                        <button type="button" class="button button-small" 
+                                onclick="copyToClipboard('{{ request.change_description|escape }}')">
+                            Copy Request Text
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Bulk Actions -->
+        <div class="bulk-actions-section">
+            <h2>Bulk Actions</h2>
+            <div class="bulk-warning">
+                <p><strong>⚠️ Use with caution:</strong> These actions affect all pending requests.</p>
+            </div>
+            <div class="bulk-buttons">
+                <button type="button" class="button button-secondary" 
+                        onclick="showApproveAllForm()">
+                    Approve All Requests
+                </button>
+                <button type="button" class="button button-danger" 
+                        onclick="showRejectAllForm()">
+                    Reject All Requests
+                </button>
+            </div>
+            
+            <!-- Hidden bulk action forms -->
+            <div id="bulkApproveForm" style="display: none;" class="bulk-form">
+                <form method="post" action="{{ url_for('contacts.bulk_process_requests') }}">
+                    <input type="hidden" name="action" value="approve_all">
+                    <div class="form-group">
+                        <label for="bulk_approve_notes">Admin Notes for all approved requests:</label>
+                        <textarea name="admin_notes" rows="2" 
+                                  placeholder="Note that will be added to all approved requests..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="button button-success" 
+                                onclick="return confirm('Approve ALL {{ requests|length }} pending requests?')">
+                            Confirm Approve All
+                        </button>
+                        <button type="button" class="button button-secondary" onclick="hideBulkForms()">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <div id="bulkRejectForm" style="display: none;" class="bulk-form">
+                <form method="post" action="{{ url_for('contacts.bulk_process_requests') }}">
+                    <input type="hidden" name="action" value="reject_all">
+                    <div class="form-group">
+                        <label for="bulk_reject_notes">Admin Notes for all rejected requests:</label>
+                        <textarea name="admin_notes" rows="2" required
+                                  placeholder="Reason for rejecting all requests..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="button button-danger" 
+                                onclick="return confirm('Reject ALL {{ requests|length }} pending requests?')">
+                            Confirm Reject All
+                        </button>
+                        <button type="button" class="button button-secondary" onclick="hideBulkForms()">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+    {% else %}
+        <div class="no-requests">
+            <h2>No Pending Change Requests</h2>
+            <p>All change requests have been processed!</p>
+            <div class="no-requests-actions">
+                <a href="{{ url_for('contacts.browse') }}" class="button">View All Contacts</a>
+                <a href="{{ url_for('admin.dashboard') }}" class="button button-secondary">Admin Dashboard</a>
+            </div>
+        </div>
+    {% endif %}
+    
+    <!-- Processed Requests History -->
+    {% set processed_requests = query_db('SELECT cr.*, c.name as existing_contact_name FROM contact_change_requests cr LEFT JOIN contacts c ON cr.contact_id = c.id WHERE cr.status != "pending" ORDER BY cr.processed_date DESC LIMIT 10') %}
+    {% if processed_requests %}
+    <div class="processed-section">
+        <h2>Recently Processed Requests</h2>
+        <div class="processed-list">
+            {% for request in processed_requests %}
+            <div class="processed-item status-{{ request.status }}">
+                <div class="processed-header">
+                    <span class="contact-name">
+                        {% if request.existing_contact_name %}{{ request.existing_contact_name }}{% else %}{{ request.contact_name }}{% endif %}
+                    </span>
+                    <span class="processed-date">{{ request.processed_date }}</span>
+                    <span class="processed-status">{{ request.status|title }}</span>
+                </div>
+                {% if request.admin_notes %}
+                <div class="processed-notes">{{ request.admin_notes }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        // Show temporary success message
+        const button = event.target;
+        const originalText = button.textContent;
+        button.textContent = 'Copied!';
+        button.style.backgroundColor = '#5A7F5A';
+        
+        setTimeout(() => {
+            button.textContent = originalText;
+            button.style.backgroundColor = '';
+        }, 2000);
+    }).catch(function(err) {
+        console.error('Could not copy text: ', err);
+        alert('Could not copy to clipboard');
+    });
+}
+
+function showApproveAllForm() {
+    hideBulkForms();
+    document.getElementById('bulkApproveForm').style.display = 'block';
+}
+
+function showRejectAllForm() {
+    hideBulkForms();
+    document.getElementById('bulkRejectForm').style.display = 'block';
+}
+
+function hideBulkForms() {
+    document.getElementById('bulkApproveForm').style.display = 'none';
+    document.getElementById('bulkRejectForm').style.display = 'none';
+}
+
+// Auto-expand textareas
+document.addEventListener('input', function(e) {
+    if (e.target.tagName === 'TEXTAREA') {
+        e.target.style.height = 'auto';
+        e.target.style.height = e.target.scrollHeight + 'px';
+    }
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Escape to hide bulk forms
+    if (e.key === 'Escape') {
+        hideBulkForms();
+    }
+});
+
+// Highlight request when clicking actions
+document.querySelectorAll('.request-card button').forEach(button => {
+    button.addEventListener('click', function() {
+        const card = this.closest('.request-card');
+        card.style.borderLeft = '4px solid var(--accent)';
+        setTimeout(() => {
+            card.style.borderLeft = '';
+        }, 3000);
+    });
+});
+</script>
+{% endblock %}

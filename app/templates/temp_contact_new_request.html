@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+<!--
+temp_contact_new_request.html - User form to request addition of new contacts
+Version: 1.0.01
+Purpose: Allow non-admin users to request new contacts to be added to the system
+Created: 2025-06-17
+Updated: 2025-06-17 - Initial implementation with guided new contact request form
+-->
+
+{% block title %}Request New Contact - Life{% endblock %}
+
+{% block template_info %}temp_contact_new_request.html v1.0.01 - New contact request form{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Request New Contact</h1>
+    
+    <div class="help-section">
+        <h2>Adding New Contacts</h2>
+        <p>Request that a new contact be added to the system. Provide as much information as you have.</p>
+        
+        <div class="contact-types-help">
+            <h3>Contact Types:</h3>
+            <div class="types-grid">
+                <div class="type-item">
+                    <strong>Family:</strong> Relatives, close friends, emergency contacts
+                </div>
+                <div class="type-item">
+                    <strong>Medical:</strong> Doctors, dentists, hospitals, pharmacies, specialists
+                </div>
+                <div class="type-item">
+                    <strong>Financial:</strong> Banks, insurance companies, pension providers, accountants
+                </div>
+                <div class="type-item">
+                    <strong>Utilities:</strong> Electric, gas, water, internet, phone, cable companies
+                </div>
+                <div class="type-item">
+                    <strong>Services:</strong> Plumbers, electricians, gardeners, house cleaners
+                </div>
+                <div class="type-item">
+                    <strong>Government:</strong> Tax office, municipality, passport office, DMV
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <form method="post" class="new-contact-form">
+        <div class="form-section">
+            <h2>Contact Information</h2>
+            
+            <div class="form-group">
+                <label for="contact_name">Contact Name *</label>
+                <input type="text" id="contact_name" name="contact_name" required autofocus
+                       placeholder="e.g., Dr. Smith, ABC Insurance, City Gas Company">
+            </div>
+            
+            <div class="form-group">
+                <label for="change_description">Contact Details *</label>
+                <textarea id="change_description" name="change_description" 
+                          rows="12" required
+                          placeholder="Please provide all the contact information you have. Include:
+
+• Contact type (Family, Medical, Financial, etc.)
+• Phone numbers
+• Email addresses
+• Physical address
+• Website
+• Account numbers or customer IDs
+• Any passwords or login information
+• Notes about services or relationship
+
+Example:
+Contact Type: Medical - Dentist
+Phone: 555-123-4567
+Address: 123 Main Street, Springfield, 12345
+Email: office@smithdental.com
+Website: www.smithdental.com
+Patient ID: PAT-98765
+Insurance accepted: Blue Cross
+Notes: Recommended by Dr. Johnson, takes emergency calls"></textarea>
+            </div>
+            
+            <div class="form-help">
+                <h3>Tips for Complete Requests:</h3>
+                <ul>
+                    <li><strong>Contact Type:</strong> Specify Family, Medical, Financial, Utilities, Services, or Government</li>
+                    <li><strong>All Information:</strong> Include everything you know - phone, email, address, websites</li>
+                    <li><strong>Account Details:</strong> Customer numbers, account numbers, login credentials if you have them</li>
+                    <li><strong>Context:</strong> How you found them, what services they provide, why they're important</li>
+                    <li><strong>Sensitive Information:</strong> It's safe to include passwords and account numbers</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="button">Submit New Contact Request</button>
+            <a href="{{ url_for('contacts.browse') }}" class="button button-secondary">Cancel</a>
+        </div>
+    </form>
+    
+    <!-- Examples Section -->
+    <div class="examples-section">
+        <h2>Example Requests</h2>
+        
+        <div class="example-card">
+            <h3>Medical Contact Example</h3>
+            <div class="example-content">
+                <strong>Contact Name:</strong> Dr. Sarah Wilson - Cardiologist<br>
+                <strong>Details:</strong><br>
+                Contact Type: Medical<br>
+                Phone: 555-234-5678<br>
+                Address: 456 Heart Avenue, Suite 200, Springfield, 12345<br>
+                Email: appointments@wilsoncardio.com<br>
+                Website: www.wilsoncardiology.com<br>
+                Patient ID: CARD-12345<br>
+                Referral from: Dr. Johnson<br>
+                Notes: Specializes in elderly care, appointment every 6 months
+            </div>
+        </div>
+        
+        <div class="example-card">
+            <h3>Financial Contact Example</h3>
+            <div class="example-content">
+                <strong>Contact Name:</strong> First National Bank<br>
+                <strong>Details:</strong><br>
+                Contact Type: Financial<br>
+                Phone: 555-345-6789 (main), 555-345-6790 (customer service)<br>
+                Address: 789 Bank Street, Springfield, 12345<br>
+                Website: www.firstnational.com<br>
+                Account Number: 1234567890<br>
+                Customer ID: CUST-ABC123<br>
+                Online Login: johnsmith@email.com<br>
+                Password: BankPass2024<br>
+                Notes: Checking and savings accounts, direct deposit setup
+            </div>
+        </div>
+        
+        <div class="example-card">
+            <h3>Family Contact Example</h3>
+            <div class="example-content">
+                <strong>Contact Name:</strong> Sarah Smith (Daughter)<br>
+                <strong>Details:</strong><br>
+                Contact Type: Family<br>
+                Phone: 555-456-7890 (cell), 555-456-7891 (work)<br>
+                Email: sarah.smith@email.com<br>
+                Address: 321 Oak Street, Nearby City, 54321<br>
+                Emergency Contact: Yes<br>
+                Relationship: Daughter<br>
+                Notes: Lives 30 minutes away, has spare house key, call in medical emergencies
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-save draft
+const nameField = document.getElementById('contact_name');
+const detailsField = document.getElementById('change_description');
+const storageKey = 'new_contact_request_draft';
+
+// Load saved draft
+const savedDraft = localStorage.getItem(storageKey);
+if (savedDraft) {
+    const draft = JSON.parse(savedDraft);
+    if (draft.name && !nameField.value) nameField.value = draft.name;
+    if (draft.details && !detailsField.value) detailsField.value = draft.details;
+}
+
+// Save draft as user types
+function saveDraft() {
+    const draft = {
+        name: nameField.value,
+        details: detailsField.value
+    };
+    localStorage.setItem(storageKey, JSON.stringify(draft));
+}
+
+nameField.addEventListener('input', saveDraft);
+detailsField.addEventListener('input', saveDraft);
+
+// Clear draft when form is submitted
+document.querySelector('.new-contact-form').addEventListener('submit', function() {
+    localStorage.removeItem(storageKey);
+});
+
+// Character counter for details field
+const maxLength = 2000;
+detailsField.addEventListener('input', function() {
+    const remaining = maxLength - this.value.length;
+    let counter = document.getElementById('detailsCharCounter');
+    
+    if (!counter) {
+        counter = document.createElement('div');
+        counter.id = 'detailsCharCounter';
+        counter.className = 'char-counter';
+        this.parentNode.appendChild(counter);
+    }
+    
+    counter.textContent = `${remaining} characters remaining`;
+    counter.className = 'char-counter ' + (remaining < 100 ? 'warning' : '');
+});
+
+// Smart suggestions based on contact name
+nameField.addEventListener('input', function() {
+    const name = this.value.toLowerCase();
+    const detailsField = document.getElementById('change_description');
+    
+    // Don't override if user has already typed details
+    if (detailsField.value.length > 50) return;
+    
+    let suggestion = '';
+    
+    if (name.includes('dr.') || name.includes('doctor')) {
+        suggestion = `Contact Type: Medical
+Phone: 
+Address: 
+Email: 
+Patient ID: 
+Notes: `;
+    } else if (name.includes('bank') || name.includes('credit union')) {
+        suggestion = `Contact Type: Financial
+Phone: 
+Address: 
+Website: 
+Account Number: 
+Customer ID: 
+Online Login: 
+Password: 
+Notes: `;
+    } else if (name.includes('electric') || name.includes('gas') || name.includes('water') || name.includes('utility')) {
+        suggestion = `Contact Type: Utilities
+Phone: 
+Website: 
+Customer Number: 
+Account Number: 
+Notes: `;
+    }
+    
+    if (suggestion && !detailsField.value) {
+        detailsField.value = suggestion;
+        detailsField.focus();
+        detailsField.setSelectionRange(suggestion.indexOf('Phone: ') + 7, suggestion.indexOf('Phone: ') + 7);
+    }
+});
+</script>
+{% endblock %}
