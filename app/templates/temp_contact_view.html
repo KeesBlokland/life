@@ -1,20 +1,21 @@
 {% extends "base.html" %}
 <!--
-temp_contact_view.html - Contact details view with basic and sensitive information
-Version: 1.0.08
-Purpose: Simple contact display matching reference design exactly - ACTUALLY FIXED
+temp_contact_view.html - Simple contact display like Daniel Blokland reference
+Version: 1.2.03
+Purpose: Clean simple contact display matching user preference - Full inline button styling
 Created: 2025-06-17
-Updated: 2025-06-17 - COMPLETELY REWRITTEN to match reference design
+Updated: 2025-06-17 - Removed CSS classes, used full inline styling to force button text visibility
 -->
 
 {% block title %}{{ contact.name }} - Contacts - Life{% endblock %}
 
-{% block template_info %}temp_contact_view.html v1.0.08 - Simple contact display{% endblock %}
+{% block template_info %}temp_contact_view.html v1.2.01 - Simple clean contact display{% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="simple-contact">
-        <h1>{{ contact.name }} <span class="contact-type">{{ contact.contact_type }}{% if contact.category %} - {{ contact.category }}{% endif %}</span></h1>
+        <h1>{{ contact.name }}</h1>
+        <p><em>{{ contact.contact_type }}{% if contact.category %} - {{ contact.category }}{% endif %}</em></p>
         
         {% for detail in details.basic %}
         <p><strong>{{ detail.field_name }}:</strong> 
@@ -30,71 +31,25 @@ Updated: 2025-06-17 - COMPLETELY REWRITTEN to match reference design
         </p>
         {% endfor %}
         
-        {% if details.sensitive %}
-        <p><strong>Account Info:</strong> <button type="button" id="toggleSensitive" class="button button-small" onclick="toggleSensitiveInfo()">Show</button></p>
-        <div id="sensitiveDetails" style="display: none;">
-            {% for detail in details.sensitive %}
-            <p><strong>{{ detail.field_name }}:</strong> <span class="sensitive-value" data-value="{{ detail.field_value }}">••••••••••</span> <button type="button" class="button button-small" onclick="toggleValue(this)">Show</button></p>
-            {% endfor %}
-        </div>
-        {% endif %}
+        {% for detail in details.sensitive %}
+        <p><strong>{{ detail.field_name }}:</strong> {{ detail.field_value }}</p>
+        {% endfor %}
         
         {% if contact.notes %}
         <p><strong>Notes:</strong> {{ contact.notes }}</p>
         {% endif %}
         
-        <p>
+        <p style="text-align: right; margin-top: 2rem;">
             {% if session.get('is_admin') %}
-            <a href="{{ url_for('contacts.edit_contact', contact_id=contact.id) }}" class="button">Edit</a>
+            <a href="{{ url_for('contacts.edit_contact', contact_id=contact.id) }}" 
+               style="display: inline-block; padding: 0.5rem 1rem; background-color: #5F827C; color: white; text-decoration: none; border-radius: 3px; font-weight: 500;">Edit</a>
             {% else %}
-            <a href="{{ url_for('contacts.request_change', contact_id=contact.id) }}" class="button">Request Changes</a>
+            <a href="{{ url_for('contacts.request_change', contact_id=contact.id) }}" 
+               style="display: inline-block; padding: 0.5rem 1rem; background-color: #5F827C; color: white; text-decoration: none; border-radius: 3px; font-weight: 500;">Request Changes</a>
             {% endif %}
-            <a href="{{ url_for('contacts.browse') }}" class="button">Back</a>
+            <a href="{{ url_for('contacts.browse') }}" 
+               style="display: inline-block; padding: 0.5rem 1rem; background-color: #5F827C; color: white; text-decoration: none; border-radius: 3px; font-weight: 500; margin-left: 0.5rem;">Back</a>
         </p>
     </div>
 </div>
-
-<script>
-function toggleSensitiveInfo() {
-    const details = document.getElementById('sensitiveDetails');
-    const button = document.getElementById('toggleSensitive');
-    
-    if (details.style.display === 'none') {
-        details.style.display = 'block';
-        button.textContent = 'Hide';
-        setTimeout(() => {
-            if (details.style.display === 'block') {
-                details.style.display = 'none';
-                button.textContent = 'Show';
-                document.querySelectorAll('.sensitive-value').forEach(span => {
-                    span.textContent = '••••••••••';
-                    span.nextElementSibling.textContent = 'Show';
-                });
-            }
-        }, 30000);
-    } else {
-        details.style.display = 'none';
-        button.textContent = 'Show';
-    }
-}
-
-function toggleValue(button) {
-    const valueSpan = button.previousElementSibling;
-    const actualValue = valueSpan.getAttribute('data-value');
-    
-    if (button.textContent === 'Show') {
-        valueSpan.textContent = actualValue;
-        button.textContent = 'Hide';
-        setTimeout(() => {
-            if (button.textContent === 'Hide') {
-                valueSpan.textContent = '••••••••••';
-                button.textContent = 'Show';
-            }
-        }, 10000);
-    } else {
-        valueSpan.textContent = '••••••••••';
-        button.textContent = 'Show';
-    }
-}
-</script>
 {% endblock %}
