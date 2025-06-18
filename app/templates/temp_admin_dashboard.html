@@ -1,17 +1,15 @@
-{% extends "base.html" %}
-<!--
-temp_admin_dashboard.html
-Version: 1.0.06
-Purpose: Admin dashboard with system overview and management tools  
-Created: 2025-06-11
-Updated: 2025-06-16 - Fixed backup button routes
+<!-- temp_admin_dashboard.html
+     Date: 2025-06-18
+     Version: 1.0.07
+     Purpose: Admin dashboard with system overview and backup download
 -->
+{% extends "base.html" %}
 
 {% block title %}Admin Dashboard - Life{% endblock %}
 
 {% block page_name %}: Admin{% endblock %}
 
-{% block template_info %}temp_admin_dashboard.html v1.0.06 - Fixed backup routes{% endblock %}
+{% block template_info %}temp_admin_dashboard.html v1.0.07 - Added backup download{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -55,19 +53,16 @@ Updated: 2025-06-16 - Fixed backup button routes
             <form method="post" action="{{ url_for('admin.data_backup') }}" style="display: inline;">
                 <button type="submit" class="button">Data Backup</button>
             </form>
-            
             <form method="post" action="{{ url_for('admin.system_backup') }}" style="display: inline;">
                 <button type="submit" class="button button-secondary">System Backup</button>
             </form>
-            
+            <a href="{{ url_for('admin.download_latest_backups') }}" class="button button-primary">Download Latest Backups</a>
             <form method="post" action="{{ url_for('admin.cleanup_files') }}" style="display: inline;">
                 <button type="submit" class="button">Find & List Orphans</button>
             </form>
-            
             <a href="{{ url_for('admin.deleted_files') }}" class="button">
                 View Deleted Files
             </a>
-            
             <a href="{{ url_for('admin.settings') }}" class="button">
                 System Settings
             </a>
@@ -90,4 +85,10 @@ Updated: 2025-06-16 - Fixed backup button routes
     </div>
     {% endif %}
 </div>
+
+{% if DEBUG %}
+<div class="debug-footer">
+    temp_admin_dashboard.html v1.0.07
+</div>
+{% endif %}
 {% endblock %}

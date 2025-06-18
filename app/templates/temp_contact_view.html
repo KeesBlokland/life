@@ -1,15 +1,13 @@
-{% extends "base.html" %}
-<!--
-temp_contact_view.html - Simple contact display like Daniel Blokland reference
-Version: 1.2.03
-Purpose: Clean simple contact display matching user preference - Full inline button styling
-Created: 2025-06-17
-Updated: 2025-06-17 - Removed CSS classes, used full inline styling to force button text visibility
+<!-- temp_contact_view.html
+     Date: 2025-06-18
+     Version: 1.2.04
+     Purpose: Clean simple contact display - Edit button removed
 -->
+{% extends "base.html" %}
 
 {% block title %}{{ contact.name }} - Contacts - Life{% endblock %}
 
-{% block template_info %}temp_contact_view.html v1.2.01 - Simple clean contact display{% endblock %}
+{% block template_info %}temp_contact_view.html v1.2.04 - Edit button removed{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -18,16 +16,16 @@ Updated: 2025-06-17 - Removed CSS classes, used full inline styling to force but
         <p><em>{{ contact.contact_type }}{% if contact.category %} - {{ contact.category }}{% endif %}</em></p>
         
         {% for detail in details.basic %}
-        <p><strong>{{ detail.field_name }}:</strong> 
-        {% if 'phone' in detail.field_name|lower or 'handy' in detail.field_name|lower or 'telefon' in detail.field_name|lower %}
-        <a href="tel:{{ detail.field_value }}">{{ detail.field_value }}</a>
-        {% elif 'email' in detail.field_name|lower or 'e-mail' in detail.field_name|lower %}
-        <a href="mailto:{{ detail.field_value }}">{{ detail.field_value }}</a>
-        {% elif 'website' in detail.field_name|lower or 'url' in detail.field_name|lower %}
-        <a href="{{ detail.field_value if detail.field_value.startswith('http') else 'https://' + detail.field_value }}" target="_blank">{{ detail.field_value }}</a>
-        {% else %}
-        {{ detail.field_value }}
-        {% endif %}
+        <p><strong>{{ detail.field_name }}:</strong>
+            {% if 'phone' in detail.field_name|lower or 'handy' in detail.field_name|lower or 'telefon' in detail.field_name|lower %}
+            <a href="tel:{{ detail.field_value }}">{{ detail.field_value }}</a>
+            {% elif 'email' in detail.field_name|lower or 'e-mail' in detail.field_name|lower %}
+            <a href="mailto:{{ detail.field_value }}">{{ detail.field_value }}</a>
+            {% elif 'website' in detail.field_name|lower or 'url' in detail.field_name|lower %}
+            <a href="{{ detail.field_value if detail.field_value.startswith('http') else 'https://' + detail.field_value }}" target="_blank">{{ detail.field_value }}</a>
+            {% else %}
+            {{ detail.field_value }}
+            {% endif %}
         </p>
         {% endfor %}
         
@@ -40,16 +38,15 @@ Updated: 2025-06-17 - Removed CSS classes, used full inline styling to force but
         {% endif %}
         
         <p style="text-align: right; margin-top: 2rem;">
-            {% if session.get('is_admin') %}
-            <a href="{{ url_for('contacts.edit_contact', contact_id=contact.id) }}" 
-               style="display: inline-block; padding: 0.5rem 1rem; background-color: #5F827C; color: white; text-decoration: none; border-radius: 3px; font-weight: 500;">Edit</a>
-            {% else %}
-            <a href="{{ url_for('contacts.request_change', contact_id=contact.id) }}" 
-               style="display: inline-block; padding: 0.5rem 1rem; background-color: #5F827C; color: white; text-decoration: none; border-radius: 3px; font-weight: 500;">Request Changes</a>
-            {% endif %}
             <a href="{{ url_for('contacts.browse') }}" 
-               style="display: inline-block; padding: 0.5rem 1rem; background-color: #5F827C; color: white; text-decoration: none; border-radius: 3px; font-weight: 500; margin-left: 0.5rem;">Back</a>
+               style="display: inline-block; padding: 0.5rem 1rem; background-color: #5F827C; color: white; text-decoration: none; border-radius: 3px; font-weight: 500;">Back</a>
         </p>
     </div>
 </div>
+
+{% if DEBUG %}
+<div class="debug-footer">
+    temp_contact_view.html v1.2.04
+</div>
+{% endif %}
 {% endblock %}

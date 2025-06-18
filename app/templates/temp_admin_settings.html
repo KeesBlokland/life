@@ -56,7 +56,7 @@ Updated: 2025-06-15 - Fixed checkbox and text input inline layout
                        {% if settings.backup_enabled == 'true' %}checked{% endif %}>
                 <label for="backup_enabled">Backup Settings</label>
                 <input type="text" id="backup_location" name="backup_location" 
-                       value="{{ settings.backup_location or '/home/life/data/backups' }}"
+                       value="{{ settings.backup_location or '/home/life/backups' }}"
                        placeholder="Backup directory path">
             </div>
             

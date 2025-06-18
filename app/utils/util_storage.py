@@ -1,14 +1,15 @@
 """
-/home/life/app/utils/util_storage.py
-Version: 1.0.0
-Purpose: File storage operations - validation, checksums, categorization
-Created: 2025-06-11
+util_storage.py
+Date: 2025-06-18
+Version: 1.0.01
+Purpose: File storage operations - validation, checksums, categorization, backups fixed
 """
 
 import os
 import hashlib
 import shutil
 import magic
+import subprocess
 from datetime import datetime
 from flask import current_app
 
@@ -214,27 +215,33 @@ def create_backup_archive(backup_name=None):
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             backup_name = f"life_backup_{timestamp}.tar.gz"
         
-        backup_dir = os.path.join(current_app.config['DATA_DIR'], 'backups')
+        backup_dir = current_app.config['BACKUP_DIR']
+        current_app.logger.info(f"Creating data backup in directory: {backup_dir}")
         os.makedirs(backup_dir, exist_ok=True)
         
         backup_path = os.path.join(backup_dir, backup_name)
+        current_app.logger.info(f"Data backup will be saved to: {backup_path}")
         
         with tarfile.open(backup_path, 'w:gz') as tar:
             # Add data directories
             for subdir in ['documents', 'images', 'videos']:
                 dir_path = os.path.join(current_app.config['DATA_DIR'], subdir)
                 if os.path.exists(dir_path):
+                    current_app.logger.debug(f"Adding {subdir} directory to backup")
                     tar.add(dir_path, arcname=subdir)
+                else:
+                    current_app.logger.warning(f"Directory {dir_path} not found, skipping")
             
             # Add database
             db_path = current_app.config['DB_PATH']
             if os.path.exists(db_path):
+                current_app.logger.debug("Adding database to backup")
                 tar.add(db_path, arcname='database/life.db')
+            else:
+                current_app.logger.warning(f"Database {db_path} not found")
         
         size = os.path.getsize(backup_path)
-        
-        if current_app.config['DEBUG']:
-            current_app.logger.info(f"Created backup: {backup_path} ({get_file_size_formatted(size)})")
+        current_app.logger.info(f"Data backup created successfully: {backup_path} ({get_file_size_formatted(size)})")
         
         return backup_path
         
@@ -245,46 +252,64 @@ def create_backup_archive(backup_name=None):
 def create_system_backup(backup_name=None):
     """Create complete system backup including code, venv, and data"""
     try:
-        import tarfile
-        import subprocess
-        
         if not backup_name:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             backup_name = f"life_system_backup_{timestamp}.tar.gz"
         
-        backup_dir = os.path.join(current_app.config['DATA_DIR'], 'backups')
+        backup_dir = current_app.config['BACKUP_DIR']
+        current_app.logger.info(f"Creating system backup in directory: {backup_dir}")
         os.makedirs(backup_dir, exist_ok=True)
         
         backup_path = os.path.join(backup_dir, backup_name)
+        current_app.logger.info(f"System backup will be saved to: {backup_path}")
         
-        with tarfile.open(backup_path, 'w:gz') as tar:
-            # Add entire /home/life directory
-            life_home = '/home/life'
-            if os.path.exists(life_home):
-                tar.add(life_home, arcname='life_home')
+        # Use tar command with exclude to prevent backing up backups
+        cmd = [
+            '/bin/tar',  # Use full path
+            f'--exclude={backup_dir}',
+            '-czf',
+            backup_path,
+            '/home/life'
+        ]
+        
+        current_app.logger.info(f"Running tar command with exclude: {backup_dir}")
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        
+        if result.returncode != 0:
+            current_app.logger.error(f"Tar command failed: {result.stderr}")
+            return None
+        
+        current_app.logger.info("Base system backup created, adding config files")
             
-            # Add systemd service files
-            try:
-                service_files = subprocess.run(
-                    ['find', '/etc/systemd/system/', '-name', '*life*'],
-                    capture_output=True, text=True, timeout=10
-                )
-                if service_files.returncode == 0:
-                    for service_file in service_files.stdout.strip().split('\n'):
-                        if service_file and os.path.exists(service_file):
-                            tar.add(service_file, arcname=f"systemd/{os.path.basename(service_file)}")
-            except Exception as e:
-                current_app.logger.warning(f"Could not backup systemd files: {str(e)}")
-            
-            # Add nginx/apache configs if they exist
-            for config_path in ['/etc/nginx/sites-available/life', '/etc/apache2/sites-available/life']:
-                if os.path.exists(config_path):
-                    tar.add(config_path, arcname=f"webserver/{os.path.basename(config_path)}")
+        # Add systemd service files
+        try:
+            # Use full path for find command
+            service_files = subprocess.run(
+                ['/usr/bin/find', '/etc/systemd/system/', '-name', '*life*'],
+                capture_output=True, text=True, timeout=10
+            )
+            if service_files.returncode == 0:
+                # Append to existing tar
+                for service_file in service_files.stdout.strip().split('\n'):
+                    if service_file and os.path.exists(service_file):
+                        current_app.logger.debug(f"Adding systemd file: {service_file}")
+                        subprocess.run(['/bin/tar', '-rf', backup_path, service_file])
+            else:
+                current_app.logger.warning(f"Find command failed: {service_files.stderr}")
+        except Exception as e:
+            current_app.logger.warning(f"Could not backup systemd files: {str(e)}")
+        
+        # Add nginx/apache configs if they exist
+        for config_path in ['/etc/nginx/sites-available/life', '/etc/apache2/sites-available/life']:
+            if os.path.exists(config_path):
+                current_app.logger.debug(f"Adding web server config: {config_path}")
+                subprocess.run(['/bin/tar', '-rf', backup_path, config_path])
+        
+        # Recompress the tar file
+        subprocess.run(['/bin/gzip', '-f', backup_path.replace('.gz', '')])
         
         size = os.path.getsize(backup_path)
-        
-        if current_app.config['DEBUG']:
-            current_app.logger.info(f"Created system backup: {backup_path} ({get_file_size_formatted(size)})")
+        current_app.logger.info(f"System backup created successfully: {backup_path} ({get_file_size_formatted(size)})")
         
         return backup_path
         

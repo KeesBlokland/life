@@ -1,17 +1,15 @@
-{% extends "base.html" %}
-<!--
-temp_contacts.html - Main contacts listing with search and filtering
-Version: 1.0.05
-Purpose: Browse contacts for family and institutions with fuzzy search - fixed button sizes and alignment
-Created: 2025-06-17
-Updated: 2025-06-17 - Fixed search button size, admin view, and button vertical alignment
+<!-- temp_contacts.html
+     Date: 2025-06-18
+     Version: 1.0.07
+     Purpose: Browse contacts for family and institutions - minimal clean interface
 -->
+{% extends "base.html" %}
 
 {% block title %}Contacts - Life{% endblock %}
 
 {% block page_name %}: Contacts{% endblock %}
 
-{% block template_info %}temp_contacts.html v1.0.05 - Fixed search button size, admin view, and button vertical alignment{% endblock %}
+{% block template_info %}temp_contacts.html v1.0.07 - Minimal clean interface{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -27,43 +25,13 @@ Updated: 2025-06-17 - Fixed search button size, admin view, and button vertical 
                            class="search-input"
                            autofocus>
                     <button type="submit" class="button button-small">Search</button>
-                </div>
-                
-                <div class="filter-buttons">
-                    <select name="type" onchange="this.form.submit()">
-                        <option value="">All Types</option>
-                        {% for type in contact_types %}
-                        <option value="{{ type }}" {% if selected_type == type %}selected{% endif %}>
-                            {{ type }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                    
-                    <select name="category" onchange="this.form.submit()">
-                        <option value="">All Categories</option>
-                        {% for category in categories %}
-                        <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>
-                            {{ category }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                    
-                    {% if search_query or selected_type or selected_category %}
-                    <a href="{{ url_for('contacts.browse') }}" class="button button-secondary">Clear Filters</a>
+                    {% if session.get('is_admin') %}
+                    <a href="{{ url_for('contacts.add_contact') }}" class="button button-small">Add Contact</a>
+                    {% else %}
+                    <a href="{{ url_for('contacts.request_new_contact') }}" class="button button-small">Request New Contact</a>
                     {% endif %}
                 </div>
             </form>
-        </div>
-        
-        <div class="action-buttons">
-            {% if session.get('is_admin') %}
-            <a href="{{ url_for('contacts.add_contact') }}" class="button button-small">Add Contact</a>
-            <a href="{{ url_for('contacts.admin_change_requests') }}" class="button button-small button-secondary">
-                Change Requests
-            </a>
-            {% else %}
-            <a href="{{ url_for('contacts.request_new_contact') }}" class="button button-small">Request New Contact</a>
-            {% endif %}
         </div>
     </div>
     
@@ -73,29 +41,21 @@ Updated: 2025-06-17 - Fixed search button size, admin view, and button vertical 
             {% for contact in contacts %}
             <div class="contact-row">
                 <div class="contact-line">
-                    <a href="{{ url_for('contacts.view_contact', contact_id=contact.id) }}" 
-                       class="button button-small">View</a>
-                    {% if session.get('is_admin') %}
-                    <a href="{{ url_for('contacts.edit_contact', contact_id=contact.id) }}" 
-                       class="button button-small">Edit</a>
-                    <form method="post" action="{{ url_for('contacts.delete_contact', contact_id=contact.id) }}" 
-                          style="display: inline;"
-                          onsubmit="return confirm('Delete {{ contact.name }}?')">
-                        <button type="submit" class="button button-small button-danger">Delete</button>
-                    </form>
-                    {% endif %}
+                    <div class="file-actions">
+                        <a href="{{ url_for('contacts.view_contact', contact_id=contact.id) }}" 
+                           class="button button-small">View</a>
+                        {% if session.get('is_admin') %}
+                        <a href="{{ url_for('contacts.edit_contact', contact_id=contact.id) }}" 
+                           class="button button-small">Edit</a>
+                        <form method="post" action="{{ url_for('contacts.delete_contact', contact_id=contact.id) }}" 
+                              onsubmit="return confirm('Delete {{ contact.name }}?')">
+                            <button type="submit" class="button button-small button-danger">Delete</button>
+                        </form>
+                        {% endif %}
+                    </div>
                     
                     <div class="contact-info">
                         <div class="contact-name">{{ contact.name }}</div>
-                        <div class="contact-meta">
-                            <span class="contact-type">{{ contact.contact_type }}</span>
-                            {% if contact.category %}
-                            <span class="contact-category">{{ contact.category }}</span>
-                            {% endif %}
-                            {% if contact.detail_count > 0 %}
-                            <span class="detail-count">{{ contact.detail_count }} details</span>
-                            {% endif %}
-                        </div>
                     </div>
                 </div>
             </div>
@@ -128,31 +88,6 @@ Updated: 2025-06-17 - Fixed search button size, admin view, and button vertical 
             {% endif %}
         </div>
     {% endif %}
-    
-    <!-- Quick Help -->
-    <div class="contacts-help">
-        <h3>Contact Types</h3>
-        <div class="help-grid">
-            <div class="help-item">
-                <strong>Family:</strong> Family members, relatives, close friends
-            </div>
-            <div class="help-item">
-                <strong>Medical:</strong> Doctors, specialists, hospitals, pharmacies
-            </div>
-            <div class="help-item">
-                <strong>Financial:</strong> Banks, insurance companies, pension providers
-            </div>
-            <div class="help-item">
-                <strong>Utilities:</strong> Gas, electric, water, internet, phone companies
-            </div>
-            <div class="help-item">
-                <strong>Services:</strong> Repair services, contractors, gardeners
-            </div>
-            <div class="help-item">
-                <strong>Government:</strong> Tax office, municipality, passport office
-            </div>
-        </div>
-    </div>
 </div>
 
 <script>
@@ -179,4 +114,10 @@ document.addEventListener('keydown', function(e) {
     }
 });
 </script>
+
+{% if DEBUG %}
+<div class="debug-footer">
+    temp_contacts.html v1.0.07
+</div>
+{% endif %}
 {% endblock %}

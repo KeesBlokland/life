@@ -337,3 +337,34 @@ def api_stats():
     }
     
     return jsonify(stats)
+
+@admin_bp.route('/download-latest-backups')
+@admin_required
+def download_latest_backups():
+    """Download the latest system backup (includes data)"""
+    from flask import send_file
+    
+    try:
+        backup_dir = current_app.config['BACKUP_DIR']
+        
+        # Find latest system backup (includes everything)
+        system_backups = [f for f in os.listdir(backup_dir) if f.startswith('life_system_backup_') and f.endswith('.tar.gz')]
+        
+        if not system_backups:
+            flash('No backups found', 'error')
+            return redirect(url_for('admin.dashboard'))
+            
+        latest_backup = max(system_backups, key=lambda f: os.path.getmtime(os.path.join(backup_dir, f)))
+        backup_path = os.path.join(backup_dir, latest_backup)
+        
+        return send_file(
+            backup_path,
+            as_attachment=True,
+            download_name=latest_backup,
+            mimetype='application/gzip'
+        )
+        
+    except Exception as e:
+        current_app.logger.error(f"Download backup failed: {str(e)}")
+        flash(f'Download failed: {str(e)}', 'error')
+        return redirect(url_for('admin.dashboard'))

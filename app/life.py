@@ -52,11 +52,11 @@ def create_app(config_name=None):
     except ImportError:
         app.logger.warning("Admin blueprint not found - skipping")
     
-    try:
-        from routes.bp_api import api_bp
-        app.register_blueprint(api_bp, url_prefix='/api')
-    except ImportError:
-        app.logger.warning("API blueprint not found - skipping")
+    #try:
+    #    from routes.bp_api import api_bp
+    #    app.register_blueprint(api_bp, url_prefix='/api')
+    #except ImportError:
+    #    app.logger.warning("API blueprint not found - skipping")
     
     # Error handlers
     @app.errorhandler(404)
