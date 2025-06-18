@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
 life.py - Main Flask application for Life family archive
-Version: 1.1.0
-Purpose: Application initialization and blueprint registration
-Created: 2025-06-11
-Updated: 2025-06-17 - Added contacts blueprint registration
+Date: 2025-06-18
+Version: 1.1.01
+Purpose: Application initialization with file logging
 """
 
 import os
 import logging
+from logging.handlers import RotatingFileHandler
 from flask import Flask, render_template
 from config import config
 
@@ -21,13 +21,40 @@ def create_app(config_name=None):
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
     
-    # Configure logging
+    # Configure logging with file output
+    log_dir = app.config.get('LOG_DIR', '/home/life/logs')
+    os.makedirs(log_dir, exist_ok=True)
+    
+    log_file = os.path.join(log_dir, 'life.log')
+    
+    # Set up rotating file handler
+    file_handler = RotatingFileHandler(
+        log_file,
+        maxBytes=10 * 1024 * 1024,  # 10MB
+        backupCount=5
+    )
+    
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    file_handler.setFormatter(formatter)
+    
+    # Configure log level
+    log_level = logging.DEBUG if app.config['DEBUG'] else logging.INFO
+    file_handler.setLevel(log_level)
+    app.logger.setLevel(log_level)
+    
+    # Add handler to app logger
+    app.logger.addHandler(file_handler)
+    
+    # Also log to console in debug mode
     if app.config['DEBUG']:
-        logging.basicConfig(
-            level=logging.DEBUG,
-            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-        )
-        app.logger.debug('Life app starting in DEBUG mode')
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(formatter)
+        console_handler.setLevel(log_level)
+        app.logger.addHandler(console_handler)
+    
+    app.logger.info(f'Life app starting with config: {config_name}')
     
     # Initialize database
     from utils.util_db import init_db
@@ -52,12 +79,6 @@ def create_app(config_name=None):
     except ImportError:
         app.logger.warning("Admin blueprint not found - skipping")
     
-    #try:
-    #    from routes.bp_api import api_bp
-    #    app.register_blueprint(api_bp, url_prefix='/api')
-    #except ImportError:
-    #    app.logger.warning("API blueprint not found - skipping")
-    
     # Error handlers
     @app.errorhandler(404)
     def not_found_error(error):
@@ -72,17 +93,16 @@ def create_app(config_name=None):
     @app.context_processor
     def inject_config():
         """Make config available in all templates"""
-        return dict(config=app.config)
+        return dict(config=app.config, DEBUG=app.config['DEBUG'])
     
     app.logger.info(f'Life app created with config: {config_name}')
+    
     return app
 
 # Create application instance
 app = create_app()
 
 if __name__ == '__main__':
-   
-    
     # Run application
     app.run(
         host='0.0.0.0',

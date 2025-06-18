@@ -1,7 +1,7 @@
 <!-- temp_admin_dashboard.html
      Date: 2025-06-18
-     Version: 1.0.07
-     Purpose: Admin dashboard with system overview and backup download
+     Version: 1.0.08
+     Purpose: Admin dashboard with 2x3 button layout using existing CSS
 -->
 {% extends "base.html" %}
 
@@ -9,12 +9,34 @@
 
 {% block page_name %}: Admin{% endblock %}
 
-{% block template_info %}temp_admin_dashboard.html v1.0.07 - Added backup download{% endblock %}
+{% block template_info %}temp_admin_dashboard.html v1.0.08{% endblock %}
 
 {% block content %}
 <div class="container">
-    <h1>Life Admin</h1>
     
+ 
+        <!-- Quick Actions -->
+    <div class="admin-section">
+        
+        <div class="file-actions">
+            <form method="post" action="{{ url_for('admin.data_backup') }}">
+                <button type="submit" class="button">Data Backup</button>
+            </form>
+            <form method="post" action="{{ url_for('admin.system_backup') }}">
+                <button type="submit" class="button">System Backup</button>
+            </form>
+            <a href="{{ url_for('admin.download_latest_backups') }}" class="button">Download Latest Backups</a>
+        </div>
+        <div class="file-actions" style="margin-top: 1rem;">
+            <form method="post" action="{{ url_for('admin.cleanup_files') }}">
+                <button type="submit" class="button">Find & List Orphans</button>
+            </form>
+            <a href="{{ url_for('admin.deleted_files') }}" class="button">View Deleted Files</a>
+            <a href="{{ url_for('admin.settings') }}" class="button">System Settings</a>
+        </div>
+    </div>
+
+
     <!-- Essential System Info -->
     <div class="admin-section">
         <div class="status-grid">
@@ -46,28 +68,6 @@
         {% endif %}
     </div>
     
-    <!-- Quick Actions -->
-    <div class="admin-section">
-        <h2>Quick Actions</h2>
-        <div class="action-buttons">
-            <form method="post" action="{{ url_for('admin.data_backup') }}" style="display: inline;">
-                <button type="submit" class="button">Data Backup</button>
-            </form>
-            <form method="post" action="{{ url_for('admin.system_backup') }}" style="display: inline;">
-                <button type="submit" class="button button-secondary">System Backup</button>
-            </form>
-            <a href="{{ url_for('admin.download_latest_backups') }}" class="button button-primary">Download Latest Backups</a>
-            <form method="post" action="{{ url_for('admin.cleanup_files') }}" style="display: inline;">
-                <button type="submit" class="button">Find & List Orphans</button>
-            </form>
-            <a href="{{ url_for('admin.deleted_files') }}" class="button">
-                View Deleted Files
-            </a>
-            <a href="{{ url_for('admin.settings') }}" class="button">
-                System Settings
-            </a>
-        </div>
-    </div>
     
     <!-- Storage by Category -->
     {% if storage_by_category %}
@@ -88,7 +88,7 @@
 
 {% if DEBUG %}
 <div class="debug-footer">
-    temp_admin_dashboard.html v1.0.07
+    temp_admin_dashboard.html v1.0.08
 </div>
 {% endif %}
 {% endblock %}

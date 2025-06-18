@@ -368,3 +368,22 @@ def download_latest_backups():
         current_app.logger.error(f"Download backup failed: {str(e)}")
         flash(f'Download failed: {str(e)}', 'error')
         return redirect(url_for('admin.dashboard'))
+
+@admin_bp.route('/daily-maintenance', methods=['POST'])
+@admin_required
+def daily_maintenance():
+    """Run daily maintenance tasks - cleanup and disk check"""
+    from utils.util_storage import cleanup_old_backups, check_disk_space
+    
+    # Cleanup old backups
+    cleanup_old_backups()
+    
+    # Check disk space
+    disk_status = check_disk_space()
+    
+    if not disk_status['healthy']:
+        for warning in disk_status['warnings']:
+            current_app.logger.error(warning)
+            flash(warning, 'error')
+    
+    return jsonify(disk_status)

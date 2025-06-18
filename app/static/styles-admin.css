@@ -385,3 +385,20 @@ Updated: 2025-06-16 - Fixed button alignment to match file browser
     border-radius: 4px;
     border-left: 3px solid var(--accent);
 }
+
+.action-buttons-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.action-buttons-grid form,
+.action-buttons-grid a {
+    display: block;
+}
+
+.action-buttons-grid .button {
+    width: 100%;
+    text-align: center;
+}

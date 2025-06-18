@@ -261,39 +261,57 @@ def create_system_backup(backup_name=None):
         os.makedirs(backup_dir, exist_ok=True)
         
         backup_path = os.path.join(backup_dir, backup_name)
+        temp_tar = backup_path.replace('.gz', '')  # Work with uncompressed tar first
         current_app.logger.info(f"System backup will be saved to: {backup_path}")
         
-        # Use tar command with exclude to prevent backing up backups
+        # Create initial tar without compression
         cmd = [
-            '/bin/tar',  # Use full path
+            '/bin/tar',
             f'--exclude={backup_dir}',
-            '-czf',
-            backup_path,
+            '--exclude=__pycache__',
+            '--exclude=*.pyc',
+            '--exclude=.cache',
+            '--exclude=*/venv/*',
+            '--exclude=*/.git/*',
+            '--exclude=*.log',
+            '--exclude=*.tmp',
+            '-cf',  # Create uncompressed
+            temp_tar,
             '/home/life'
         ]
         
-        current_app.logger.info(f"Running tar command with exclude: {backup_dir}")
+        current_app.logger.info(f"Running tar command: {' '.join(cmd)}")
         result = subprocess.run(cmd, capture_output=True, text=True)
         
-        if result.returncode != 0:
-            current_app.logger.error(f"Tar command failed: {result.stderr}")
+        # Check return code, not stderr (tar warns about leading / but still works)
+        if result.returncode != 0 and result.returncode != 1:
+            current_app.logger.error(f"Tar command failed with code {result.returncode}")
+            current_app.logger.error(f"STDOUT: {result.stdout}")
+            current_app.logger.error(f"STDERR: {result.stderr}")
             return None
         
-        current_app.logger.info("Base system backup created, adding config files")
+        if not os.path.exists(temp_tar) or os.path.getsize(temp_tar) == 0:
+            current_app.logger.error(f"Tar file not created or empty: {temp_tar}")
+            return None
+            
+        current_app.logger.info(f"Base tar created, size: {os.path.getsize(temp_tar)} bytes")
             
         # Add systemd service files
         try:
-            # Use full path for find command
-            service_files = subprocess.run(
-                ['/usr/bin/find', '/etc/systemd/system/', '-name', '*life*'],
-                capture_output=True, text=True, timeout=10
-            )
+            service_cmd = ['/usr/bin/find', '/etc/systemd/system/', '-name', '*life*']
+            current_app.logger.debug(f"Looking for systemd files: {' '.join(service_cmd)}")
+            service_files = subprocess.run(service_cmd, capture_output=True, text=True, timeout=10)
+            
             if service_files.returncode == 0:
-                # Append to existing tar
-                for service_file in service_files.stdout.strip().split('\n'):
+                files_found = service_files.stdout.strip().split('\n')
+                current_app.logger.info(f"Found {len(files_found)} systemd files")
+                for service_file in files_found:
                     if service_file and os.path.exists(service_file):
                         current_app.logger.debug(f"Adding systemd file: {service_file}")
-                        subprocess.run(['/bin/tar', '-rf', backup_path, service_file])
+                        append_result = subprocess.run(['/bin/tar', '-rf', temp_tar, service_file], 
+                                                     capture_output=True, text=True)
+                        if append_result.returncode != 0:
+                            current_app.logger.warning(f"Failed to add {service_file}: {append_result.stderr}")
             else:
                 current_app.logger.warning(f"Find command failed: {service_files.stderr}")
         except Exception as e:
@@ -303,16 +321,103 @@ def create_system_backup(backup_name=None):
         for config_path in ['/etc/nginx/sites-available/life', '/etc/apache2/sites-available/life']:
             if os.path.exists(config_path):
                 current_app.logger.debug(f"Adding web server config: {config_path}")
-                subprocess.run(['/bin/tar', '-rf', backup_path, config_path])
+                append_result = subprocess.run(['/bin/tar', '-rf', temp_tar, config_path], 
+                                             capture_output=True, text=True)
+                if append_result.returncode != 0:
+                    current_app.logger.warning(f"Failed to add {config_path}: {append_result.stderr}")
         
-        # Recompress the tar file
-        subprocess.run(['/bin/gzip', '-f', backup_path.replace('.gz', '')])
+        # Compress the final tar
+        current_app.logger.info(f"Compressing tar file to {backup_path}")
+        gzip_result = subprocess.run(['/bin/gzip', '-f', temp_tar], capture_output=True, text=True)
         
+        if gzip_result.returncode != 0:
+            current_app.logger.error(f"Gzip failed: {gzip_result.stderr}")
+            return None
+        
+        if not os.path.exists(backup_path):
+            current_app.logger.error(f"Expected backup file {backup_path} not found after compression")
+            return None
+            
         size = os.path.getsize(backup_path)
         current_app.logger.info(f"System backup created successfully: {backup_path} ({get_file_size_formatted(size)})")
         
         return backup_path
         
     except Exception as e:
-        current_app.logger.error(f"Failed to create system backup: {str(e)}")
+        current_app.logger.error(f"Failed to create system backup: {str(e)}", exc_info=True)
         return None
+
+def cleanup_old_backups():
+    """Keep only recent backups to save disk space"""
+    try:
+        backup_dir = current_app.config['BACKUP_DIR']
+        
+        # Data backups - keep last 5
+        data_backups = sorted([f for f in os.listdir(backup_dir) 
+                             if f.startswith('life_backup_') and f.endswith('.tar.gz')])
+        if len(data_backups) > 5:
+            for old_backup in data_backups[:-5]:
+                os.remove(os.path.join(backup_dir, old_backup))
+                current_app.logger.info(f"Deleted old data backup: {old_backup}")
+        
+        # System backups - keep only one per month
+        system_backups = sorted([f for f in os.listdir(backup_dir) 
+                               if f.startswith('life_system_backup_') and f.endswith('.tar.gz')])
+        
+        # Group by year-month
+        from collections import defaultdict
+        monthly_backups = defaultdict(list)
+        for backup in system_backups:
+            # Extract YYYYMM from filename
+            date_part = backup.split('_')[3]  # life_system_backup_YYYYMMDD_HHMMSS.tar.gz
+            year_month = date_part[:6]
+            monthly_backups[year_month].append(backup)
+        
+        # Keep only newest per month
+        for year_month, backups in monthly_backups.items():
+            if len(backups) > 1:
+                for old_backup in backups[:-1]:
+                    os.remove(os.path.join(backup_dir, old_backup))
+                    current_app.logger.info(f"Deleted old system backup: {old_backup}")
+                    
+    except Exception as e:
+        current_app.logger.error(f"Failed to cleanup backups: {str(e)}")
+
+def check_disk_space():
+    """Check disk space and return warning if low"""
+    try:
+        import shutil
+        
+        # Get disk usage for data directory
+        stat = shutil.disk_usage(current_app.config['DATA_DIR'])
+        free_gb = stat.free / (1024**3)
+        used_percent = (stat.used / stat.total) * 100
+        
+        warning_messages = []
+        
+        # Warn if less than 1GB free or more than 90% used
+        if free_gb < 1:
+            warning_messages.append(f"LOW DISK SPACE: Only {free_gb:.2f}GB free")
+        
+        if used_percent > 90:
+            warning_messages.append(f"DISK NEARLY FULL: {used_percent:.1f}% used")
+            
+        # Also check backup directory
+        backup_stat = shutil.disk_usage(current_app.config['BACKUP_DIR'])
+        backup_size_gb = sum(os.path.getsize(os.path.join(current_app.config['BACKUP_DIR'], f)) 
+                           for f in os.listdir(current_app.config['BACKUP_DIR']) 
+                           if f.endswith('.tar.gz')) / (1024**3)
+        
+        if backup_size_gb > 5:
+            warning_messages.append(f"Backup directory using {backup_size_gb:.1f}GB")
+        
+        return {
+            'free_gb': free_gb,
+            'used_percent': used_percent,
+            'warnings': warning_messages,
+            'healthy': len(warning_messages) == 0
+        }
+        
+    except Exception as e:
+        current_app.logger.error(f"Failed to check disk space: {str(e)}")
+        return {'healthy': False, 'warnings': [f"Error checking disk: {str(e)}"]}
