@@ -1,9 +1,9 @@
 /*
 styles-shopping.css - Shopping list styles for Life app
-Version: 1.0.06
-Purpose: Shopping list specific styles - dropdown positioned right
+Version: 1.1.00
+Purpose: Shopping list specific styles - removed button definitions
 Created: 2025-06-14
-Updated: 2025-06-16 - Moved dropdown to right of input field
+Updated: 2025-06-17 - Removed all button class definitions, use only core 4
 */
 
 /* List tabs container */
@@ -151,50 +151,6 @@ Updated: 2025-06-16 - Moved dropdown to right of input field
     gap: 0.3rem;
     font-size: 0.85rem;
     white-space: nowrap;
-}
-
-/* Global button consistency - all buttons same height and alignment */
-.button-sm,
-.button-small {
-    height: 32px;
-    padding: 0 12px;
-    font-size: 0.85rem;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    font-weight: 500;
-    line-height: 1;
-    vertical-align: middle;
-    white-space: nowrap;
-    min-width: 48px;
-}
-
-.button-sm {
-    background-color: var(--accent);
-    color: white;
-}
-
-.button-sm.button-secondary {
-    background-color: var(--text-secondary);
-    color: white;
-}
-
-.button-sm.button-danger {
-    background-color: var(--error);
-    color: white;
-}
-
-.button-sm.button-success {
-    background-color: var(--success);
-    color: white;
-}
-
-.button-sm:hover {
-    opacity: 0.9;
 }
 
 /* Quantity inputs */

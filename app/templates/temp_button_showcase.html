@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+<!--
+temp_button_showcase.html - Complete button showcase
+Version: 1.0.00
+Purpose: Display all CSS button classes found in the system
+Created: 2025-06-17
+-->
+
+{% block title %}Button Showcase - Life{% endblock %}
+
+{% block template_info %}temp_button_showcase.html v1.0.00 - All CSS button classes{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Complete Button Showcase</h1>
+    <p>All button classes found in CSS files, numbered for reference:</p>
+    
+    <h2>From styles-components.css</h2>
+    <div style="display: flex; flex-direction: column; gap: 1rem; padding: 1rem; background: #f0f0f0;">
+        <div>1. <button class="button">.button</button></div>
+        <div>2. <button class="button-secondary">.button-secondary</button></div>
+        <div>3. <button class="button-danger">.button-danger</button></div>
+        <div>4. <button class="button-success">.button-success</button></div>
+        <div>5. <button class="button-small">.button-small</button></div>
+        <div>6. <button class="button-small button-secondary">.button-small.button-secondary</button></div>
+        <div>7. <button class="button-small button-danger">.button-small.button-danger</button></div>
+        <div>8. <button class="button-small button-success">.button-small.button-success</button></div>
+        <div>9. <button class="button-large">.button-large</button></div>
+        <div>10. <button class="button button-active">.button.button-active</button></div>
+    </div>
+    
+    <h2>From styles-shopping.css</h2>
+    <div style="display: flex; flex-direction: column; gap: 1rem; padding: 1rem; background: #f0f0f0;">
+        <div>11. <button class="button-sm">.button-sm</button></div>
+        <div>12. <button class="button-sm button-secondary">.button-sm.button-secondary</button></div>
+        <div>13. <button class="button-sm button-danger">.button-sm.button-danger</button></div>
+        <div>14. <button class="button-sm button-success">.button-sm.button-success</button></div>
+    </div>
+    
+    <h2>From styles-files.css</h2>
+    <div style="display: flex; flex-direction: column; gap: 1rem; padding: 1rem; background: #f0f0f0;">
+        <div>15. <button class="button-edit-small">.button-edit-small</button></div>
+        <div>16. <button class="button-save-small">.button-save-small</button></div>
+        <div>17. <button class="button-cancel-small">.button-cancel-small</button></div>
+    </div>
+    
+    <h2>From styles-misc.css</h2>
+    <div style="display: flex; flex-direction: column; gap: 1rem; padding: 1rem; background: #f0f0f0;">
+        <div>18. <button class="tag-button">.tag-button</button></div>
+        <div>19. <button class="button-edit">.button-edit</button></div>
+        <div>20. <button class="button-delete">.button-delete</button></div>
+        <div>21. <button class="button-add">.button-add</button></div>
+        <div>22. <button class="button-back">.button-back</button></div>
+        <div>23. <button class="button-large">.button-large (from misc)</button></div>
+    </div>
+    
+    <h2>Button Heights Comparison</h2>
+    <div style="display: flex; gap: 1rem; align-items: center; padding: 1rem; background: #f0f0f0;">
+        <button class="button">button (36px)</button>
+        <button class="button-small">button-small (32px)</button>
+        <button class="button-sm">button-sm (32px)</button>
+        <button class="button-large">button-large (44px)</button>
+    </div>
+    
+    <h2>As Links</h2>
+    <div style="display: flex; flex-direction: column; gap: 1rem; padding: 1rem; background: #f0f0f0;">
+        <div>24. <a href="#" class="button">a.button</a></div>
+        <div>25. <a href="#" class="button button-small">a.button.button-small</a></div>
+        <div>26. <a href="#" class="button button-secondary">a.button.button-secondary</a></div>
+    </div>
+</div>
+{% endblock %}

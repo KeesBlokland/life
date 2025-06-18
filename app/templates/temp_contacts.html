@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 <!--
 temp_contacts.html - Main contacts listing with search and filtering
-Version: 1.0.02
-Purpose: Browse contacts for family and institutions with fuzzy search - standardized button sizes
+Version: 1.0.05
+Purpose: Browse contacts for family and institutions with fuzzy search - fixed button sizes and alignment
 Created: 2025-06-17
-Updated: 2025-06-17 - Fixed inconsistent button sizes, all buttons now button-small
+Updated: 2025-06-17 - Fixed search button size, admin view, and button vertical alignment
 -->
 
 {% block title %}Contacts - Life{% endblock %}
 
 {% block page_name %}: Contacts{% endblock %}
 
-{% block template_info %}temp_contacts.html v1.0.01 - Main contacts listing{% endblock %}
+{% block template_info %}temp_contacts.html v1.0.05 - Fixed search button size, admin view, and button vertical alignment{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -26,7 +26,7 @@ Updated: 2025-06-17 - Fixed inconsistent button sizes, all buttons now button-sm
                            placeholder="Search contacts, phone numbers, emails..."
                            class="search-input"
                            autofocus>
-                    <button type="submit" class="button">Search</button>
+                    <button type="submit" class="button button-small">Search</button>
                 </div>
                 
                 <div class="filter-buttons">
@@ -57,12 +57,12 @@ Updated: 2025-06-17 - Fixed inconsistent button sizes, all buttons now button-sm
         
         <div class="action-buttons">
             {% if session.get('is_admin') %}
-            <a href="{{ url_for('contacts.add_contact') }}" class="button">Add Contact</a>
-            <a href="{{ url_for('contacts.admin_change_requests') }}" class="button button-secondary">
+            <a href="{{ url_for('contacts.add_contact') }}" class="button button-small">Add Contact</a>
+            <a href="{{ url_for('contacts.admin_change_requests') }}" class="button button-small button-secondary">
                 Change Requests
             </a>
             {% else %}
-            <a href="{{ url_for('contacts.request_new_contact') }}" class="button">Request New Contact</a>
+            <a href="{{ url_for('contacts.request_new_contact') }}" class="button button-small">Request New Contact</a>
             {% endif %}
         </div>
     </div>
@@ -75,13 +75,14 @@ Updated: 2025-06-17 - Fixed inconsistent button sizes, all buttons now button-sm
                 <div class="contact-line">
                     <a href="{{ url_for('contacts.view_contact', contact_id=contact.id) }}" 
                        class="button button-small">View</a>
-                    
                     {% if session.get('is_admin') %}
                     <a href="{{ url_for('contacts.edit_contact', contact_id=contact.id) }}" 
                        class="button button-small">Edit</a>
-                    {% else %}
-                    <a href="{{ url_for('contacts.request_change', contact_id=contact.id) }}" 
-                       class="button button-small">Request Change</a>
+                    <form method="post" action="{{ url_for('contacts.delete_contact', contact_id=contact.id) }}" 
+                          style="display: inline;"
+                          onsubmit="return confirm('Delete {{ contact.name }}?')">
+                        <button type="submit" class="button button-small button-danger">Delete</button>
+                    </form>
                     {% endif %}
                     
                     <div class="contact-info">
@@ -96,14 +97,6 @@ Updated: 2025-06-17 - Fixed inconsistent button sizes, all buttons now button-sm
                             {% endif %}
                         </div>
                     </div>
-                    
-                    {% if session.get('is_admin') %}
-                    <form method="post" action="{{ url_for('contacts.delete_contact', contact_id=contact.id) }}" 
-                          style="margin-left: auto;"
-                          onsubmit="return confirm('Delete {{ contact.name }}?')">
-                        <button type="submit" class="button button-small button-danger">Delete</button>
-                    </form>
-                    {% endif %}
                 </div>
             </div>
             {% endfor %}

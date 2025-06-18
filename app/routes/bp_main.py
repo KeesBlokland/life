@@ -624,3 +624,8 @@ def edit_master_item():
 @login_required
 def button_test():
     return render_template('temp_button_test.html')
+
+@main_bp.route('/button-showcase')
+@login_required
+def button_showcase():
+    return render_template('temp_button_showcase.html')
