@@ -1,9 +1,9 @@
 /*
 styles-files.css - File browser styles for Life app
-Version: 1.1.00
-Purpose: Document browser specific styles - removed button definitions
+Version: 1.1.01
+Purpose: Document browser specific styles - Fixed iPad landscape layout
 Created: 2025-06-14
-Updated: 2025-06-17 - Removed all button class definitions, use only core 4
+Updated: 2025-06-18 - Added iPad layout fixes for action button visibility
 */
 
 /* DO NOT TOUCH - WORKS - File browser controls */
@@ -64,103 +64,79 @@ Updated: 2025-06-17 - Removed all button class definitions, use only core 4
     min-height: 36px;
 }
 
-/* DO NOT TOUCH - WORKS - Compact spacing between buttons */
-.file-line > * {
-    margin: 0;
-    flex-shrink: 0;
-}
-
-/* DO NOT TOUCH - WORKS - Title takes remaining space */
-.file-title {
-    font-weight: 500;
-    color: var(--text-primary);
-    font-size: 1rem;
-    margin-left: 0.5rem;
-}
-
-/* DO NOT TOUCH - WORKS - Form button alignment */
-.file-line form {
-    margin: 0;
-    display: inline-flex;
+/* Fixed layout - action buttons always visible regardless of filename length */
+.file-line-fixed {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
     align-items: center;
+    padding: 0.6rem 0.8rem;
+    gap: 1rem;
+    min-height: 36px;
 }
 
-.file-actions {
+.file-actions-left {
     display: flex;
     gap: 0.5rem;
     align-items: center;
+    flex-shrink: 0;
 }
 
-.file-actions form {
-    margin: 0;
-    display: inline;
+.file-title-container {
+    min-width: 0;
+    overflow: hidden;
 }
 
-.file-details {
-    padding: 0.8rem;
-    background-color: var(--bg-accent);
-    border-top: 1px solid var(--border);
-}
-
-.detail-item {
-    margin-bottom: 0.4rem;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-}
-
-.detail-item:last-child {
-    margin-bottom: 0;
-}
-
-.detail-item strong {
-    color: var(--text-primary);
-    margin-right: 0.5rem;
-}
-
-#title-form input {
-    width: 300px;
-    padding: 0.3rem;
-    margin-right: 0.5rem;
-}
-
-.pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.page-info {
-    color: var(--text-secondary);
+.file-title-truncated {
     font-weight: 500;
+    color: var(--text-primary);
+    font-size: 1rem;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
-.no-files {
-    text-align: center;
-    padding: 2rem;
-    background-color: var(--bg-accent);
-    border-radius: 6px;
-}
-
-.no-files h3 {
-    color: var(--text-secondary);
-    margin-bottom: 0.5rem;
-}
-
-.no-files p {
-    color: var(--text-secondary);
-    margin-bottom: 1rem;
-}
-
-.file-item {
-    padding: 0.3rem 0;
+.file-actions-right {
     display: flex;
-    justify-content: space-between;
+    gap: 0.5rem;
     align-items: center;
+    flex-shrink: 0;
 }
 
-.file-item small {
-    color: var(--text-secondary);
-    font-size: 0.8rem;
+.inline-form {
+    display: inline-flex;
+    margin: 0;
 }
+
+/* NEW - iPad landscape layout with proper action button visibility */
+.file-line-fixed {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    padding: 0.6rem 0.8rem;
+    gap: 1rem;
+    min-height: 36px;
+}
+
+.file-actions-left {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.file-title-container {
+    min-width: 0; /* Allow flex item to shrink below content size */
+    overflow: hidden;
+}
+
+.file-title-truncated {
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 1rem;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;

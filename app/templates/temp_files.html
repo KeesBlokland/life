@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 <!--
 /home/life/app/templates/temp_files.html
-Version: 1.4.1
-Purpose: File browser - Info button on left, syntax fixed
+Version: 1.4.2
+Purpose: File browser - Fixed iPad landscape layout with proper action button visibility
 Created: 2025-06-11
-Updated: 2025-06-16 - Fixed Jinja2 syntax error
+Updated: 2025-06-18 - Fixed action buttons always visible on iPad, truncated long filenames
 -->
 
 {% block title %}Documents - Life{% endblock %}
 
 {% block page_name %}: Documents{% endblock %}
 
-{% block template_info %}temp_files.html v1.4.1 - Fixed syntax error{% endblock %}
+{% block template_info %}temp_files.html v1.4.2 - Fixed iPad landscape layout{% endblock %}
 
 {% block scripts %}
 <script>
@@ -76,19 +76,30 @@ function cancelTagsEdit(fileId) {
         <div class="file-list">
             {% for file in files %}
             <div class="file-row">
-                <div class="file-line">
-                    <a href="{{ url_for('files.download', file_id=file.id) }}" 
-                       class="button button-small">View</a>
-                    <button type="button" class="button button-small button-secondary" 
-                            onclick="toggleDetails({{ file.id }})">Info</button>
-                    {% if session.get('is_admin') %}
-                    <form method="post" action="{{ url_for('files.delete_file', file_id=file.id) }}" 
-                          style="display: inline;" 
-                          onsubmit="return confirm('Delete this file?')">
-                        <button type="submit" class="button button-small button-danger">Delete</button>
-                    </form>
-                    {% endif %}
-                    <span class="file-title">{{ file.title or file.filename }}</span>
+                <div class="file-line-fixed">
+                    <div class="file-actions-left">
+                        <a href="{{ url_for('files.download', file_id=file.id) }}" 
+                           class="button button-small">View</a>
+                        <button type="button" class="button button-small button-secondary" 
+                                onclick="toggleDetails({{ file.id }})">Info</button>
+                    </div>
+                    <div class="file-actions-right">
+                        {% if session.get('is_admin') %}
+                        <form method="post" action="{{ url_for('files.delete_file', file_id=file.id) }}" 
+                              class="inline-form" 
+                              onsubmit="return confirm('Delete this file?')">
+                            <button type="submit" class="button button-small button-danger">Delete</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    <div class="file-title-container">
+                        <span class="file-title-truncated" title="{{ file.title or file.filename }}">
+                            {{ file.title or file.filename }}
+                        </span>
+                    </div>
+                    
+                    
+
                 </div>
                 
                 <!-- Hidden details -->
@@ -176,4 +187,6 @@ function cancelTagsEdit(fileId) {
         </div>
     {% endif %}
 </div>
+
+
 {% endblock %}

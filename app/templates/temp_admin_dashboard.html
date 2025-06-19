@@ -18,7 +18,7 @@
         <!-- Quick Actions -->
     <div class="admin-section">
         
-        <div class="file-actions">
+        <div class="action-buttons">
             <form method="post" action="{{ url_for('admin.data_backup') }}">
                 <button type="submit" class="button">Data Backup</button>
             </form>
@@ -27,7 +27,7 @@
             </form>
             <a href="{{ url_for('admin.download_latest_backups') }}" class="button">Download Latest Backups</a>
         </div>
-        <div class="file-actions" style="margin-top: 1rem;">
+        <div class="action-buttons" style="margin-top: 1rem;">
             <form method="post" action="{{ url_for('admin.cleanup_files') }}">
                 <button type="submit" class="button">Find & List Orphans</button>
             </form>
